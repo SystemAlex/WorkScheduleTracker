@@ -136,7 +136,10 @@ export function ShiftModal({
                       {employees
                         .filter(emp => emp.status === 'active')
                         .map((employee) => (
-                          <SelectItem key={employee.id} value={employee.id.toString()}>
+                          <SelectItem 
+                            key={employee.id} 
+                            value={employee.id.toString()}
+                          >
                             {employee.name}
                           </SelectItem>
                         ))}
@@ -165,7 +168,10 @@ export function ShiftModal({
                     </FormControl>
                     <SelectContent>
                       {positions.map((position) => (
-                        <SelectItem key={position.id} value={position.id.toString()}>
+                        <SelectItem 
+                          key={position.id} 
+                          value={position.id.toString()}
+                        >
                           {position.name}
                         </SelectItem>
                       ))}
@@ -253,7 +259,10 @@ export function ShiftModal({
                   <FormControl>
                     <Textarea 
                       placeholder="Notas adicionales sobre el turno..."
-                      {...field}
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
                     />
                   </FormControl>
                   <FormMessage />

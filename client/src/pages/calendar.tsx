@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
 import { CalendarGrid } from "@/components/calendar/calendar-grid";
+import { EmployeeCalendarGrid } from "@/components/calendar/employee-calendar-grid";
 import { QuickPanel } from "@/components/calendar/quick-panel";
 import { ShiftModal } from "@/components/calendar/shift-modal";
 import { LayoutContent, LayoutPanel } from "@/components/ui/layout";
@@ -14,6 +15,7 @@ type ViewMode = "month" | "week" | "day";
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee>();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingShift, setEditingShift] = useState<ShiftWithDetails>();
   const [viewMode, setViewMode] = useState<ViewMode>("month");
@@ -102,6 +104,18 @@ export default function Calendar() {
     setSelectedDate(date);
   };
 
+  const handleEmployeeDateSelect = (date: Date, employee: Employee) => {
+    setSelectedDate(date);
+    setSelectedEmployee(employee);
+  };
+
+  const handleEmployeeAddShift = (date: Date, employee: Employee) => {
+    setSelectedDate(date);
+    setSelectedEmployee(employee);
+    setEditingShift(undefined);
+    setModalOpen(true);
+  };
+
   const handleAddShift = () => {
     setEditingShift(undefined);
     setModalOpen(true);
@@ -148,24 +162,15 @@ export default function Calendar() {
 
       <div className="flex flex-1 overflow-hidden">
         <LayoutContent>
-          <CalendarGrid
+          <EmployeeCalendarGrid
             currentDate={currentDate}
             shifts={shifts}
+            employees={employees}
             selectedDate={selectedDate}
-            onDateSelect={handleDateSelect}
+            onDateSelect={handleEmployeeDateSelect}
+            onAddShift={handleEmployeeAddShift}
           />
         </LayoutContent>
-
-        <LayoutPanel>
-          <QuickPanel
-            selectedDate={selectedDate}
-            shifts={shifts}
-            employees={employees}
-            onAddShift={handleAddShift}
-            onEditShift={handleEditShift}
-            onDeleteShift={handleDeleteShift}
-          />
-        </LayoutPanel>
       </div>
 
       <ShiftModal

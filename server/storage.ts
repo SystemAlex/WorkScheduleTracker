@@ -104,9 +104,9 @@ export class DatabaseStorage implements IStorage {
         shiftType: shiftTypes
       })
       .from(shifts)
-      .leftJoin(employees, eq(shifts.employeeId, employees.id))
-      .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .leftJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id));
+      .innerJoin(employees, eq(shifts.employeeId, employees.id))
+      .innerJoin(positions, eq(shifts.positionId, positions.id))
+      .innerJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id));
 
     return results.map(row => ({
       id: row.id,
@@ -123,8 +123,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getShiftsByMonth(month: number, year: number): Promise<ShiftWithDetails[]> {
+    const daysInMonth = new Date(year, month, 0).getDate();
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+    const endDate = `${year}-${month.toString().padStart(2, '0')}-${daysInMonth.toString().padStart(2, '0')}`;
     
     const results = await db
       .select({
@@ -140,9 +141,9 @@ export class DatabaseStorage implements IStorage {
         shiftType: shiftTypes
       })
       .from(shifts)
-      .leftJoin(employees, eq(shifts.employeeId, employees.id))
-      .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .leftJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
+      .innerJoin(employees, eq(shifts.employeeId, employees.id))
+      .innerJoin(positions, eq(shifts.positionId, positions.id))
+      .innerJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
       .where(and(
         gte(shifts.date, startDate),
         lte(shifts.date, endDate)
@@ -177,9 +178,9 @@ export class DatabaseStorage implements IStorage {
         shiftType: shiftTypes
       })
       .from(shifts)
-      .leftJoin(employees, eq(shifts.employeeId, employees.id))
-      .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .leftJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
+      .innerJoin(employees, eq(shifts.employeeId, employees.id))
+      .innerJoin(positions, eq(shifts.positionId, positions.id))
+      .innerJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
       .where(eq(shifts.date, date));
 
     return results.map(row => ({
