@@ -19,11 +19,9 @@ interface SidebarLinkProps {
 
 function SidebarLink({ href, icon, children, isActive }: SidebarLinkProps) {
   return (
-    <Link href={href}>
-      <a className={cn("sidebar-link", isActive && "active")}>
-        {icon}
-        <span>{children}</span>
-      </a>
+    <Link href={href} className={cn("sidebar-link", isActive && "active")}>
+      {icon}
+      <span>{children}</span>
     </Link>
   );
 }
