@@ -104,7 +104,7 @@ export default function Positions() {
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
               Puestos ({positions.length})
@@ -119,7 +119,7 @@ export default function Positions() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {positions.map((position) => (
             <Card key={position.id}>
               <CardHeader className="pb-4">

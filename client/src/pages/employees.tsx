@@ -184,7 +184,7 @@ export default function Employees() {
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
               Empleados ({employees.length})
@@ -199,7 +199,7 @@ export default function Employees() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {employees.map((employee) => (
             <Card key={employee.id}>
               <CardHeader className="pb-4">

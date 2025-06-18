@@ -26,7 +26,7 @@ export function CalendarGrid({
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="bg-white rounded-xl shadow-md p-4">
       {/* Calendar Header */}
       <div className="grid grid-cols-7 gap-px bg-neutral-200 rounded-lg overflow-hidden mb-4">
         {dayNames.map((day) => (
@@ -106,7 +106,7 @@ export function CalendarGrid({
       </div>
 
       {/* Legend */}
-      <div className="mt-6 bg-white rounded-xl shadow-md p-6">
+      <div className="mt-4 bg-white rounded-xl shadow-md p-4">
         <h3 className="text-lg font-semibold text-neutral-900 mb-4">Leyenda de Turnos</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center space-x-3">

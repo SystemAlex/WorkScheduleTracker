@@ -15,7 +15,7 @@ export function Layout({ children, className }: LayoutProps) {
 
 export function LayoutSidebar({ children, className }: LayoutProps) {
   return (
-    <aside className={cn("w-64 bg-white shadow-lg flex flex-col", className)}>
+      <aside className={cn("w-auto bg-white shadow-lg flex flex-col", className)}>
       {children}
     </aside>
   );
@@ -23,7 +23,7 @@ export function LayoutSidebar({ children, className }: LayoutProps) {
 
 export function LayoutMain({ children, className }: LayoutProps) {
   return (
-    <main className={cn("flex-1 flex flex-col overflow-hidden", className)}>
+      <main className={cn("flex-1 flex flex-col overflow-hidden px-4 pt-4", className)}>
       {children}
     </main>
   );
@@ -31,7 +31,7 @@ export function LayoutMain({ children, className }: LayoutProps) {
 
 export function LayoutHeader({ children, className }: LayoutProps) {
   return (
-    <header className={cn("bg-white shadow-sm border-b border-neutral-200 px-6 py-4", className)}>
+    <header className={cn("bg-white shadow-sm border-b border-neutral-200 px-4 py-4", className)}>
       {children}
     </header>
   );
@@ -39,7 +39,7 @@ export function LayoutHeader({ children, className }: LayoutProps) {
 
 export function LayoutContent({ children, className }: LayoutProps) {
   return (
-    <div className={cn("flex-1 p-6 overflow-auto", className)}>
+    <div className={cn("flex-1 p-4 overflow-auto", className)}>
       {children}
     </div>
   );

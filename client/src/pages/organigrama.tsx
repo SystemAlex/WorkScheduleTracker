@@ -49,7 +49,7 @@ export default function Organigrama() {
 
       <LayoutContent>
         {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Empleados</CardTitle>
@@ -94,7 +94,7 @@ export default function Organigrama() {
         <div className="space-y-8">
           {Object.entries(departments).map(([departmentName, deptPositions]) => (
             <div key={departmentName}>
-              <div className="flex items-center space-x-3 mb-6">
+              <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                   <Building className="w-5 h-5 text-white" />
                 </div>
@@ -107,7 +107,7 @@ export default function Organigrama() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ml-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ml-4">
                 {deptPositions.map((position) => {
                   const positionEmployees = getEmployeesForPosition(position.name);
                   

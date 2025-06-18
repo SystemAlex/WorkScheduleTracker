@@ -106,7 +106,7 @@ export default function Shifts() {
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
               Tipos de Turno ({shiftTypes.length})
@@ -121,7 +121,7 @@ export default function Shifts() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {shiftTypes.map((shiftType) => {
             const color = getShiftColor(shiftType.code);
             return (

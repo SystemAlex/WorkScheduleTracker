@@ -42,7 +42,7 @@ export function QuickPanel({
   return (
     <>
       {/* Panel Header */}
-      <div className="p-6 border-b border-neutral-200">
+      <div className="p-4 border-b border-neutral-200">
         <h3 className="text-lg font-semibold text-neutral-900">Panel Rápido</h3>
         <p className="text-sm text-neutral-500 mt-1">
           {selectedDate ? "Información del día seleccionado" : "Selecciona un día"}
@@ -51,7 +51,7 @@ export function QuickPanel({
 
       {/* Selected Day Info */}
       {selectedDate && (
-        <div className="p-6 border-b border-neutral-200">
+        <div className="p-4 border-b border-neutral-200">
           <div className="text-center">
             <div className="text-3xl font-bold text-primary">{selectedDate.getDate()}</div>
             <div className="text-sm text-neutral-500">
@@ -65,7 +65,7 @@ export function QuickPanel({
       )}
 
       {/* Today Shifts */}
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="flex-1 p-4 overflow-auto">
         {selectedDate && (
           <>
             <h4 className="text-sm font-semibold text-neutral-700 uppercase tracking-wide mb-4">
@@ -173,7 +173,7 @@ export function QuickPanel({
             </div>
 
             {/* Quick Actions */}
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-3">
               <Button 
                 onClick={onAddShift} 
                 className="w-full bg-primary hover:bg-blue-700"
