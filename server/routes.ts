@@ -11,6 +11,17 @@ import { z } from 'zod';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Employees routes
+
+  /**
+   * @openapi
+   * /api/employees:
+   *   get:
+   *     summary: Obtiene todos los empleados
+   *     tags: [Employees]
+   *     responses:
+   *       200:
+   *         description: Lista de empleados
+   */
   app.get('/api/employees', async (req, res) => {
     try {
       const employees = await storage.getEmployees();
@@ -21,6 +32,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/employees:
+   *   post:
+   *     summary: Crea un nuevo empleado
+   *     tags: [Employees]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       201:
+   *         description: Empleado creado
+   *       400:
+   *         description: Datos inválidos
+   */
   app.post('/api/employees', async (req, res) => {
     try {
       const validatedData = insertEmployeeSchema.parse(req.body);
@@ -35,6 +64,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/employees/{id}:
+   *   put:
+   *     summary: Actualiza un empleado existente
+   *     tags: [Employees]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       200:
+   *         description: Empleado actualizado
+   *       400:
+   *         description: Datos inválidos
+   *       500:
+   *         description: Error interno
+   */
   app.put('/api/employees/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -50,6 +105,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/employees/{id}:
+   *   delete:
+   *     summary: Elimina un empleado
+   *     tags: [Employees]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       204:
+   *         description: Empleado eliminado
+   *       500:
+   *         description: Error interno
+   */
   app.delete('/api/employees/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -61,6 +134,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Positions routes
+
+  /**
+   * @openapi
+   * /api/positions:
+   *   get:
+   *     summary: Obtiene todos los puestos
+   *     tags: [Positions]
+   *     responses:
+   *       200:
+   *         description: Lista de puestos
+   */
   app.get('/api/positions', async (req, res) => {
     try {
       const positions = await storage.getPositions();
@@ -70,6 +154,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/positions:
+   *   post:
+   *     summary: Crea un nuevo puesto
+   *     tags: [Positions]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       201:
+   *         description: Puesto creado
+   *       400:
+   *         description: Datos inválidos
+   */
   app.post('/api/positions', async (req, res) => {
     try {
       const validatedData = insertPositionSchema.parse(req.body);
@@ -85,6 +187,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Shift Types routes
+
+  /**
+   * @openapi
+   * /api/shift-types:
+   *   get:
+   *     summary: Obtiene todos los tipos de turno
+   *     tags: [ShiftTypes]
+   *     responses:
+   *       200:
+   *         description: Lista de tipos de turno
+   */
   app.get('/api/shift-types', async (req, res) => {
     try {
       const shiftTypes = await storage.getShiftTypes();
@@ -94,6 +207,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/shift-types:
+   *   post:
+   *     summary: Crea un nuevo tipo de turno
+   *     tags: [ShiftTypes]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       201:
+   *         description: Tipo de turno creado
+   *       400:
+   *         description: Datos inválidos
+   */
   app.post('/api/shift-types', async (req, res) => {
     try {
       const validatedData = insertShiftTypeSchema.parse(req.body);
@@ -109,6 +240,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Shifts routes
+
+  /**
+   * @openapi
+   * /api/shifts:
+   *   get:
+   *     summary: Obtiene todos los turnos o por mes/año
+   *     tags: [Shifts]
+   *     parameters:
+   *       - in: query
+   *         name: month
+   *         schema:
+   *           type: integer
+   *       - in: query
+   *         name: year
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       200:
+   *         description: Lista de turnos
+   */
   app.get('/api/shifts', async (req, res) => {
     try {
       const { month, year } = req.query;
@@ -129,6 +280,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/shifts/date/{date}:
+   *   get:
+   *     summary: Obtiene los turnos por fecha
+   *     tags: [Shifts]
+   *     parameters:
+   *       - in: path
+   *         name: date
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Lista de turnos para la fecha
+   */
   app.get('/api/shifts/date/:date', async (req, res) => {
     try {
       const { date } = req.params;
@@ -139,6 +306,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/shifts:
+   *   post:
+   *     summary: Crea un nuevo turno
+   *     tags: [Shifts]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       201:
+   *         description: Turno creado
+   *       400:
+   *         description: Datos inválidos
+   *       409:
+   *         description: Conflicto de turno
+   */
   app.post('/api/shifts', async (req, res) => {
     try {
       const validatedData = insertShiftSchema.parse(req.body);
@@ -167,6 +354,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/shifts/{id}:
+   *   delete:
+   *     summary: Elimina un turno
+   *     tags: [Shifts]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       204:
+   *         description: Turno eliminado
+   */
   app.delete('/api/shifts/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -178,6 +381,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reports routes
+
+  /**
+   * @openapi
+   * /api/reports/employee-hours:
+   *   get:
+   *     summary: Obtiene el reporte de horas trabajadas por empleado
+   *     tags: [Reports]
+   *     parameters:
+   *       - in: query
+   *         name: month
+   *         schema:
+   *           type: integer
+   *       - in: query
+   *         name: year
+   *         schema:
+   *           type: integer
+   *       - in: query
+   *         name: employeeId
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       200:
+   *         description: Reporte generado
+   */
   app.get('/api/reports/employee-hours', async (req, res) => {
     try {
       const { month, year, employeeId } = req.query;

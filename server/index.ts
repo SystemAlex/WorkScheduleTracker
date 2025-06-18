@@ -1,10 +1,35 @@
 import express, { type Request, Response, NextFunction } from 'express';
 import { registerRoutes } from './routes';
 import { setupVite, serveStatic, log } from './vite';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configuración de Swagger
+const swaggerDefinition = {
+  openapi: '3.0.0',
+  info: {
+    title: 'WorkScheduleTracker API',
+    version: '1.0.0',
+    description: 'Documentación de la API de WorkScheduleTracker',
+  },
+  servers: [
+    {
+      url: 'http://localhost:5000',
+    },
+  ],
+};
+
+const swaggerOptions = {
+  swaggerDefinition,
+  apis: ['./server/routes.ts'], // Cambia la ruta si tus rutas están en otro archivo
+};
+
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use((req, res, next) => {
   const start = Date.now();
