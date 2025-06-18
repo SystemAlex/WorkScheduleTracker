@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import * as React from 'react';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -16,23 +17,28 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { insertShiftSchema } from "@shared/schema";
-import type { Employee, Position, ShiftType, ShiftWithDetails } from "@shared/schema";
-import { formatDate, getShiftColor } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { insertShiftSchema } from '@shared/schema';
+import type {
+  Employee,
+  Position,
+  ShiftType,
+  ShiftWithDetails,
+} from '@shared/schema';
+import { formatDate, getShiftColor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 const formSchema = insertShiftSchema.extend({
-  date: z.string().min(1, "La fecha es requerida"),
+  date: z.string().min(1, 'La fecha es requerida'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -60,7 +66,9 @@ export function ShiftModal({
   onSubmit,
   isLoading = false,
 }: ShiftModalProps) {
-  const [selectedShiftType, setSelectedShiftType] = useState<number | null>(null);
+  const [selectedShiftType, setSelectedShiftType] = useState<number | null>(
+    null,
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,8 +76,8 @@ export function ShiftModal({
       employeeId: 0,
       positionId: 0,
       shiftTypeId: 0,
-      date: selectedDate ? formatDate(selectedDate) : "",
-      notes: "",
+      date: selectedDate ? formatDate(selectedDate) : '',
+      notes: '',
     },
   });
 
@@ -80,7 +88,7 @@ export function ShiftModal({
         positionId: editingShift.positionId,
         shiftTypeId: editingShift.shiftTypeId,
         date: editingShift.date,
-        notes: editingShift.notes || "",
+        notes: editingShift.notes || '',
       });
       setSelectedShiftType(editingShift.shiftTypeId);
     } else if (selectedDate) {
@@ -89,7 +97,7 @@ export function ShiftModal({
         positionId: 0,
         shiftTypeId: 0,
         date: formatDate(selectedDate),
-        notes: "",
+        notes: '',
       });
       setSelectedShiftType(null);
     }
@@ -110,12 +118,15 @@ export function ShiftModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {editingShift ? "Editar Turno" : "Asignar Nuevo Turno"}
+            {editingShift ? 'Editar Turno' : 'Asignar Nuevo Turno'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             {/* Employee Selection */}
             <FormField
               control={form.control}
@@ -123,9 +134,9 @@ export function ShiftModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Empleado</FormLabel>
-                  <Select 
+                  <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
-                    value={field.value ? field.value.toString() : ""}
+                    value={field.value ? field.value.toString() : ''}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -134,10 +145,10 @@ export function ShiftModal({
                     </FormControl>
                     <SelectContent>
                       {employees
-                        .filter(emp => emp.status === 'active')
+                        .filter((emp) => emp.status === 'active')
                         .map((employee) => (
-                          <SelectItem 
-                            key={employee.id} 
+                          <SelectItem
+                            key={employee.id}
                             value={employee.id.toString()}
                           >
                             {employee.name}
@@ -157,9 +168,9 @@ export function ShiftModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Puesto</FormLabel>
-                  <Select 
+                  <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
-                    value={field.value ? field.value.toString() : ""}
+                    value={field.value ? field.value.toString() : ''}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -168,8 +179,8 @@ export function ShiftModal({
                     </FormControl>
                     <SelectContent>
                       {positions.map((position) => (
-                        <SelectItem 
-                          key={position.id} 
+                        <SelectItem
+                          key={position.id}
                           value={position.id.toString()}
                         >
                           {position.name}
@@ -193,7 +204,7 @@ export function ShiftModal({
                     {shiftTypes.map((shiftType) => {
                       const color = getShiftColor(shiftType.code);
                       const isSelected = selectedShiftType === shiftType.id;
-                      
+
                       return (
                         <button
                           key={shiftType.id}
@@ -203,22 +214,30 @@ export function ShiftModal({
                             setSelectedShiftType(shiftType.id);
                           }}
                           className={cn(
-                            "p-3 border-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2",
-                            isSelected ? [
-                              color === 'blue' && "border-blue-200 bg-blue-50 text-blue-800",
-                              color === 'green' && "border-green-200 bg-green-50 text-green-800",
-                              color === 'orange' && "border-orange-200 bg-orange-50 text-orange-800",
-                              color === 'purple' && "border-purple-200 bg-purple-50 text-purple-800",
-                            ] : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+                            'p-3 border-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2',
+                            isSelected
+                              ? [
+                                  color === 'blue' &&
+                                    'border-blue-200 bg-blue-50 text-blue-800',
+                                  color === 'green' &&
+                                    'border-green-200 bg-green-50 text-green-800',
+                                  color === 'orange' &&
+                                    'border-orange-200 bg-orange-50 text-orange-800',
+                                  color === 'purple' &&
+                                    'border-purple-200 bg-purple-50 text-purple-800',
+                                ]
+                              : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50',
                           )}
                         >
-                          <div className={cn(
-                            "w-3 h-3 rounded-full",
-                            color === 'blue' && "bg-blue-500",
-                            color === 'green' && "bg-green-500",
-                            color === 'orange' && "bg-orange-500",
-                            color === 'purple' && "bg-purple-500"
-                          )} />
+                          <div
+                            className={cn(
+                              'w-3 h-3 rounded-full',
+                              color === 'blue' && 'bg-blue-500',
+                              color === 'green' && 'bg-green-500',
+                              color === 'orange' && 'bg-orange-500',
+                              color === 'purple' && 'bg-purple-500',
+                            )}
+                          />
                           <div className="text-left">
                             <div>{shiftType.name}</div>
                             <div className="text-xs opacity-75">
@@ -257,9 +276,9 @@ export function ShiftModal({
                 <FormItem>
                   <FormLabel>Notas (opcional)</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder="Notas adicionales sobre el turno..."
-                      value={field.value || ""}
+                      value={field.value || ''}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
                       name={field.name}
@@ -281,7 +300,11 @@ export function ShiftModal({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Guardando..." : editingShift ? "Actualizar" : "Asignar Turno"}
+                {isLoading
+                  ? 'Guardando...'
+                  : editingShift
+                    ? 'Actualizar'
+                    : 'Asignar Turno'}
               </Button>
             </div>
           </form>

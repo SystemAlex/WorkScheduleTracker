@@ -1,16 +1,25 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit3, Trash2, User, Mail, Phone, Briefcase } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import * as React from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  Edit3,
+  Trash2,
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -18,100 +27,100 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Header } from "@/components/layout/header";
-import { LayoutContent } from "@/components/ui/layout";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertEmployeeSchema } from "@shared/schema";
-import type { Employee, InsertEmployee } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { z } from "zod";
+} from '@/components/ui/select';
+import { Header } from '@/components/layout/header';
+import { LayoutContent } from '@/components/ui/layout';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { insertEmployeeSchema } from '@shared/schema';
+import type { Employee, InsertEmployee } from '@shared/schema';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { z } from 'zod';
 
 const formSchema = insertEmployeeSchema;
 
 export default function Employees() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee>();
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: employees = [], isLoading } = useQuery<Employee[]>({
-    queryKey: ["/api/employees"],
+    queryKey: ['/api/employees'],
   });
 
   const createEmployeeMutation = useMutation({
     mutationFn: async (data: InsertEmployee) => {
-      const response = await apiRequest("POST", "/api/employees", data);
+      const response = await apiRequest('POST', '/api/employees', data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
       setModalOpen(false);
       setEditingEmployee(undefined);
       toast({
-        title: "Empleado creado",
-        description: "El empleado ha sido creado correctamente.",
+        title: 'Empleado creado',
+        description: 'El empleado ha sido creado correctamente.',
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "No se pudo crear el empleado.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo crear el empleado.',
+        variant: 'destructive',
       });
     },
   });
 
   const updateEmployeeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertEmployee }) => {
-      const response = await apiRequest("PUT", `/api/employees/${id}`, data);
+      const response = await apiRequest('PUT', `/api/employees/${id}`, data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
       setModalOpen(false);
       setEditingEmployee(undefined);
       toast({
-        title: "Empleado actualizado",
-        description: "El empleado ha sido actualizado correctamente.",
+        title: 'Empleado actualizado',
+        description: 'El empleado ha sido actualizado correctamente.',
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "No se pudo actualizar el empleado.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo actualizar el empleado.',
+        variant: 'destructive',
       });
     },
   });
 
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/employees/${id}`);
+      await apiRequest('DELETE', `/api/employees/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
       toast({
-        title: "Empleado eliminado",
-        description: "El empleado ha sido eliminado correctamente.",
+        title: 'Empleado eliminado',
+        description: 'El empleado ha sido eliminado correctamente.',
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "No se pudo eliminar el empleado.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo eliminar el empleado.',
+        variant: 'destructive',
       });
     },
   });
@@ -119,11 +128,11 @@ export default function Employees() {
   const form = useForm<InsertEmployee>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      position: "",
-      status: "active",
+      name: '',
+      email: '',
+      phone: '',
+      position: '',
+      status: 'active',
     },
   });
 
@@ -139,9 +148,9 @@ export default function Employees() {
     setEditingEmployee(employee);
     form.reset({
       name: employee.name,
-      email: employee.email || "",
-      phone: employee.phone || "",
-      position: employee.position || "",
+      email: employee.email || '',
+      phone: employee.phone || '',
+      position: employee.position || '',
       status: employee.status,
     });
     setModalOpen(true);
@@ -150,17 +159,17 @@ export default function Employees() {
   const handleAdd = () => {
     setEditingEmployee(undefined);
     form.reset({
-      name: "",
-      email: "",
-      phone: "",
-      position: "",
-      status: "active",
+      name: '',
+      email: '',
+      phone: '',
+      position: '',
+      status: 'active',
     });
     setModalOpen(true);
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("¿Estás seguro de que quieres eliminar este empleado?")) {
+    if (confirm('¿Estás seguro de que quieres eliminar este empleado?')) {
       deleteEmployeeMutation.mutate(id);
     }
   };
@@ -210,7 +219,11 @@ export default function Employees() {
                     </div>
                     <div>
                       <CardTitle className="text-lg">{employee.name}</CardTitle>
-                      <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          employee.status === 'active' ? 'default' : 'secondary'
+                        }
+                      >
                         {employee.status === 'active' ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </div>
@@ -280,12 +293,15 @@ export default function Employees() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingEmployee ? "Editar Empleado" : "Agregar Empleado"}
+              {editingEmployee ? 'Editar Empleado' : 'Agregar Empleado'}
             </DialogTitle>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -293,7 +309,10 @@ export default function Employees() {
                   <FormItem>
                     <FormLabel>Nombre completo</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ingresa el nombre completo" {...field} />
+                      <Input
+                        placeholder="Ingresa el nombre completo"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -307,7 +326,11 @@ export default function Employees() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="email@ejemplo.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="email@ejemplo.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -372,11 +395,14 @@ export default function Employees() {
                 >
                   Cancelar
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createEmployeeMutation.isPending || updateEmployeeMutation.isPending}
+                <Button
+                  type="submit"
+                  disabled={
+                    createEmployeeMutation.isPending ||
+                    updateEmployeeMutation.isPending
+                  }
                 >
-                  {editingEmployee ? "Actualizar" : "Crear"}
+                  {editingEmployee ? 'Actualizar' : 'Crear'}
                 </Button>
               </div>
             </form>

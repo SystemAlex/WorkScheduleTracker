@@ -1,19 +1,20 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import * as React from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Header } from "@/components/layout/header";
-import { LayoutContent } from "@/components/ui/layout";
-import { BarChart3, Clock, Users, Download } from "lucide-react";
-import type { Employee } from "@shared/schema";
-import { getMonthName } from "@/lib/utils";
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Header } from '@/components/layout/header';
+import { LayoutContent } from '@/components/ui/layout';
+import { BarChart3, Clock, Users, Download } from 'lucide-react';
+import type { Employee } from '@shared/schema';
+import { getMonthName } from '@/lib/utils';
 
 interface EmployeeHoursReport {
   employeeId: number;
@@ -34,23 +35,28 @@ export default function Reports() {
   const [selectedEmployee, setSelectedEmployee] = useState<number>();
 
   const { data: employees = [] } = useQuery<Employee[]>({
-    queryKey: ["/api/employees"],
+    queryKey: ['/api/employees'],
   });
 
   const { data: report = [], isLoading } = useQuery<EmployeeHoursReport[]>({
-    queryKey: ["/api/reports/employee-hours", selectedMonth, selectedYear, selectedEmployee],
+    queryKey: [
+      '/api/reports/employee-hours',
+      selectedMonth,
+      selectedYear,
+      selectedEmployee,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams({
         month: selectedMonth.toString(),
         year: selectedYear.toString(),
       });
-      
+
       if (selectedEmployee) {
         params.append('employeeId', selectedEmployee.toString());
       }
 
       const response = await fetch(`/api/reports/employee-hours?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch report");
+      if (!response.ok) throw new Error('Failed to fetch report');
       return response.json();
     },
   });
@@ -98,13 +104,19 @@ export default function Reports() {
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Mes
                 </label>
-                <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
+                <Select
+                  value={selectedMonth.toString()}
+                  onValueChange={(value) => setSelectedMonth(parseInt(value))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value.toString()}>
+                      <SelectItem
+                        key={month.value}
+                        value={month.value.toString()}
+                      >
                         {month.label}
                       </SelectItem>
                     ))}
@@ -116,13 +128,19 @@ export default function Reports() {
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Año
                 </label>
-                <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+                <Select
+                  value={selectedYear.toString()}
+                  onValueChange={(value) => setSelectedYear(parseInt(value))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {years.map((year) => (
-                      <SelectItem key={year.value} value={year.value.toString()}>
+                      <SelectItem
+                        key={year.value}
+                        value={year.value.toString()}
+                      >
                         {year.label}
                       </SelectItem>
                     ))}
@@ -134,14 +152,22 @@ export default function Reports() {
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Empleado (opcional)
                 </label>
-                <Select value={selectedEmployee?.toString() || ""} onValueChange={(value) => setSelectedEmployee(value ? parseInt(value) : undefined)}>
+                <Select
+                  value={selectedEmployee?.toString() || ''}
+                  onValueChange={(value) =>
+                    setSelectedEmployee(value ? parseInt(value) : undefined)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Todos los empleados" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Todos los empleados</SelectItem>
                     {employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id.toString()}>
+                      <SelectItem
+                        key={employee.id}
+                        value={employee.id.toString()}
+                      >
                         {employee.name}
                       </SelectItem>
                     ))}
@@ -169,36 +195,37 @@ export default function Reports() {
             <CardContent>
               <div className="text-2xl font-bold">{totalHours}</div>
               <p className="text-xs text-muted-foreground">
-                horas trabajadas en {getMonthName(selectedMonth - 1)} {selectedYear}
+                horas trabajadas en {getMonthName(selectedMonth - 1)}{' '}
+                {selectedYear}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Turnos</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Turnos
+              </CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalShifts}</div>
-              <p className="text-xs text-muted-foreground">
-                turnos asignados
-              </p>
+              <p className="text-xs text-muted-foreground">turnos asignados</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Promedio por Empleado</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Promedio por Empleado
+              </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {report.length > 0 ? Math.round(totalHours / report.length) : 0}
               </div>
-              <p className="text-xs text-muted-foreground">
-                horas promedio
-              </p>
+              <p className="text-xs text-muted-foreground">horas promedio</p>
             </CardContent>
           </Card>
         </div>
@@ -224,23 +251,46 @@ export default function Reports() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-neutral-700">Empleado</th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">Total Horas</th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">Total Turnos</th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">Mañana</th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">Tarde</th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">Noche</th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">Especial</th>
+                      <th className="text-left py-3 px-4 font-medium text-neutral-700">
+                        Empleado
+                      </th>
+                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
+                        Total Horas
+                      </th>
+                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
+                        Total Turnos
+                      </th>
+                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
+                        Mañana
+                      </th>
+                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
+                        Tarde
+                      </th>
+                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
+                        Noche
+                      </th>
+                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
+                        Especial
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {report.map((employee) => (
-                      <tr key={employee.employeeId} className="border-b hover:bg-neutral-50">
+                      <tr
+                        key={employee.employeeId}
+                        className="border-b hover:bg-neutral-50"
+                      >
                         <td className="py-3 px-4">
-                          <div className="font-medium text-neutral-900">{employee.employeeName}</div>
+                          <div className="font-medium text-neutral-900">
+                            {employee.employeeName}
+                          </div>
                         </td>
-                        <td className="text-center py-3 px-4 font-semibold">{employee.totalHours}</td>
-                        <td className="text-center py-3 px-4">{employee.totalShifts}</td>
+                        <td className="text-center py-3 px-4 font-semibold">
+                          {employee.totalHours}
+                        </td>
+                        <td className="text-center py-3 px-4">
+                          {employee.totalShifts}
+                        </td>
                         <td className="text-center py-3 px-4">
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                             {employee.shiftBreakdown.morning}

@@ -1,14 +1,15 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit3, Trash2, Briefcase, Building } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import * as React from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Edit3, Trash2, Briefcase, Building } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -16,49 +17,49 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Header } from "@/components/layout/header";
-import { LayoutContent } from "@/components/ui/layout";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertPositionSchema } from "@shared/schema";
-import type { Position, InsertPosition } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Header } from '@/components/layout/header';
+import { LayoutContent } from '@/components/ui/layout';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { insertPositionSchema } from '@shared/schema';
+import type { Position, InsertPosition } from '@shared/schema';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function Positions() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPosition, setEditingPosition] = useState<Position>();
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: positions = [], isLoading } = useQuery<Position[]>({
-    queryKey: ["/api/positions"],
+    queryKey: ['/api/positions'],
   });
 
   const createPositionMutation = useMutation({
     mutationFn: async (data: InsertPosition) => {
-      const response = await apiRequest("POST", "/api/positions", data);
+      const response = await apiRequest('POST', '/api/positions', data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/positions"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/positions'] });
       setModalOpen(false);
       setEditingPosition(undefined);
       toast({
-        title: "Puesto creado",
-        description: "El puesto ha sido creado correctamente.",
+        title: 'Puesto creado',
+        description: 'El puesto ha sido creado correctamente.',
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "No se pudo crear el puesto.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo crear el puesto.',
+        variant: 'destructive',
       });
     },
   });
@@ -66,9 +67,9 @@ export default function Positions() {
   const form = useForm<InsertPosition>({
     resolver: zodResolver(insertPositionSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      department: "",
+      name: '',
+      description: '',
+      department: '',
     },
   });
 
@@ -79,10 +80,10 @@ export default function Positions() {
   const handleAdd = () => {
     setEditingPosition(undefined);
     form.reset({
-      name: "",
-      description: "",
-      department: "",
-      siglas: "",
+      name: '',
+      description: '',
+      department: '',
+      siglas: '',
     });
     setModalOpen(true);
   };
@@ -133,7 +134,9 @@ export default function Positions() {
                     <div>
                       <CardTitle className="text-lg">{position.name}</CardTitle>
                       <div className="mt-1">
-                        <Badge variant="outline" className="text-xs font-mono">{position.siglas}</Badge>
+                        <Badge variant="outline" className="text-xs font-mono">
+                          {position.siglas}
+                        </Badge>
                       </div>
                     </div>
                   </div>
@@ -148,7 +151,9 @@ export default function Positions() {
                     </div>
                   )}
                   {position.description && (
-                    <p className="text-sm text-neutral-600">{position.description}</p>
+                    <p className="text-sm text-neutral-600">
+                      {position.description}
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -180,7 +185,10 @@ export default function Positions() {
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -188,7 +196,10 @@ export default function Positions() {
                   <FormItem>
                     <FormLabel>Nombre del puesto</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej: Recepcionista, Seguridad, etc." {...field} />
+                      <Input
+                        placeholder="Ej: Recepcionista, Seguridad, etc."
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -202,7 +213,11 @@ export default function Positions() {
                   <FormItem>
                     <FormLabel>Siglas</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej: REC, SEG, ADM (máx 3 caracteres)" maxLength={3} {...field} />
+                      <Input
+                        placeholder="Ej: REC, SEG, ADM (máx 3 caracteres)"
+                        maxLength={3}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -216,7 +231,10 @@ export default function Positions() {
                   <FormItem>
                     <FormLabel>Departamento</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej: Administración, Operaciones, etc." {...field} />
+                      <Input
+                        placeholder="Ej: Administración, Operaciones, etc."
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -230,7 +248,7 @@ export default function Positions() {
                   <FormItem>
                     <FormLabel>Descripción</FormLabel>
                     <FormControl>
-                      <Textarea 
+                      <Textarea
                         placeholder="Describe las responsabilidades del puesto..."
                         {...field}
                       />
@@ -248,8 +266,13 @@ export default function Positions() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createPositionMutation.isPending}>
-                  {createPositionMutation.isPending ? "Creando..." : "Crear Puesto"}
+                <Button
+                  type="submit"
+                  disabled={createPositionMutation.isPending}
+                >
+                  {createPositionMutation.isPending
+                    ? 'Creando...'
+                    : 'Crear Puesto'}
                 </Button>
               </div>
             </form>

@@ -1,14 +1,15 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Clock, Palette } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import * as React from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Clock, Palette } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -16,47 +17,47 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Header } from "@/components/layout/header";
-import { LayoutContent } from "@/components/ui/layout";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertShiftTypeSchema } from "@shared/schema";
-import type { ShiftType, InsertShiftType } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { getShiftColor } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Header } from '@/components/layout/header';
+import { LayoutContent } from '@/components/ui/layout';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { insertShiftTypeSchema } from '@shared/schema';
+import type { ShiftType, InsertShiftType } from '@shared/schema';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { getShiftColor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function Shifts() {
   const [modalOpen, setModalOpen] = useState(false);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: shiftTypes = [], isLoading } = useQuery<ShiftType[]>({
-    queryKey: ["/api/shift-types"],
+    queryKey: ['/api/shift-types'],
   });
 
   const createShiftTypeMutation = useMutation({
     mutationFn: async (data: InsertShiftType) => {
-      const response = await apiRequest("POST", "/api/shift-types", data);
+      const response = await apiRequest('POST', '/api/shift-types', data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shift-types"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/shift-types'] });
       setModalOpen(false);
       toast({
-        title: "Tipo de turno creado",
-        description: "El tipo de turno ha sido creado correctamente.",
+        title: 'Tipo de turno creado',
+        description: 'El tipo de turno ha sido creado correctamente.',
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "No se pudo crear el tipo de turno.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo crear el tipo de turno.',
+        variant: 'destructive',
       });
     },
   });
@@ -64,11 +65,11 @@ export default function Shifts() {
   const form = useForm<InsertShiftType>({
     resolver: zodResolver(insertShiftTypeSchema),
     defaultValues: {
-      name: "",
-      code: "",
-      startTime: "",
-      endTime: "",
-      color: "#3B82F6",
+      name: '',
+      code: '',
+      startTime: '',
+      endTime: '',
+      color: '#3B82F6',
     },
   });
 
@@ -78,11 +79,11 @@ export default function Shifts() {
 
   const handleAdd = () => {
     form.reset({
-      name: "",
-      code: "",
-      startTime: "",
-      endTime: "",
-      color: "#3B82F6",
+      name: '',
+      code: '',
+      startTime: '',
+      endTime: '',
+      color: '#3B82F6',
     });
     setModalOpen(true);
   };
@@ -92,7 +93,9 @@ export default function Shifts() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-neutral-500 mt-2">Cargando tipos de turno...</p>
+          <p className="text-sm text-neutral-500 mt-2">
+            Cargando tipos de turno...
+          </p>
         </div>
       </div>
     );
@@ -129,31 +132,42 @@ export default function Shifts() {
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center",
-                        color === 'blue' && "bg-blue-100",
-                        color === 'green' && "bg-green-100",
-                        color === 'orange' && "bg-orange-100",
-                        color === 'purple' && "bg-purple-100"
-                      )}>
-                        <Clock className={cn(
-                          "w-5 h-5",
-                          color === 'blue' && "text-blue-600",
-                          color === 'green' && "text-green-600",
-                          color === 'orange' && "text-orange-600",
-                          color === 'purple' && "text-purple-600"
-                        )} />
+                      <div
+                        className={cn(
+                          'w-10 h-10 rounded-full flex items-center justify-center',
+                          color === 'blue' && 'bg-blue-100',
+                          color === 'green' && 'bg-green-100',
+                          color === 'orange' && 'bg-orange-100',
+                          color === 'purple' && 'bg-purple-100',
+                        )}
+                      >
+                        <Clock
+                          className={cn(
+                            'w-5 h-5',
+                            color === 'blue' && 'text-blue-600',
+                            color === 'green' && 'text-green-600',
+                            color === 'orange' && 'text-orange-600',
+                            color === 'purple' && 'text-purple-600',
+                          )}
+                        />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{shiftType.name}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {shiftType.name}
+                        </CardTitle>
                         <div className="flex items-center space-x-2">
-                          <span className={cn(
-                            "text-xs px-2 py-1 rounded-full font-medium",
-                            color === 'blue' && "bg-blue-100 text-blue-800",
-                            color === 'green' && "bg-green-100 text-green-800",
-                            color === 'orange' && "bg-orange-100 text-orange-800",
-                            color === 'purple' && "bg-purple-100 text-purple-800"
-                          )}>
+                          <span
+                            className={cn(
+                              'text-xs px-2 py-1 rounded-full font-medium',
+                              color === 'blue' && 'bg-blue-100 text-blue-800',
+                              color === 'green' &&
+                                'bg-green-100 text-green-800',
+                              color === 'orange' &&
+                                'bg-orange-100 text-orange-800',
+                              color === 'purple' &&
+                                'bg-purple-100 text-purple-800',
+                            )}
+                          >
                             {shiftType.code}
                           </span>
                         </div>
@@ -172,11 +186,13 @@ export default function Shifts() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-neutral-600">Color:</span>
                       <div className="flex items-center space-x-2">
-                        <div 
+                        <div
                           className="w-4 h-4 rounded-full border"
                           style={{ backgroundColor: shiftType.color }}
                         />
-                        <span className="text-xs text-neutral-500">{shiftType.color}</span>
+                        <span className="text-xs text-neutral-500">
+                          {shiftType.color}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -210,7 +226,10 @@ export default function Shifts() {
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -232,10 +251,10 @@ export default function Shifts() {
                   <FormItem>
                     <FormLabel>Código</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Ej: M, T, N, E" 
+                      <Input
+                        placeholder="Ej: M, T, N, E"
                         maxLength={2}
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -281,9 +300,13 @@ export default function Shifts() {
                     <FormLabel>Color</FormLabel>
                     <FormControl>
                       <div className="flex items-center space-x-3">
-                        <Input type="color" className="w-16 h-10 p-1" {...field} />
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="color"
+                          className="w-16 h-10 p-1"
+                          {...field}
+                        />
+                        <Input
+                          type="text"
                           placeholder="#3B82F6"
                           className="flex-1"
                           {...field}
@@ -303,8 +326,13 @@ export default function Shifts() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createShiftTypeMutation.isPending}>
-                  {createShiftTypeMutation.isPending ? "Creando..." : "Crear Tipo"}
+                <Button
+                  type="submit"
+                  disabled={createShiftTypeMutation.isPending}
+                >
+                  {createShiftTypeMutation.isPending
+                    ? 'Creando...'
+                    : 'Crear Tipo'}
                 </Button>
               </div>
             </form>

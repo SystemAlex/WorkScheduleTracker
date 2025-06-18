@@ -1,45 +1,60 @@
-import { pgTable, text, serial, integer, boolean, timestamp, time, date } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+  time,
+  date,
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
-export const employees = pgTable("employees", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").unique(),
-  phone: text("phone"),
-  position: text("position"),
-  status: text("status").notNull().default("active"), // active, inactive
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const employees = pgTable('employees', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').unique(),
+  phone: text('phone'),
+  position: text('position'),
+  status: text('status').notNull().default('active'), // active, inactive
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const positions = pgTable("positions", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  description: text("description"),
-  department: text("department"),
-  siglas: text("siglas").notNull(), // Siglas para mostrar en el calendario
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const positions = pgTable('positions', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  department: text('department'),
+  siglas: text('siglas').notNull(), // Siglas para mostrar en el calendario
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const shiftTypes = pgTable("shift_types", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  code: text("code").notNull().unique(), // M, T, N, E
-  startTime: time("start_time").notNull(),
-  endTime: time("end_time").notNull(),
-  color: text("color").notNull(), // hex color code
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const shiftTypes = pgTable('shift_types', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  code: text('code').notNull().unique(), // M, T, N, E
+  startTime: time('start_time').notNull(),
+  endTime: time('end_time').notNull(),
+  color: text('color').notNull(), // hex color code
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const shifts = pgTable("shifts", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").notNull().references(() => employees.id),
-  positionId: integer("position_id").notNull().references(() => positions.id),
-  shiftTypeId: integer("shift_type_id").notNull().references(() => shiftTypes.id),
-  date: date("date").notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const shifts = pgTable('shifts', {
+  id: serial('id').primaryKey(),
+  employeeId: integer('employee_id')
+    .notNull()
+    .references(() => employees.id),
+  positionId: integer('position_id')
+    .notNull()
+    .references(() => positions.id),
+  shiftTypeId: integer('shift_type_id')
+    .notNull()
+    .references(() => shiftTypes.id),
+  date: date('date').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 // Relations

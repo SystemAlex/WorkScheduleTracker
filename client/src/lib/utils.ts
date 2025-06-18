@@ -1,5 +1,5 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,8 +15,18 @@ export function formatTime(time: string): string {
 
 export function getMonthName(month: number): string {
   const months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
   return months[month];
 }
@@ -30,15 +40,15 @@ export function getWeekRange(date: Date): string {
   const startOfWeek = new Date(date);
   const dayOfWeek = startOfWeek.getDay();
   startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
-  
+
   const endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(endOfWeek.getDate() + 6);
-  
+
   const startDay = startOfWeek.getDate();
   const endDay = endOfWeek.getDate();
   const startMonth = getMonthName(startOfWeek.getMonth());
   const endMonth = getMonthName(endOfWeek.getMonth());
-  
+
   if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
     return `${startDay} - ${endDay} ${startMonth} ${startOfWeek.getFullYear()}`;
   } else {
@@ -51,7 +61,7 @@ export function getDayDisplay(date: Date): string {
   const day = date.getDate();
   const month = getMonthName(date.getMonth());
   const year = date.getFullYear();
-  
+
   return `${dayName} ${day} ${month} ${year}`;
 }
 
@@ -60,10 +70,10 @@ export function generateCalendarDays(year: number, month: number) {
   const lastDay = new Date(year, month + 1, 0);
   const startDate = new Date(firstDay);
   startDate.setDate(startDate.getDate() - firstDay.getDay());
-  
+
   const days = [];
   const current = new Date(startDate);
-  
+
   // Generate 6 weeks (42 days) for consistent calendar grid
   for (let i = 0; i < 42; i++) {
     days.push({
@@ -73,16 +83,21 @@ export function generateCalendarDays(year: number, month: number) {
     });
     current.setDate(current.getDate() + 1);
   }
-  
+
   return days;
 }
 
 export function getShiftColor(shiftTypeCode: string): string {
   switch (shiftTypeCode) {
-    case 'M': return 'blue';
-    case 'T': return 'green';
-    case 'N': return 'orange';
-    case 'E': return 'purple';
-    default: return 'gray';
+    case 'M':
+      return 'blue';
+    case 'T':
+      return 'green';
+    case 'N':
+      return 'orange';
+    case 'E':
+      return 'purple';
+    default:
+      return 'gray';
   }
 }
