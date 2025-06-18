@@ -26,6 +26,35 @@ export function getDayName(dayOfWeek: number): string {
   return days[dayOfWeek];
 }
 
+export function getWeekRange(date: Date): string {
+  const startOfWeek = new Date(date);
+  const dayOfWeek = startOfWeek.getDay();
+  startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+  
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+  
+  const startDay = startOfWeek.getDate();
+  const endDay = endOfWeek.getDate();
+  const startMonth = getMonthName(startOfWeek.getMonth());
+  const endMonth = getMonthName(endOfWeek.getMonth());
+  
+  if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
+    return `${startDay} - ${endDay} ${startMonth} ${startOfWeek.getFullYear()}`;
+  } else {
+    return `${startDay} ${startMonth} - ${endDay} ${endMonth} ${startOfWeek.getFullYear()}`;
+  }
+}
+
+export function getDayDisplay(date: Date): string {
+  const dayName = getDayName(date.getDay());
+  const day = date.getDate();
+  const month = getMonthName(date.getMonth());
+  const year = date.getFullYear();
+  
+  return `${dayName} ${day} ${month} ${year}`;
+}
+
 export function generateCalendarDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);

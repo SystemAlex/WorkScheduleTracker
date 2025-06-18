@@ -93,11 +93,31 @@ export default function Calendar() {
 
   // Event handlers
   const handlePreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)));
+    const newDate = new Date(currentDate);
+    
+    if (viewMode === "day") {
+      newDate.setDate(newDate.getDate() - 1);
+    } else if (viewMode === "week") {
+      newDate.setDate(newDate.getDate() - 7);
+    } else {
+      newDate.setMonth(newDate.getMonth() - 1);
+    }
+    
+    setCurrentDate(newDate);
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)));
+    const newDate = new Date(currentDate);
+    
+    if (viewMode === "day") {
+      newDate.setDate(newDate.getDate() + 1);
+    } else if (viewMode === "week") {
+      newDate.setDate(newDate.getDate() + 7);
+    } else {
+      newDate.setMonth(newDate.getMonth() + 1);
+    }
+    
+    setCurrentDate(newDate);
   };
 
   const handleDateSelect = (date: Date) => {
@@ -169,6 +189,7 @@ export default function Calendar() {
             selectedDate={selectedDate}
             onDateSelect={handleEmployeeDateSelect}
             onAddShift={handleEmployeeAddShift}
+            viewMode={viewMode}
           />
         </LayoutContent>
       </div>

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
 import { LayoutContent } from "@/components/ui/layout";
 import { useForm } from "react-hook-form";
@@ -81,6 +82,7 @@ export default function Positions() {
       name: "",
       description: "",
       department: "",
+      siglas: "",
     });
     setModalOpen(true);
   };
@@ -130,6 +132,9 @@ export default function Positions() {
                     </div>
                     <div>
                       <CardTitle className="text-lg">{position.name}</CardTitle>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="text-xs font-mono">{position.siglas}</Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -184,6 +189,20 @@ export default function Positions() {
                     <FormLabel>Nombre del puesto</FormLabel>
                     <FormControl>
                       <Input placeholder="Ej: Recepcionista, Seguridad, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="siglas"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Siglas</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: REC, SEG, ADM (máx 3 caracteres)" maxLength={3} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -18,6 +18,7 @@ export const positions = pgTable("positions", {
   name: text("name").notNull().unique(),
   description: text("description"),
   department: text("department"),
+  siglas: text("siglas").notNull(), // Siglas para mostrar en el calendario
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

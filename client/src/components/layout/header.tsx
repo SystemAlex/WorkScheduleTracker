@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getMonthName } from "@/lib/utils";
+import { getMonthName, getWeekRange, getDayDisplay } from "@/lib/utils";
 
 interface HeaderProps {
   title: string;
@@ -42,8 +42,10 @@ export function Header({
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-lg font-semibold text-neutral-900 min-w-[140px] text-center">
-              {getMonthName(currentDate.getMonth())} {currentDate.getFullYear()}
+            <span className="text-lg font-semibold text-neutral-900 min-w-[200px] text-center">
+              {viewMode === "month" && `${getMonthName(currentDate.getMonth())} ${currentDate.getFullYear()}`}
+              {viewMode === "week" && getWeekRange(currentDate)}
+              {viewMode === "day" && getDayDisplay(currentDate)}
             </span>
             <Button
               variant="ghost"

@@ -39,7 +39,7 @@ function SidebarLink({ href, icon, children, isActive, isCollapsed }: SidebarLin
 
 export function Sidebar() {
   const [location] = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const navigation = [
     { href: "/", icon: <Calendar className="w-5 h-5" />, label: "Calendario" },
