@@ -14,7 +14,7 @@ import {
   type ShiftWithDetails,
 } from '@shared/schema';
 import { db } from './db';
-import { eq, and, gte, lte } from 'drizzle-orm';
+import { eq, and, gte, lte, ne, asc } from 'drizzle-orm';
 
 export interface IStorage {
   // Employees
@@ -54,7 +54,7 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // Employees
   async getEmployees(): Promise<Employee[]> {
-    return await db.select().from(employees);
+    return await db.select().from(employees).orderBy(asc(employees.name));
   }
 
   async getEmployee(id: number): Promise<Employee | undefined> {
@@ -265,7 +265,18 @@ export class DatabaseStorage implements IStorage {
   async checkShiftConflicts(
     employeeId: number,
     date: string,
+    excludeShiftId?: number,
   ): Promise<ShiftWithDetails[]> {
+    const whereConditions = [
+      eq(shifts.employeeId, employeeId),
+      eq(shifts.date, date)
+    ];
+
+    // Exclude current shift when updating
+    if (excludeShiftId) {
+      whereConditions.push(ne(shifts.id, excludeShiftId));
+    }
+
     const results = await db
       .select({
         id: shifts.id,
@@ -283,7 +294,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(employees, eq(shifts.employeeId, employees.id))
       .leftJoin(positions, eq(shifts.positionId, positions.id))
       .leftJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
-      .where(and(eq(shifts.employeeId, employeeId), eq(shifts.date, date)));
+      .where(and(...whereConditions));
 
     return results.map((row) => ({
       id: row.id,

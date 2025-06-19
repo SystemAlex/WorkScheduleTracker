@@ -14,6 +14,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface SidebarLinkProps {
   href: string;
@@ -30,7 +36,7 @@ function SidebarLink({
   isActive,
   isCollapsed,
 }: SidebarLinkProps) {
-  return (
+  const linkContent = (
     <Link
       href={href}
       className={cn(
@@ -45,6 +51,21 @@ function SidebarLink({
       {!isCollapsed && <span>{children}</span>}
     </Link>
   );
+
+  if (isCollapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {linkContent}
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>{children}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return linkContent;
 }
 
 export function Sidebar() {
@@ -118,17 +139,19 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1">
-        {navigation.map((item) => (
-          <SidebarLink
-            key={item.href}
-            href={item.href}
-            icon={item.icon}
-            isActive={location === item.href}
-            isCollapsed={isCollapsed}
-          >
-            {item.label}
-          </SidebarLink>
-        ))}
+        <TooltipProvider>
+          {navigation.map((item) => (
+            <SidebarLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              isActive={location === item.href}
+              isCollapsed={isCollapsed}
+            >
+              {item.label}
+            </SidebarLink>
+          ))}
+        </TooltipProvider>
       </nav>
 
       {/* User Profile */}

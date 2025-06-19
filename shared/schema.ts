@@ -15,7 +15,7 @@ import { z } from 'zod';
 export const employees = pgTable('employees', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  email: text('email').unique(),
+  email: text('email'),
   phone: text('phone'),
   position: text('position'),
   status: text('status').notNull().default('active'), // active, inactive

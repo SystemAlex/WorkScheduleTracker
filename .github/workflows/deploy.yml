@@ -1,0 +1,53 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            echo "Desplegando en la rama: ${{ github.ref }}"
+            branch="${{ github.ref }}"
+            branch=${branch#refs/heads/}
+            echo "Branch detectado: $branch"
+            
+            # Actualizamos el repositorio en el servidor acorde a la rama
+            cd /home/systemalex/MentorHub-PF
+            git fetch --all
+            git reset --hard origin/$branch
+
+            # Desplegar el frontend
+            echo "Desplegando frontend..."
+            cd front
+            npm prune
+            npm install
+            npm run build
+            sudo systemctl restart mentorhub-front.service
+
+            # Desplegar el backend
+            echo "Desplegando backend..."
+            cd ../back
+            npm prune
+            npm install
+            npm run build
+            sudo systemctl restart mentorhub-back.service
+
+            echo "¡Despliegue completado!"

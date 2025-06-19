@@ -29,10 +29,10 @@ export function EmployeeCalendarGrid({
   const month = currentDate.getMonth();
   const daysInMonth = getDaysInMonth(currentDate);
 
-  // Generate array of day numbers based on view mode
+  // Generate array of dates based on view mode
   const getDaysToShow = () => {
     if (viewMode === 'day') {
-      return [currentDate.getDate()];
+      return [currentDate];
     } else if (viewMode === 'week') {
       const startOfWeek = new Date(currentDate);
       const dayOfWeek = startOfWeek.getDay();
@@ -42,21 +42,19 @@ export function EmployeeCalendarGrid({
       for (let i = 0; i < 7; i++) {
         const day = new Date(startOfWeek);
         day.setDate(day.getDate() + i);
-        if (day.getMonth() === month) {
-          weekDays.push(day.getDate());
-        }
+        weekDays.push(day);
       }
       return weekDays;
     } else {
-      return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+      return Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1));
     }
   };
 
-  const dayNumbers = getDaysToShow();
+  const daysToShow = getDaysToShow();
 
   // Get shifts for a specific employee and date
-  const getShiftForEmployeeAndDate = (employeeId: number, day: number) => {
-    const dateStr = format(new Date(year, month, day), 'yyyy-MM-dd');
+  const getShiftForEmployeeAndDate = (employeeId: number, date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
     return shifts.find(
       (shift) =>
         shift.employeeId === employeeId &&
@@ -71,18 +69,16 @@ export function EmployeeCalendarGrid({
     );
   };
 
-  const handleCellClick = (day: number, employee: Employee) => {
-    const date = new Date(year, month, day);
+  const handleCellClick = (date: Date, employee: Employee) => {
     onDateSelect?.(date, employee);
   };
 
   const handleAddClick = (
     e: React.MouseEvent,
-    day: number,
+    date: Date,
     employee: Employee,
   ) => {
     e.stopPropagation();
-    const date = new Date(year, month, day);
     onAddShift?.(date, employee);
   };
 
@@ -92,13 +88,12 @@ export function EmployeeCalendarGrid({
         {/* Header with day names and numbers */}
         <div
           className="grid grid-cols-[200px_repeat(var(--days),minmax(38px,1fr))] gap-1 mb-2"
-          style={{ '--days': dayNumbers.length } as React.CSSProperties}
+          style={{ '--days': daysToShow.length } as React.CSSProperties}
         >
           <div className="font-semibold text-sm text-neutral-600 p-2">
             Empleado
           </div>
-          {dayNumbers.map((day) => {
-            const date = new Date(year, month, day);
+          {daysToShow.map((date) => {
             const dayOfWeek = getDay(date);
             const isToday = new Date().toDateString() === date.toDateString();
             const dayAbbr = getDayName(dayOfWeek).toUpperCase();
@@ -112,13 +107,13 @@ export function EmployeeCalendarGrid({
 
             return (
               <div
-                key={day}
+                key={date.toISOString()}
                 className={`text-center p-1 text-xs font-medium rounded-md ${dayColor}`}
               >
                 <div className="font-bold text-[10px] leading-tight">
                   {dayAbbr}
                 </div>
-                <div className="font-bold text-sm leading-tight">{day}</div>
+                <div className="font-bold text-sm leading-tight">{date.getDate()}</div>
               </div>
             );
           })}
@@ -130,7 +125,7 @@ export function EmployeeCalendarGrid({
             <div
               key={employee.id}
               className="grid grid-cols-[200px_repeat(var(--days),minmax(38px,1fr))] gap-1 items-center"
-              style={{ '--days': dayNumbers.length } as React.CSSProperties}
+              style={{ '--days': daysToShow.length } as React.CSSProperties}
             >
               {/* Employee name */}
               <div className="font-medium text-sm p-2 truncate bg-neutral-50 rounded-md">
@@ -138,35 +133,38 @@ export function EmployeeCalendarGrid({
               </div>
 
               {/* Days */}
-              {dayNumbers.map((day) => {
-                const shift = getShiftForEmployeeAndDate(employee.id, day);
-                const date = new Date(year, month, day - 1);
+              {daysToShow.map((date) => {
+                const shift = getShiftForEmployeeAndDate(employee.id, date);
                 const dayOfWeek = getDay(date);
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
                 const isSelected =
                   selectedDate &&
                   selectedDate.toDateString() === date.toDateString();
 
+                // Match the header colors exactly
+                let dayColor = 'bg-cyan-50'; // Días de semana (lunes-viernes) en celeste
+                if (dayOfWeek === 6) dayColor = 'bg-yellow-50'; // Sábado en amarillo
+                if (dayOfWeek === 0) dayColor = 'bg-red-50'; // Domingo en rojo
+
                 return (
                   <div
-                    key={`${employee.id}-${day}`}
+                    key={`${employee.id}-${date.toISOString()}`}
                     className={`
                       min-h-[40px] p-1 rounded-md border cursor-pointer
                       transition-colors duration-150 relative group
+                      ${dayColor}
                       ${
                         isSelected
                           ? 'ring-2 ring-primary ring-offset-1'
-                          : 'hover:bg-neutral-50'
+                          : 'hover:opacity-80'
                       }
-                      ${isWeekend ? 'bg-neutral-100' : 'bg-white'}
                     `}
-                    onClick={() => handleCellClick(day, employee)}
+                    onClick={() => handleCellClick(date, employee)}
                   >
                     {shift ? (
                       <Badge
-                        variant="secondary"
+                        variant="outline"
                         className={`
-                          text-xs px-1 py-0.5 w-full justify-center
+                          text-xs px-1 py-0.5 w-full justify-center font-medium
                           ${getShiftColor(shift.shiftType.code)}
                         `}
                       >
@@ -177,7 +175,7 @@ export function EmployeeCalendarGrid({
                         variant="ghost"
                         size="sm"
                         className="opacity-0 group-hover:opacity-100 w-full h-full p-0"
-                        onClick={(e) => handleAddClick(e, day, employee)}
+                        onClick={(e) => handleAddClick(e, date, employee)}
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
