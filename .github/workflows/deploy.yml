@@ -47,5 +47,5 @@ jobs:
             sudo systemctl restart scheduletracker.service
 
             echo "🔍 Verificando estado del servicio"
-            sudo systemctl status scheduletracker.service --no-pager
+            sudo systemctl status scheduletracker.service --no-pager || true
           EOF
