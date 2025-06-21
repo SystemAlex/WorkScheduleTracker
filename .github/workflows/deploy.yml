@@ -1,4 +1,4 @@
-name: Deploy to AWS
+name: Deploy con OIDC a EC2
 
 on:
   push:
@@ -6,31 +6,47 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout código
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Configurar SSH
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Configurar credenciales AWS con OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1  # Cambiá esto si tu instancia está en otra región
 
-      - name: Ejecutar deploy remoto
+      - name: Deploy remoto a EC2
         run: |
-          ssh -tt -o StrictHostKeyChecking=no systemalex@systemalex.cbu.net << EOF
-          set -e
-          cd /home/systemalex/WorkScheduleTracker
-          git fetch --all
-          git reset --hard origin/main
-          npm prune
-          npm install --omit=dev
-          npm audit fix || true
-          npm run build
-          sudo systemctl restart scheduletracker.service
-          sleep 1
-          kill -9 $$
-          EOF
+          echo "🔐 Conectando a EC2 con Session Manager"
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=WorkScheduleTracker" \
+            --query "Reservations[].Instances[].InstanceId" \
+            --output text)
+
+          echo "📦 Ejecutando comandos remotos"
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy desde GitHub Actions" \
+            --parameters commands='
+              cd /home/systemalex/WorkScheduleTracker &&
+              git fetch --all &&
+              git reset --hard origin/main &&
+              npm prune &&
+              npm install --omit=dev &&
+              npm audit fix || true &&
+              npm run build &&
+              sudo systemctl restart scheduletracker.service
+              sudo systemctl status scheduletracker.service --no-pager
+            ' \
+            --region us-east-1 \
+            --output text
