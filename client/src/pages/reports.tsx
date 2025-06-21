@@ -156,16 +156,22 @@ export default function Reports() {
                   Empleado (opcional)
                 </label>
                 <Select
-                  value={selectedEmployee?.toString() || ''}
+                  value={selectedEmployee?.toString() || 'all'}
                   onValueChange={(value) =>
-                    setSelectedEmployee(value ? parseInt(value) : undefined)
+                    setSelectedEmployee(
+                      value === 'all' ? undefined : parseInt(value),
+                    )
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Todos los empleados" />
+                    <SelectValue>
+                      {selectedEmployee
+                        ? employees.find((e) => e.id === selectedEmployee)?.name
+                        : 'Todos los empleados'}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos los empleados</SelectItem>
+                    <SelectItem value="all">Todos los empleados</SelectItem>
                     {employees.map((employee) => (
                       <SelectItem
                         key={employee.id}
