@@ -106,7 +106,7 @@ export function QuickPanel({
                 </div>
               ) : (
                 dayShifts.map((shift) => {
-                  const color = getShiftColor(shift.shiftType.code);
+                  const color = shift.shiftType.color; //getShiftColor(shift.shiftType.code);
                   return (
                     <div
                       key={shift.id}

@@ -126,7 +126,7 @@ export default function Shifts() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {shiftTypes.map((shiftType) => {
-            const color = getShiftColor(shiftType.code);
+            const color = shiftType.color; //getShiftColor(shiftType.code);
             return (
               <Card key={shiftType.id}>
                 <CardHeader className="pb-4">

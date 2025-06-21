@@ -202,7 +202,7 @@ export function ShiftModal({
                   <FormLabel>Tipo de Turno</FormLabel>
                   <div className="grid grid-cols-2 gap-2">
                     {shiftTypes.map((shiftType) => {
-                      const color = getShiftColor(shiftType.code);
+                      const color = shiftType.color; //getShiftColor(shiftType.code);
                       const isSelected = selectedShiftType === shiftType.id;
 
                       return (

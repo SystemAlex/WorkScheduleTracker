@@ -5,6 +5,5 @@ export function withBase(path: string): string {
 
 export function getApiUrl(path: string): string {
   const base = import.meta.env.MODE === 'production' ? '/vipsrl' : '';
-  console.log(`API URL: ${base}/${path}`);
   return `${base}${path}`;
 }

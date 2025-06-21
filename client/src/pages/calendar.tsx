@@ -42,7 +42,7 @@ export default function Calendar() {
     queryFn: async () => {
       const response = await fetch(
         getApiUrl(
-          `/shifts?month=${currentDate.getMonth() + 1}&year=${currentDate.getFullYear()}`,
+          `/api/shifts?month=${currentDate.getMonth() + 1}&year=${currentDate.getFullYear()}`,
         ),
       );
       if (!response.ok) throw new Error('Failed to fetch shifts');

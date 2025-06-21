@@ -45,7 +45,9 @@ export function CalendarGrid({
       {/* Calendar Grid */}
       <div className="grid grid-cols-7 gap-px bg-neutral-200 rounded-lg overflow-hidden">
         {days.map((day, index) => {
-          const dayShifts = getShiftsForDate(day.date);
+          const dayShifts = shifts.filter(
+            (shift) => shift.date === formatDate(day.date)
+          );
           const isSelected =
             selectedDate && formatDate(selectedDate) === formatDate(day.date);
 
@@ -74,7 +76,7 @@ export function CalendarGrid({
               {/* Shift Indicators */}
               <div className="mt-1 space-y-1">
                 {dayShifts.slice(0, 3).map((shift) => {
-                  const color = getShiftColor(shift.shiftType.code);
+                  const color = shift.shiftType.color; //getShiftColor(shift.shiftType.code);
                   return (
                     <div
                       key={shift.id}

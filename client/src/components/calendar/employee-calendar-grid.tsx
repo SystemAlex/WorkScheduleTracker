@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import type { ShiftWithDetails, Employee } from '@shared/schema';
-import { getShiftColor, getDayName } from '@/lib/utils';
+import { getShiftColor, getDayName, formatDate } from '@/lib/utils';
 
 interface EmployeeCalendarGridProps {
   currentDate: Date;
@@ -139,7 +139,10 @@ export function EmployeeCalendarGrid({
 
               {/* Days */}
               {daysToShow.map((date) => {
-                const shift = getShiftForEmployeeAndDate(employee.id, date);
+                const shift = shifts.find(
+                  (s) =>
+                    s.employeeId === employee.id && s.date === formatDate(date), // <-- compara ambos como string YYYY-MM-DD
+                );
                 const dayOfWeek = getDay(date);
                 const isSelected =
                   selectedDate &&
@@ -154,7 +157,7 @@ export function EmployeeCalendarGrid({
                   <div
                     key={`${employee.id}-${date.toISOString()}`}
                     className={`
-                      min-h-[40px] p-1 rounded-md border cursor-pointer
+                      min-h-[40px] p-1 rounded-md border cursor-pointer flex items-stretch justify-center
                       transition-colors duration-150 relative group
                       ${dayColor}
                       ${
