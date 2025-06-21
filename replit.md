@@ -7,6 +7,7 @@ WorkScheduleTracker is a full-stack web application for managing employee work s
 ## System Architecture
 
 ### Frontend Architecture
+
 - **Framework**: React 18 with TypeScript
 - **Routing**: Wouter for client-side routing
 - **State Management**: TanStack Query (React Query) for server state management
@@ -16,6 +17,7 @@ WorkScheduleTracker is a full-stack web application for managing employee work s
 - **Build Tool**: Vite for development and production builds
 
 ### Backend Architecture
+
 - **Runtime**: Node.js with Express.js framework
 - **Language**: TypeScript with ESM modules
 - **Database ORM**: Drizzle ORM for type-safe database operations
@@ -24,6 +26,7 @@ WorkScheduleTracker is a full-stack web application for managing employee work s
 - **Development**: Hot reloading with tsx for development server
 
 ### Database Schema
+
 - **employees**: Core employee information with status tracking
 - **positions**: Job positions with department categorization
 - **shiftTypes**: Configurable shift templates with time ranges and color coding
@@ -32,11 +35,13 @@ WorkScheduleTracker is a full-stack web application for managing employee work s
 ## Key Components
 
 ### Data Management
+
 - **Storage Layer**: Abstracted storage interface with PostgreSQL implementation
 - **Schema Validation**: Zod schemas for runtime type checking and validation
 - **Type Safety**: End-to-end TypeScript types shared between client and server
 
 ### User Interface
+
 - **Calendar View**: Primary interface for visualizing and managing shifts
 - **Employee Management**: CRUD operations for employee data
 - **Position Management**: Department and role organization
@@ -45,6 +50,7 @@ WorkScheduleTracker is a full-stack web application for managing employee work s
 - **Organizational Chart**: Visual representation of company structure
 
 ### API Endpoints
+
 - **Employees**: `/api/employees` - Full CRUD operations
 - **Positions**: `/api/positions` - Position management
 - **Shift Types**: `/api/shift-types` - Shift template configuration
@@ -63,15 +69,17 @@ WorkScheduleTracker is a full-stack web application for managing employee work s
 ## External Dependencies
 
 ### Core Dependencies
+
 - **@neondatabase/serverless**: PostgreSQL database connectivity
 - **drizzle-orm**: Type-safe database ORM
 - **@tanstack/react-query**: Server state management
 - **react-hook-form**: Form handling and validation
-- **@radix-ui/***: Accessible UI component primitives
+- **@radix-ui/\***: Accessible UI component primitives
 - **tailwindcss**: Utility-first CSS framework
 - **zod**: Runtime type validation
 
 ### Development Tools
+
 - **vite**: Build tool and development server
 - **tsx**: TypeScript execution for development
 - **esbuild**: Production build bundling
@@ -80,27 +88,32 @@ WorkScheduleTracker is a full-stack web application for managing employee work s
 ## Deployment Strategy
 
 ### Development
+
 - **Command**: `npm run dev` starts both frontend and backend in development mode
 - **Port**: Application runs on port 5000 with hot reloading
 - **Database**: Requires DATABASE_URL environment variable for PostgreSQL connection
 
 ### Production Build
+
 - **Frontend**: `vite build` compiles React app to static assets
 - **Backend**: `esbuild` bundles server code with external dependencies
 - **Start**: `npm run start` runs the production server
 
 ### Database Management
+
 - **Schema**: Shared schema definition in `shared/schema.ts`
 - **Migrations**: `npm run db:push` applies schema changes
 - **Configuration**: Drizzle config points to PostgreSQL dialect
 
 ### Replit Configuration
+
 - **Modules**: nodejs-20 and web modules enabled
 - **Deployment**: Autoscale deployment target configured
 - **Build Process**: Automated build and start commands
 - **Port Mapping**: Internal port 5000 mapped to external port 80
 
 ## Changelog
+
 - June 18, 2025. Initial setup
 
 ## User Preferences

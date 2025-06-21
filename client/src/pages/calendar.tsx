@@ -15,6 +15,7 @@ import type {
   Position,
   ShiftType,
 } from '@shared/schema';
+import { getApiUrl } from '@/lib/paths';
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -40,7 +41,9 @@ export default function Calendar() {
     ],
     queryFn: async () => {
       const response = await fetch(
-        `/api/shifts?month=${currentDate.getMonth() + 1}&year=${currentDate.getFullYear()}`,
+        getApiUrl(
+          `/shifts?month=${currentDate.getMonth() + 1}&year=${currentDate.getFullYear()}`,
+        ),
       );
       if (!response.ok) throw new Error('Failed to fetch shifts');
       return response.json();

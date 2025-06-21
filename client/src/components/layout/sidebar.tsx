@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { withBase } from '@/lib/paths';
 
 interface SidebarLinkProps {
   href: string;
@@ -55,9 +56,7 @@ function SidebarLink({
   if (isCollapsed) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          {linkContent}
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
         <TooltipContent side="right">
           <p>{children}</p>
         </TooltipContent>
@@ -73,25 +72,33 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const navigation = [
-    { href: '/', icon: <Calendar className="w-5 h-5" />, label: 'Calendario' },
     {
-      href: '/organigrama',
+      href: withBase('/'),
+      icon: <Calendar className="w-5 h-5" />,
+      label: 'Calendario',
+    },
+    {
+      href: withBase('/organigrama'),
       icon: <Map className="w-5 h-5" />,
       label: 'Organigrama',
     },
     {
-      href: '/employees',
+      href: withBase('/employees'),
       icon: <Users className="w-5 h-5" />,
       label: 'Empleados',
     },
     {
-      href: '/positions',
+      href: withBase('/positions'),
       icon: <Briefcase className="w-5 h-5" />,
       label: 'Puestos',
     },
-    { href: '/shifts', icon: <Clock className="w-5 h-5" />, label: 'Turnos' },
     {
-      href: '/reports',
+      href: withBase('/shifts'),
+      icon: <Clock className="w-5 h-5" />,
+      label: 'Turnos',
+    },
+    {
+      href: withBase('/reports'),
       icon: <BarChart3 className="w-5 h-5" />,
       label: 'Reportes',
     },

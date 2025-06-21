@@ -46,7 +46,10 @@ export function EmployeeCalendarGrid({
       }
       return weekDays;
     } else {
-      return Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1));
+      return Array.from(
+        { length: daysInMonth },
+        (_, i) => new Date(year, month, i + 1),
+      );
     }
   };
 
@@ -113,7 +116,9 @@ export function EmployeeCalendarGrid({
                 <div className="font-bold text-[10px] leading-tight">
                   {dayAbbr}
                 </div>
-                <div className="font-bold text-sm leading-tight">{date.getDate()}</div>
+                <div className="font-bold text-sm leading-tight">
+                  {date.getDate()}
+                </div>
               </div>
             );
           })}

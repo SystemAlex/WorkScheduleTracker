@@ -269,7 +269,7 @@ export class DatabaseStorage implements IStorage {
   ): Promise<ShiftWithDetails[]> {
     const whereConditions = [
       eq(shifts.employeeId, employeeId),
-      eq(shifts.date, date)
+      eq(shifts.date, date),
     ];
 
     // Exclude current shift when updating

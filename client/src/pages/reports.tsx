@@ -15,6 +15,7 @@ import { LayoutContent } from '@/components/ui/layout';
 import { BarChart3, Clock, Users, Download } from 'lucide-react';
 import type { Employee } from '@shared/schema';
 import { getMonthName } from '@/lib/utils';
+import { getApiUrl } from '@/lib/paths';
 
 interface EmployeeHoursReport {
   employeeId: number;
@@ -55,7 +56,9 @@ export default function Reports() {
         params.append('employeeId', selectedEmployee.toString());
       }
 
-      const response = await fetch(`/api/reports/employee-hours?${params}`);
+      const response = await fetch(
+        getApiUrl(`/reports/employee-hours?${params}`),
+      );
       if (!response.ok) throw new Error('Failed to fetch report');
       return response.json();
     },

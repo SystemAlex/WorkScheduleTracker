@@ -28,7 +28,7 @@ jobs:
             branch="${{ github.ref }}"
             branch=${branch#refs/heads/}
             echo "Branch detectado: $branch"
-            
+
             # Actualizamos el repositorio en el servidor acorde a la rama
             cd /home/systemalex/MentorHub-PF
             git fetch --all
