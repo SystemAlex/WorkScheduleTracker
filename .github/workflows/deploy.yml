@@ -38,8 +38,9 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --comment "Deploy desde GitHub Actions" \
             --parameters commands='
-              cd /home/systemalex/WorkScheduleTracker &&
+              export HOME=/home/systemalex &&
               git config --global --add safe.directory /home/systemalex/WorkScheduleTracker &&
+              cd /home/systemalex/WorkScheduleTracker &&
               git fetch --all &&
               git reset --hard origin/main &&
               npm prune &&
