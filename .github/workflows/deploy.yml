@@ -45,7 +45,7 @@ jobs:
               npm install --omit=dev &&
               npm audit fix || true &&
               npm run build &&
-              sudo systemctl restart scheduletracker.service
+              sudo systemctl restart scheduletracker.service &&
               sudo systemctl status scheduletracker.service --no-pager
             ' \
             --region us-east-1 \
