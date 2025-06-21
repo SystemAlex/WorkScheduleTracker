@@ -21,17 +21,16 @@ jobs:
 
       - name: Ejecutar deploy remoto
         run: |
-          ssh -tt -o StrictHostKeyChecking=no systemalex@systemalex.cbu.net << 'EOF'
+          ssh -tt -o StrictHostKeyChecking=no systemalex@systemalex.cbu.net << EOF
           set -e
           cd /home/systemalex/WorkScheduleTracker
           git fetch --all
           git reset --hard origin/main
           npm prune
           npm install --omit=dev
-          npm audit fix
+          npm audit fix || true
           npm run build
           sudo systemctl restart scheduletracker.service
           sudo systemctl status scheduletracker.service --no-pager || true
           sleep 1
-          exit 0
           EOF
