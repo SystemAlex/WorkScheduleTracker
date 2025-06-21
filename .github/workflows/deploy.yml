@@ -28,7 +28,7 @@ jobs:
         run: |
           echo "🔐 Conectando a EC2 con Session Manager"
           INSTANCE_ID=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=WorkScheduleTracker" \
+            --filters "Name=tag:Name,Values=SystemAlex" \
             --query "Reservations[].Instances[].InstanceId" \
             --output text)
 
