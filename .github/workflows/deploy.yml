@@ -22,30 +22,12 @@ jobs:
       - name: Ejecutar deploy remoto
         run: |
           ssh -tt -o StrictHostKeyChecking=no systemalex@systemalex.cbu.net << 'EOF'
-            echo "📁 Cambiando a carpeta del proyecto"
             cd /home/systemalex/WorkScheduleTracker
-
-            echo "🔄 Haciendo git fetch"
             git fetch --all
-
-            echo "♻️  Haciendo git reset --hard origin/main"
             git reset --hard origin/main
-
-            echo "🧹 Ejecutando npm prune"
             npm prune
-
-            echo "📦 Instalando dependencias (omit=dev)"
             npm install --omit=dev
-
-            echo "🔍 Verificando dependencias obsoletas"
             npm audit fix
-
-            echo "🔨 Ejecutando build del frontend/backend"
             npm run build
-
-            echo "🚀 Reiniciando servicio con systemctl"
             sudo systemctl restart scheduletracker.service
-
-            echo "🔍 Verificando estado del servicio"
-            sudo systemctl status scheduletracker.service --no-pager || true
           EOF
