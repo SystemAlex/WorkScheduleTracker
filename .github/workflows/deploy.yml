@@ -30,6 +30,5 @@ jobs:
             npm audit fix
             npm run build
             sudo systemctl restart scheduletracker.service
-            sudo systemctl status scheduletracker.service --no-pager || true
             exit
           EOF
