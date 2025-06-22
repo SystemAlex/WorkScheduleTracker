@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { generateCalendarDays, formatDate, getShiftColor } from '@/lib/utils';
+import { generateCalendarDays, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { ShiftWithDetails } from '@shared/schema';
 
@@ -46,7 +46,7 @@ export function CalendarGrid({
       <div className="grid grid-cols-7 gap-px bg-neutral-200 rounded-lg overflow-hidden">
         {days.map((day, index) => {
           const dayShifts = shifts.filter(
-            (shift) => shift.date === formatDate(day.date)
+            (shift) => shift.date === formatDate(day.date),
           );
           const isSelected =
             selectedDate && formatDate(selectedDate) === formatDate(day.date);
@@ -76,34 +76,21 @@ export function CalendarGrid({
               {/* Shift Indicators */}
               <div className="mt-1 space-y-1">
                 {dayShifts.slice(0, 3).map((shift) => {
-                  const color = shift.shiftType.color; //getShiftColor(shift.shiftType.code);
+                  const color = shift.position.color;
                   return (
                     <div
                       key={shift.id}
-                      className={cn(
-                        'shift-indicator',
-                        `shift-${
-                          color === 'blue'
-                            ? 'morning'
-                            : color === 'green'
-                              ? 'afternoon'
-                              : color === 'orange'
-                                ? 'night'
-                                : 'special'
-                        }`,
-                      )}
+                      className="shift-indicator flex items-center space-x-2 rounded-full border px-2 py-1"
+                      style={{
+                        backgroundColor: `${color}20`, // HEX + transparencia
+                        borderColor: color,
+                      }}
                     >
                       <div
-                        className={cn(
-                          'w-2 h-2 rounded-full',
-                          color === 'blue' && 'bg-blue-500',
-                          color === 'green' && 'bg-green-500',
-                          color === 'orange' && 'bg-orange-500',
-                          color === 'purple' && 'bg-purple-500',
-                        )}
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: color }}
                       />
-                      <span>
-                        {shift.shiftType.code}:{' '}
+                      <span className="text-xs font-medium" style={{ color }}>
                         {shift.employee.name.split(' ')[0]}
                       </span>
                     </div>
@@ -125,39 +112,6 @@ export function CalendarGrid({
             </div>
           );
         })}
-      </div>
-
-      {/* Legend */}
-      <div className="mt-4 bg-white rounded-xl shadow-md p-4">
-        <h3 className="text-lg font-semibold text-neutral-900 mb-4">
-          Leyenda de Turnos
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-            <span className="text-sm text-neutral-700">
-              Mañana (M) - 6:00-14:00
-            </span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-            <span className="text-sm text-neutral-700">
-              Tarde (T) - 14:00-22:00
-            </span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-            <span className="text-sm text-neutral-700">
-              Noche (N) - 22:00-6:00
-            </span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-            <span className="text-sm text-neutral-700">
-              Especial (E) - Variable
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );

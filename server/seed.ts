@@ -1,53 +1,194 @@
 import { db } from './db';
-import { employees, positions, shiftTypes, shifts } from '@shared/schema';
+import { employees, positions, shifts, clientes } from '@shared/schema';
 
 async function seed() {
   // Limpiar tablas
   await db.delete(shifts);
   await db.delete(employees);
   await db.delete(positions);
-  await db.delete(shiftTypes);
+  await db.delete(clientes);
 
-  // 1. Insertar puestos
-  await db
-    .insert(positions)
-    .values([
-      { name: 'Recepcionista', siglas: 'REC', department: 'Administración', description: 'Atiende la recepción' },
-      { name: 'Seguridad', siglas: 'SEG', department: 'Operaciones', description: 'Vigila el edificio' },
-      { name: 'Limpieza', siglas: 'LIM', department: 'Servicios', description: 'Limpieza general' },
-      { name: 'Administrativo', siglas: 'ADM', department: 'Administración', description: 'Tareas administrativas' },
-      { name: 'Mantenimiento', siglas: 'MAN', department: 'Operaciones', description: 'Mantenimiento técnico' },
-    ])
+  // 1. Insertar clientes
+  const clientesAInsertar = [
+    {
+      empresa: 'Empresa Uno',
+      direccion: 'Calle 1',
+      localidad: 'Ciudad A',
+      nombreContacto: 'Juan Cliente',
+      telefono: '111-111',
+      email: 'uno@empresa.com',
+    },
+    {
+      empresa: 'Empresa Dos',
+      direccion: 'Calle 2',
+      localidad: 'Ciudad B',
+      nombreContacto: 'Ana Cliente',
+      telefono: '222-222',
+      email: 'dos@empresa.com',
+    },
+    {
+      empresa: 'Empresa Tres',
+      direccion: 'Calle 3',
+      localidad: 'Ciudad C',
+      nombreContacto: 'Carlos Cliente',
+      telefono: '333-333',
+      email: 'tres@empresa.com',
+    },
+    {
+      empresa: 'Empresa Cuatro',
+      direccion: 'Calle 4',
+      localidad: 'Ciudad D',
+      nombreContacto: 'María Cliente',
+      telefono: '444-444',
+      email: 'cuatro@empresa.com',
+    },
+    {
+      empresa: 'Empresa Cinco',
+      direccion: 'Calle 5',
+      localidad: 'Ciudad E',
+      nombreContacto: 'Pedro Cliente',
+      telefono: '555-555',
+      email: 'cinco@empresa.com',
+    },
+  ];
+  const clientesInsertados = await db
+    .insert(clientes)
+    .values(clientesAInsertar)
     .returning();
 
-  // 2. Insertar empleados
-  await db.insert(employees).values([
-    { name: 'Juan Pérez', email: 'juan@example.com', phone: '111111111', position: 'Recepcionista', status: 'active' },
-    { name: 'Ana Gómez', email: 'ana@example.com', phone: '222222222', position: 'Seguridad', status: 'active' },
-    { name: 'Carlos Ruiz', email: 'carlos@example.com', phone: '333333333', position: 'Limpieza', status: 'active' },
-    { name: 'María López', email: 'maria@example.com', phone: '444444444', position: 'Administrativo', status: 'active' },
-    { name: 'Pedro Sánchez', email: 'pedro@example.com', phone: '555555555', position: 'Mantenimiento', status: 'active' },
-    { name: 'Lucía Torres', email: 'lucia@example.com', phone: '666666666', position: 'Recepcionista', status: 'active' },
-    { name: 'Miguel Díaz', email: 'miguel@example.com', phone: '777777777', position: 'Seguridad', status: 'active' },
-    { name: 'Sofía Romero', email: 'sofia@example.com', phone: '888888888', position: 'Limpieza', status: 'active' },
-    { name: 'Diego Fernández', email: 'diego@example.com', phone: '999999999', position: 'Administrativo', status: 'active' },
-    { name: 'Valentina Castro', email: 'valentina@example.com', phone: '101010101', position: 'Mantenimiento', status: 'active' },
-  ]);
+  // 2. Insertar puestos, cada uno con clienteId, color y totalHoras
+  const puestosAInsertar = [
+    {
+      name: 'Recepcionista',
+      siglas: 'REC',
+      department: 'Administración',
+      description: 'Atiende la recepción',
+      color: '#3B82F6',
+      totalHoras: 8,
+      clienteId: clientesInsertados[0].id,
+    },
+    {
+      name: 'Seguridad',
+      siglas: 'SEG',
+      department: 'Operaciones',
+      description: 'Vigila el edificio',
+      color: '#22C55E',
+      totalHoras: 8,
+      clienteId: clientesInsertados[1].id,
+    },
+    {
+      name: 'Limpieza',
+      siglas: 'LIM',
+      department: 'Servicios',
+      description: 'Limpieza general',
+      color: '#F59E42',
+      totalHoras: 6,
+      clienteId: clientesInsertados[2].id,
+    },
+    {
+      name: 'Administrativo',
+      siglas: 'ADM',
+      department: 'Administración',
+      description: 'Tareas administrativas',
+      color: '#A855F7',
+      totalHoras: 7.5,
+      clienteId: clientesInsertados[3].id,
+    },
+    {
+      name: 'Mantenimiento',
+      siglas: 'MAN',
+      department: 'Operaciones',
+      description: 'Mantenimiento técnico',
+      color: '#F43F5E',
+      totalHoras: 8,
+      clienteId: clientesInsertados[4].id,
+    },
+  ];
+  const puestos = await db
+    .insert(positions)
+    .values(puestosAInsertar)
+    .returning();
 
-  // 3. Insertar tipos de turno
-  await db.insert(shiftTypes).values([
-    { name: 'Mañana', code: 'M', startTime: '06:00', endTime: '14:00', color: '#3B82F6' },
-    { name: 'Tarde', code: 'T', startTime: '14:00', endTime: '22:00', color: '#22C55E' },
+  // 3. Insertar empleados
+  await db.insert(employees).values([
+    {
+      name: 'Juan Pérez',
+      email: 'juan@example.com',
+      phone: '111111111',
+      position: 'Recepcionista',
+      status: 'active',
+    },
+    {
+      name: 'Ana Gómez',
+      email: 'ana@example.com',
+      phone: '222222222',
+      position: 'Seguridad',
+      status: 'active',
+    },
+    {
+      name: 'Carlos Ruiz',
+      email: 'carlos@example.com',
+      phone: '333333333',
+      position: 'Limpieza',
+      status: 'active',
+    },
+    {
+      name: 'María López',
+      email: 'maria@example.com',
+      phone: '444444444',
+      position: 'Administrativo',
+      status: 'active',
+    },
+    {
+      name: 'Pedro Sánchez',
+      email: 'pedro@example.com',
+      phone: '555555555',
+      position: 'Mantenimiento',
+      status: 'active',
+    },
+    {
+      name: 'Lucía Torres',
+      email: 'lucia@example.com',
+      phone: '666666666',
+      position: 'Recepcionista',
+      status: 'active',
+    },
+    {
+      name: 'Miguel Díaz',
+      email: 'miguel@example.com',
+      phone: '777777777',
+      position: 'Seguridad',
+      status: 'active',
+    },
+    {
+      name: 'Sofía Romero',
+      email: 'sofia@example.com',
+      phone: '888888888',
+      position: 'Limpieza',
+      status: 'active',
+    },
+    {
+      name: 'Diego Fernández',
+      email: 'diego@example.com',
+      phone: '999999999',
+      position: 'Administrativo',
+      status: 'active',
+    },
+    {
+      name: 'Valentina Castro',
+      email: 'valentina@example.com',
+      phone: '101010101',
+      position: 'Mantenimiento',
+      status: 'active',
+    },
   ]);
 
   // Obtener IDs y datos necesarios
   const empleados = await db.select().from(employees);
-  const puestos = await db.select().from(positions);
-  const tiposTurno = await db.select().from(shiftTypes);
+  const puestosDb = await db.select().from(positions);
 
   // Mapas para lookup rápido
-  const puestoPorNombre = Object.fromEntries(puestos.map(p => [p.name, p]));
-  const tipoTurnoPorCodigo = Object.fromEntries(tiposTurno.map(t => [t.code, t]));
+  const puestoPorNombre = Object.fromEntries(puestosDb.map((p) => [p.name, p]));
 
   // Generar turnos para el mes actual
   const now = new Date();
@@ -64,16 +205,16 @@ async function seed() {
       const fecha = new Date(year, month, day);
       const diaSemana = fecha.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
 
-      if (diaSemana >= 1 && diaSemana <= 5) { // Lunes a Viernes
-        // Alternar tipo de turno entre Mañana y Tarde
-        const tipoTurno = diaSemana % 2 === 0 ? tipoTurnoPorCodigo['M'] : tipoTurnoPorCodigo['T'];
-        const puesto = empleado.position ? puestoPorNombre[empleado.position] : undefined;
+      if (diaSemana >= 1 && diaSemana <= 5) {
+        // Lunes a Viernes
+        const puesto = empleado.position
+          ? puestoPorNombre[empleado.position]
+          : undefined;
 
-        if (tipoTurno && puesto) {
+        if (puesto) {
           turnosAInsertar.push({
             employeeId: empleado.id,
             positionId: puesto.id,
-            shiftTypeId: tipoTurno.id,
             date: fecha.toISOString().slice(0, 10),
             notes: '',
           });

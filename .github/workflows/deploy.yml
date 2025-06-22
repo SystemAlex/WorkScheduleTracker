@@ -22,7 +22,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1  # Cambiá esto si tu instancia está en otra región
+          aws-region: us-east-1 # Cambiá esto si tu instancia está en otra región
 
       - name: Deploy remoto a EC2
         run: |

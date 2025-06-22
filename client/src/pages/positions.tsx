@@ -29,6 +29,13 @@ import { insertPositionSchema } from '@shared/schema';
 import type { Position, InsertPosition } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function Positions() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -64,12 +71,21 @@ export default function Positions() {
     },
   });
 
+  // Obtener clientes
+  const { data: clientes = [] } = useQuery({
+    queryKey: ['/api/clientes'],
+  });
+
   const form = useForm<InsertPosition>({
     resolver: zodResolver(insertPositionSchema),
     defaultValues: {
       name: '',
       description: '',
       department: '',
+      siglas: '',
+      color: '#3B82F6',
+      totalHoras: 8,
+      clienteId: undefined,
     },
   });
 
@@ -128,15 +144,21 @@ export default function Positions() {
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Briefcase className="w-5 h-5 text-blue-600" />
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center border"
+                      style={{ backgroundColor: position.color }}
+                    >
+                      <Briefcase className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">{position.name}</CardTitle>
-                      <div className="mt-1">
+                      <div className="mt-1 flex items-center gap-2">
                         <Badge variant="outline" className="text-xs font-mono">
                           {position.siglas}
                         </Badge>
+                        <span className="text-xs text-neutral-500">
+                          {position.totalHoras}h
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -155,6 +177,13 @@ export default function Positions() {
                       {position.description}
                     </p>
                   )}
+                  <div className="flex items-center space-x-2 text-sm text-neutral-600">
+                    <span>Cliente:</span>
+                    <span className="font-semibold">
+                      {clientes.find((c) => c.id === position.clienteId)
+                        ?.empresa || '-'}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -253,6 +282,89 @@ export default function Positions() {
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Color (HEX)</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center space-x-3">
+                        <Input
+                          type="color"
+                          className="w-16 h-10 p-1"
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                        <Input
+                          type="text"
+                          placeholder="#3B82F6"
+                          className="flex-1"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="totalHoras"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total de Horas</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min={0}
+                        placeholder="Ej: 6.5"
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value))
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="clienteId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cliente</FormLabel>
+                    <Select
+                      value={field.value ? field.value.toString() : ''}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar cliente..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {clientes.map((cliente) => (
+                          <SelectItem
+                            key={cliente.id}
+                            value={cliente.id.toString()}
+                          >
+                            {cliente.empresa}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

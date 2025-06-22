@@ -1,16 +1,16 @@
 import {
   employees,
   positions,
-  shiftTypes,
   shifts,
+  clientes,
   type Employee,
   type Position,
-  type ShiftType,
   type Shift,
+  type Cliente,
   type InsertEmployee,
   type InsertPosition,
-  type InsertShiftType,
   type InsertShift,
+  type InsertCliente,
   type ShiftWithDetails,
 } from '@shared/schema';
 import { db } from './db';
@@ -27,10 +27,6 @@ export interface IStorage {
   // Positions
   getPositions(): Promise<Position[]>;
   createPosition(insertPosition: InsertPosition): Promise<Position>;
-
-  // Shift Types
-  getShiftTypes(): Promise<ShiftType[]>;
-  createShiftType(insertShiftType: InsertShiftType): Promise<ShiftType>;
 
   // Shifts
   getShifts(): Promise<ShiftWithDetails[]>;
@@ -49,6 +45,12 @@ export interface IStorage {
     month?: number,
     year?: number,
   ): Promise<any[]>;
+
+  // Clientes
+  getClientes(): Promise<Cliente[]>;
+  createCliente(data: InsertCliente): Promise<Cliente>;
+  updateCliente(id: number, data: InsertCliente): Promise<Cliente>;
+  deleteCliente(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -99,19 +101,6 @@ export class DatabaseStorage implements IStorage {
     return position;
   }
 
-  // Shift Types
-  async getShiftTypes(): Promise<ShiftType[]> {
-    return await db.select().from(shiftTypes);
-  }
-
-  async createShiftType(insertShiftType: InsertShiftType): Promise<ShiftType> {
-    const [shiftType] = await db
-      .insert(shiftTypes)
-      .values(insertShiftType)
-      .returning();
-    return shiftType;
-  }
-
   // Shifts
   async getShifts(): Promise<ShiftWithDetails[]> {
     const results = await db
@@ -119,30 +108,25 @@ export class DatabaseStorage implements IStorage {
         id: shifts.id,
         employeeId: shifts.employeeId,
         positionId: shifts.positionId,
-        shiftTypeId: shifts.shiftTypeId,
         date: shifts.date,
         notes: shifts.notes,
         createdAt: shifts.createdAt,
         employee: employees,
         position: positions,
-        shiftType: shiftTypes,
       })
       .from(shifts)
       .innerJoin(employees, eq(shifts.employeeId, employees.id))
-      .innerJoin(positions, eq(shifts.positionId, positions.id))
-      .innerJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id));
+      .innerJoin(positions, eq(shifts.positionId, positions.id));
 
     return results.map((row) => ({
       id: row.id,
       employeeId: row.employeeId,
       positionId: row.positionId,
-      shiftTypeId: row.shiftTypeId,
       date: row.date,
       notes: row.notes,
       createdAt: row.createdAt,
       employee: row.employee!,
       position: row.position!,
-      shiftType: row.shiftType!,
     }));
   }
 
@@ -159,31 +143,26 @@ export class DatabaseStorage implements IStorage {
         id: shifts.id,
         employeeId: shifts.employeeId,
         positionId: shifts.positionId,
-        shiftTypeId: shifts.shiftTypeId,
         date: shifts.date,
         notes: shifts.notes,
         createdAt: shifts.createdAt,
         employee: employees,
         position: positions,
-        shiftType: shiftTypes,
       })
       .from(shifts)
       .innerJoin(employees, eq(shifts.employeeId, employees.id))
       .innerJoin(positions, eq(shifts.positionId, positions.id))
-      .innerJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
       .where(and(gte(shifts.date, startDate), lte(shifts.date, endDate)));
 
     return results.map((row) => ({
       id: row.id,
       employeeId: row.employeeId,
       positionId: row.positionId,
-      shiftTypeId: row.shiftTypeId,
       date: row.date,
       notes: row.notes,
       createdAt: row.createdAt,
       employee: row.employee!,
       position: row.position!,
-      shiftType: row.shiftType!,
     }));
   }
 
@@ -193,31 +172,26 @@ export class DatabaseStorage implements IStorage {
         id: shifts.id,
         employeeId: shifts.employeeId,
         positionId: shifts.positionId,
-        shiftTypeId: shifts.shiftTypeId,
         date: shifts.date,
         notes: shifts.notes,
         createdAt: shifts.createdAt,
         employee: employees,
         position: positions,
-        shiftType: shiftTypes,
       })
       .from(shifts)
       .innerJoin(employees, eq(shifts.employeeId, employees.id))
       .innerJoin(positions, eq(shifts.positionId, positions.id))
-      .innerJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
       .where(eq(shifts.date, date));
 
     return results.map((row) => ({
       id: row.id,
       employeeId: row.employeeId,
       positionId: row.positionId,
-      shiftTypeId: row.shiftTypeId,
       date: row.date,
       notes: row.notes,
       createdAt: row.createdAt,
       employee: row.employee!,
       position: row.position!,
-      shiftType: row.shiftType!,
     }));
   }
 
@@ -230,31 +204,26 @@ export class DatabaseStorage implements IStorage {
         id: shifts.id,
         employeeId: shifts.employeeId,
         positionId: shifts.positionId,
-        shiftTypeId: shifts.shiftTypeId,
         date: shifts.date,
         notes: shifts.notes,
         createdAt: shifts.createdAt,
         employee: employees,
         position: positions,
-        shiftType: shiftTypes,
       })
       .from(shifts)
       .leftJoin(employees, eq(shifts.employeeId, employees.id))
       .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .leftJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
       .where(eq(shifts.id, shift.id));
 
     return {
       id: result.id,
       employeeId: result.employeeId,
       positionId: result.positionId,
-      shiftTypeId: result.shiftTypeId,
       date: result.date,
       notes: result.notes,
       createdAt: result.createdAt,
       employee: result.employee!,
       position: result.position!,
-      shiftType: result.shiftType!,
     };
   }
 
@@ -282,31 +251,26 @@ export class DatabaseStorage implements IStorage {
         id: shifts.id,
         employeeId: shifts.employeeId,
         positionId: shifts.positionId,
-        shiftTypeId: shifts.shiftTypeId,
         date: shifts.date,
         notes: shifts.notes,
         createdAt: shifts.createdAt,
         employee: employees,
         position: positions,
-        shiftType: shiftTypes,
       })
       .from(shifts)
       .leftJoin(employees, eq(shifts.employeeId, employees.id))
       .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .leftJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
       .where(and(...whereConditions));
 
     return results.map((row) => ({
       id: row.id,
       employeeId: row.employeeId,
       positionId: row.positionId,
-      shiftTypeId: row.shiftTypeId,
       date: row.date,
       notes: row.notes,
       createdAt: row.createdAt,
       employee: row.employee!,
       position: row.position!,
-      shiftType: row.shiftType!,
     }));
   }
 
@@ -333,18 +297,15 @@ export class DatabaseStorage implements IStorage {
     const shiftData = await db
       .select({
         employee: employees,
-        shiftType: shiftTypes,
       })
       .from(shifts)
       .leftJoin(employees, eq(shifts.employeeId, employees.id))
-      .leftJoin(shiftTypes, eq(shifts.shiftTypeId, shiftTypes.id))
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
 
     // Group by employee and calculate stats
     const report = shiftData.reduce((acc, row) => {
       const employeeId = row.employee!.id;
       const employeeName = row.employee!.name;
-      const shiftCode = row.shiftType!.code;
 
       if (!acc[employeeId]) {
         acc[employeeId] = {
@@ -364,25 +325,33 @@ export class DatabaseStorage implements IStorage {
       acc[employeeId].totalShifts++;
       acc[employeeId].totalHours += 8; // Assuming 8 hours per shift
 
-      // Count shift types
-      switch (shiftCode) {
-        case 'M':
-          acc[employeeId].shiftBreakdown.morning++;
-          break;
-        case 'T':
-          acc[employeeId].shiftBreakdown.afternoon++;
-          break;
-        case 'N':
-          acc[employeeId].shiftBreakdown.night++;
-          break;
-        default:
-          acc[employeeId].shiftBreakdown.special++;
-      }
-
       return acc;
     }, {} as any);
 
     return Object.values(report);
+  }
+
+  // Clientes
+  async getClientes(): Promise<Cliente[]> {
+    return await db.select().from(clientes);
+  }
+
+  async createCliente(data: InsertCliente): Promise<Cliente> {
+    const [cliente] = await db.insert(clientes).values(data).returning();
+    return cliente;
+  }
+
+  async updateCliente(id: number, data: InsertCliente): Promise<Cliente> {
+    const [cliente] = await db
+      .update(clientes)
+      .set(data)
+      .where(eq(clientes.id, id))
+      .returning();
+    return cliente;
+  }
+
+  async deleteCliente(id: number): Promise<void> {
+    await db.delete(clientes).where(eq(clientes.id, id));
   }
 }
 

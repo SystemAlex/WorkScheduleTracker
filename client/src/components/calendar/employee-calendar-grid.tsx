@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import type { ShiftWithDetails, Employee } from '@shared/schema';
-import { getShiftColor, getDayName, formatDate } from '@/lib/utils';
+import { getDayName, formatDate } from '@/lib/utils';
 
 interface EmployeeCalendarGridProps {
   currentDate: Date;
@@ -171,10 +171,12 @@ export function EmployeeCalendarGrid({
                     {shift ? (
                       <Badge
                         variant="outline"
-                        className={`
-                          text-xs px-1 py-0.5 w-full justify-center font-medium
-                          ${getShiftColor(shift.shiftType.code)}
-                        `}
+                        className="text-xs px-1 py-0.5 w-full justify-center font-medium"
+                        style={{
+                          backgroundColor: `${shift.position.color}20`, // fondo con transparencia
+                          color: shift.position.color,
+                          borderColor: shift.position.color,
+                        }}
                       >
                         {getPositionSiglas(shift)}
                       </Badge>

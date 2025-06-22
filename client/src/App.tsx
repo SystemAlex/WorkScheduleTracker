@@ -13,9 +13,9 @@ import Calendar from '@/pages/calendar';
 import Organigrama from '@/pages/organigrama';
 import Employees from '@/pages/employees';
 import Positions from '@/pages/positions';
-import Shifts from '@/pages/shifts';
 import Reports from '@/pages/reports';
 import NotFound from '@/pages/not-found';
+import Clientes from '@/pages/clientes';
 
 function MyRouter() {
   return (
@@ -24,8 +24,8 @@ function MyRouter() {
       <Route path="/organigrama" component={Organigrama} />
       <Route path="/employees" component={Employees} />
       <Route path="/positions" component={Positions} />
-      <Route path="/shifts" component={Shifts} />
       <Route path="/reports" component={Reports} />
+      <Route path="/clientes" component={Clientes} />
       <Route component={NotFound} />
     </Switch>
   );

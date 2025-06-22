@@ -28,13 +28,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { insertShiftSchema } from '@shared/schema';
-import type {
-  Employee,
-  Position,
-  ShiftType,
-  ShiftWithDetails,
-} from '@shared/schema';
-import { formatDate, getShiftColor } from '@/lib/utils';
+import type { Employee, Position, ShiftWithDetails } from '@shared/schema';
+import { formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 const formSchema = insertShiftSchema.extend({
@@ -48,7 +43,6 @@ interface ShiftModalProps {
   onOpenChange: (open: boolean) => void;
   employees: Employee[];
   positions: Position[];
-  shiftTypes: ShiftType[];
   selectedDate?: Date;
   editingShift?: ShiftWithDetails;
   onSubmit: (data: FormValues) => void;
@@ -60,22 +54,16 @@ export function ShiftModal({
   onOpenChange,
   employees,
   positions,
-  shiftTypes,
   selectedDate,
   editingShift,
   onSubmit,
   isLoading = false,
 }: ShiftModalProps) {
-  const [selectedShiftType, setSelectedShiftType] = useState<number | null>(
-    null,
-  );
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       employeeId: 0,
       positionId: 0,
-      shiftTypeId: 0,
       date: selectedDate ? formatDate(selectedDate) : '',
       notes: '',
     },
@@ -86,20 +74,16 @@ export function ShiftModal({
       form.reset({
         employeeId: editingShift.employeeId,
         positionId: editingShift.positionId,
-        shiftTypeId: editingShift.shiftTypeId,
         date: editingShift.date,
         notes: editingShift.notes || '',
       });
-      setSelectedShiftType(editingShift.shiftTypeId);
     } else if (selectedDate) {
       form.reset({
         employeeId: 0,
         positionId: 0,
-        shiftTypeId: 0,
         date: formatDate(selectedDate),
         notes: '',
       });
-      setSelectedShiftType(null);
     }
   }, [editingShift, selectedDate, form]);
 
@@ -110,7 +94,6 @@ export function ShiftModal({
   const handleClose = () => {
     onOpenChange(false);
     form.reset();
-    setSelectedShiftType(null);
   };
 
   return (
@@ -188,66 +171,6 @@ export function ShiftModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Shift Type Selection */}
-            <FormField
-              control={form.control}
-              name="shiftTypeId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Turno</FormLabel>
-                  <div className="grid grid-cols-2 gap-2">
-                    {shiftTypes.map((shiftType) => {
-                      const color = shiftType.color; //getShiftColor(shiftType.code);
-                      const isSelected = selectedShiftType === shiftType.id;
-
-                      return (
-                        <button
-                          key={shiftType.id}
-                          type="button"
-                          onClick={() => {
-                            field.onChange(shiftType.id);
-                            setSelectedShiftType(shiftType.id);
-                          }}
-                          className={cn(
-                            'p-3 border-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2',
-                            isSelected
-                              ? [
-                                  color === 'blue' &&
-                                    'border-blue-200 bg-blue-50 text-blue-800',
-                                  color === 'green' &&
-                                    'border-green-200 bg-green-50 text-green-800',
-                                  color === 'orange' &&
-                                    'border-orange-200 bg-orange-50 text-orange-800',
-                                  color === 'purple' &&
-                                    'border-purple-200 bg-purple-50 text-purple-800',
-                                ]
-                              : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50',
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              'w-3 h-3 rounded-full',
-                              color === 'blue' && 'bg-blue-500',
-                              color === 'green' && 'bg-green-500',
-                              color === 'orange' && 'bg-orange-500',
-                              color === 'purple' && 'bg-purple-500',
-                            )}
-                          />
-                          <div className="text-left">
-                            <div>{shiftType.name}</div>
-                            <div className="text-xs opacity-75">
-                              {shiftType.startTime} - {shiftType.endTime}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
                   <FormMessage />
                 </FormItem>
               )}

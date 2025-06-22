@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit3, Trash2, User, Clock } from 'lucide-react';
-import { formatDate, getShiftColor } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import type { ShiftWithDetails, Employee } from '@shared/schema';
 import { cn } from '@/lib/utils';
 
@@ -106,76 +106,47 @@ export function QuickPanel({
                 </div>
               ) : (
                 dayShifts.map((shift) => {
-                  const color = shift.shiftType.color; //getShiftColor(shift.shiftType.code);
+                  const color = shift.position.color;
                   return (
                     <div
                       key={shift.id}
-                      className={cn(
-                        'border rounded-lg p-4',
-                        color === 'blue' && 'bg-blue-50 border-blue-200',
-                        color === 'green' && 'bg-green-50 border-green-200',
-                        color === 'orange' && 'bg-orange-50 border-orange-200',
-                        color === 'purple' && 'bg-purple-50 border-purple-200',
-                      )}
+                      className="border rounded-lg p-4"
+                      style={{
+                        borderColor: color,
+                        backgroundColor: `${color}20`,
+                      }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <div
-                            className={cn(
-                              'w-3 h-3 rounded-full',
-                              color === 'blue' && 'bg-blue-500',
-                              color === 'green' && 'bg-green-500',
-                              color === 'orange' && 'bg-orange-500',
-                              color === 'purple' && 'bg-purple-500',
-                            )}
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: color }}
                           />
                           <span
-                            className={cn(
-                              'text-sm font-medium',
-                              color === 'blue' && 'text-blue-900',
-                              color === 'green' && 'text-green-900',
-                              color === 'orange' && 'text-orange-900',
-                              color === 'purple' && 'text-purple-900',
-                            )}
+                            className="text-sm font-medium"
+                            style={{ color }}
                           >
-                            {shift.shiftType.name}
+                            {shift.position.name}
                           </span>
                         </div>
                         <span
-                          className={cn(
-                            'text-xs px-2 py-1 rounded-full',
-                            color === 'blue' && 'text-blue-700 bg-blue-100',
-                            color === 'green' && 'text-green-700 bg-green-100',
-                            color === 'orange' &&
-                              'text-orange-700 bg-orange-100',
-                            color === 'purple' &&
-                              'text-purple-700 bg-purple-100',
-                          )}
+                          className="text-xs px-2 py-1 rounded-full"
+                          style={{
+                            color,
+                            backgroundColor: `${color}10`,
+                            border: `1px solid ${color}`,
+                          }}
                         >
-                          {shift.shiftType.startTime} -{' '}
-                          {shift.shiftType.endTime}
+                          {shift.position.totalHoras} horas
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div
-                            className={cn(
-                              'w-8 h-8 rounded-full flex items-center justify-center',
-                              color === 'blue' && 'bg-blue-200',
-                              color === 'green' && 'bg-green-200',
-                              color === 'orange' && 'bg-orange-200',
-                              color === 'purple' && 'bg-purple-200',
-                            )}
+                            className="w-8 h-8 rounded-full flex items-center justify-center"
+                            style={{ backgroundColor: color }}
                           >
-                            <User
-                              className={cn(
-                                'w-4 h-4',
-                                color === 'blue' && 'text-blue-600',
-                                color === 'green' && 'text-green-600',
-                                color === 'orange' && 'text-orange-600',
-                                color === 'purple' && 'text-purple-600',
-                              )}
-                            />
+                            <User className="w-4 h-4 text-white" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-neutral-900">

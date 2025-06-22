@@ -2,13 +2,13 @@ import * as React from 'react';
 import { Link, useLocation } from 'wouter';
 import { useState } from 'react';
 import {
-  Calendar,
   Users,
   Briefcase,
-  Clock,
   BarChart3,
   Map,
+  Calendar,
   User,
+  Building,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -93,9 +93,9 @@ export function Sidebar() {
       label: 'Puestos',
     },
     {
-      href: withBase('/shifts'),
-      icon: <Clock className="w-5 h-5" />,
-      label: 'Turnos',
+      href: withBase('/clientes'),
+      icon: <Building className="w-5 h-5" />,
+      label: 'Clientes',
     },
     {
       href: withBase('/reports'),

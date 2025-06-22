@@ -9,12 +9,7 @@ import { ShiftModal } from '@/components/calendar/shift-modal';
 import { LayoutContent, LayoutPanel } from '@/components/ui/layout';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import type {
-  ShiftWithDetails,
-  Employee,
-  Position,
-  ShiftType,
-} from '@shared/schema';
+import type { ShiftWithDetails, Employee, Position } from '@shared/schema';
 import { getApiUrl } from '@/lib/paths';
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -56,10 +51,6 @@ export default function Calendar() {
 
   const { data: positions = [] } = useQuery<Position[]>({
     queryKey: ['/api/positions'],
-  });
-
-  const { data: shiftTypes = [] } = useQuery<ShiftType[]>({
-    queryKey: ['/api/shift-types'],
   });
 
   // Mutations
@@ -216,7 +207,6 @@ export default function Calendar() {
         onOpenChange={setModalOpen}
         employees={employees}
         positions={positions}
-        shiftTypes={shiftTypes}
         selectedDate={selectedDate}
         editingShift={editingShift}
         onSubmit={handleShiftSubmit}

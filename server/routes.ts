@@ -4,8 +4,9 @@ import { storage } from './storage';
 import {
   insertEmployeeSchema,
   insertPositionSchema,
-  insertShiftTypeSchema,
   insertShiftSchema,
+  insertClienteSchema,
+  clienteSchema,
 } from '@shared/schema';
 import { z } from 'zod';
 
@@ -182,59 +183,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ message: 'Invalid data', errors: error.errors });
       } else {
         res.status(500).json({ message: 'Failed to create position' });
-      }
-    }
-  });
-
-  // Shift Types routes
-
-  /**
-   * @openapi
-   * /api/shift-types:
-   *   get:
-   *     summary: Obtiene todos los tipos de turno
-   *     tags: [ShiftTypes]
-   *     responses:
-   *       200:
-   *         description: Lista de tipos de turno
-   */
-  app.get('/api/shift-types', async (req, res) => {
-    try {
-      const shiftTypes = await storage.getShiftTypes();
-      res.json(shiftTypes);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to fetch shift types' });
-    }
-  });
-
-  /**
-   * @openapi
-   * /api/shift-types:
-   *   post:
-   *     summary: Crea un nuevo tipo de turno
-   *     tags: [ShiftTypes]
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *     responses:
-   *       201:
-   *         description: Tipo de turno creado
-   *       400:
-   *         description: Datos inválidos
-   */
-  app.post('/api/shift-types', async (req, res) => {
-    try {
-      const validatedData = insertShiftTypeSchema.parse(req.body);
-      const shiftType = await storage.createShiftType(validatedData);
-      res.status(201).json(shiftType);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: 'Invalid data', errors: error.errors });
-      } else {
-        res.status(500).json({ message: 'Failed to create shift type' });
       }
     }
   });
@@ -418,6 +366,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res
         .status(500)
         .json({ message: 'Failed to generate employee hours report' });
+    }
+  });
+
+  // Clientes routes
+
+  /**
+   * @openapi
+   * /api/clientes:
+   *   get:
+   *     summary: Obtiene todos los clientes
+   *     tags: [Clientes]
+   *     responses:
+   *       200:
+   *         description: Lista de clientes
+   */
+  app.get('/api/clientes', async (req, res) => {
+    try {
+      const clientes = await storage.getClientes();
+      res.json(clientes);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch clientes' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/clientes:
+   *   post:
+   *     summary: Crea un nuevo cliente
+   *     tags: [Clientes]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       201:
+   *         description: Cliente creado
+   *       400:
+   *         description: Datos inválidos
+   */
+  app.post('/api/clientes', async (req, res) => {
+    try {
+      const validatedData = insertClienteSchema.parse(req.body);
+      const cliente = await storage.createCliente(validatedData);
+      res.status(201).json(cliente);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: 'Invalid data', errors: error.errors });
+      } else {
+        res.status(500).json({ message: 'Failed to create cliente' });
+      }
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/clientes/{id}:
+   *   put:
+   *     summary: Actualiza un cliente existente
+   *     tags: [Clientes]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       200:
+   *         description: Cliente actualizado
+   *       400:
+   *         description: Datos inválidos
+   *       500:
+   *         description: Error interno
+   */
+  app.put('/api/clientes/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertClienteSchema.parse(req.body); // usa el schema de insert
+      const cliente = await storage.updateCliente(id, validatedData);
+      res.json(cliente);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: 'Invalid data', errors: error.errors });
+      } else {
+        res.status(500).json({ message: 'Failed to update cliente' });
+      }
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/clientes/{id}:
+   *   delete:
+   *     summary: Elimina un cliente
+   *     tags: [Clientes]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       204:
+   *         description: Cliente eliminado
+   *       500:
+   *         description: Error interno
+   */
+  app.delete('/api/clientes/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCliente(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to delete cliente' });
     }
   });
 

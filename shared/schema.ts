@@ -7,9 +7,11 @@ import {
   timestamp,
   time,
   date,
+  varchar,
+  decimal,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { createInsertSchema } from 'drizzle-zod';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 export const employees = pgTable('employees', {
@@ -28,16 +30,11 @@ export const positions = pgTable('positions', {
   description: text('description'),
   department: text('department'),
   siglas: text('siglas').notNull(), // Siglas para mostrar en el calendario
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
-
-export const shiftTypes = pgTable('shift_types', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull().unique(),
-  code: text('code').notNull().unique(), // M, T, N, E
-  startTime: time('start_time').notNull(),
-  endTime: time('end_time').notNull(),
-  color: text('color').notNull(), // hex color code
+  color: varchar('color', { length: 7 }).notNull(), // HEX
+  totalHoras: decimal('total_horas', { precision: 4, scale: 1 }).notNull(), // Puedes usar decimal si tu ORM lo soporta
+  clienteId: integer('cliente_id')
+    .notNull()
+    .references(() => clientes.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
@@ -49,12 +46,20 @@ export const shifts = pgTable('shifts', {
   positionId: integer('position_id')
     .notNull()
     .references(() => positions.id),
-  shiftTypeId: integer('shift_type_id')
-    .notNull()
-    .references(() => shiftTypes.id),
   date: date('date').notNull(),
   notes: text('notes'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const clientes = pgTable('clientes', {
+  id: serial('id').primaryKey(),
+  empresa: varchar('empresa', { length: 100 }).notNull(),
+  direccion: varchar('direccion', { length: 150 }),
+  localidad: varchar('localidad', { length: 100 }),
+  nombreContacto: varchar('nombre_contacto', { length: 100 }),
+  telefono: varchar('telefono', { length: 30 }),
+  email: varchar('email', { length: 100 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 // Relations
@@ -66,10 +71,6 @@ export const positionsRelations = relations(positions, ({ many }) => ({
   shifts: many(shifts),
 }));
 
-export const shiftTypesRelations = relations(shiftTypes, ({ many }) => ({
-  shifts: many(shifts),
-}));
-
 export const shiftsRelations = relations(shifts, ({ one }) => ({
   employee: one(employees, {
     fields: [shifts.employeeId],
@@ -78,10 +79,6 @@ export const shiftsRelations = relations(shifts, ({ one }) => ({
   position: one(positions, {
     fields: [shifts.positionId],
     references: [positions.id],
-  }),
-  shiftType: one(shiftTypes, {
-    fields: [shifts.shiftTypeId],
-    references: [shiftTypes.id],
   }),
 }));
 
@@ -96,15 +93,19 @@ export const insertPositionSchema = createInsertSchema(positions).omit({
   createdAt: true,
 });
 
-export const insertShiftTypeSchema = createInsertSchema(shiftTypes).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertShiftSchema = createInsertSchema(shifts).omit({
   id: true,
   createdAt: true,
 });
+
+export const insertClienteSchema = createInsertSchema(clientes)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    empresa: z.string().min(1, 'La empresa es obligatoria'),
+  });
+
+// Select schemas
+export const clienteSchema = createSelectSchema(clientes);
 
 // Types
 export type Employee = typeof employees.$inferSelect;
@@ -113,15 +114,14 @@ export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type Position = typeof positions.$inferSelect;
 export type InsertPosition = z.infer<typeof insertPositionSchema>;
 
-export type ShiftType = typeof shiftTypes.$inferSelect;
-export type InsertShiftType = z.infer<typeof insertShiftTypeSchema>;
-
 export type Shift = typeof shifts.$inferSelect;
 export type InsertShift = z.infer<typeof insertShiftSchema>;
+
+export type Cliente = typeof clientes.$inferSelect;
+export type InsertCliente = z.infer<typeof insertClienteSchema>;
 
 // Extended types for API responses
 export type ShiftWithDetails = Shift & {
   employee: Employee;
   position: Position;
-  shiftType: ShiftType;
 };
