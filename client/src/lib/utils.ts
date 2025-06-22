@@ -86,3 +86,22 @@ export function generateCalendarDays(year: number, month: number) {
 
   return days;
 }
+
+/**
+ * Aclara un color HEX en el porcentaje indicado (0-100).
+ * Ejemplo: lighten('#3B82F6', 0.8) => color muy claro.
+ */
+export function lighten(hex: string, percent: number) {
+  const num = parseInt(hex.slice(1), 16);
+  let r = (num >> 16) + Math.round((255 - (num >> 16)) * percent);
+  let g =
+    ((num >> 8) & 0x00ff) + Math.round((255 - ((num >> 8) & 0x00ff)) * percent);
+  let b = (num & 0x0000ff) + Math.round((255 - (num & 0x0000ff)) * percent);
+
+  r = Math.min(255, r);
+  g = Math.min(255, g);
+  b = Math.min(255, b);
+
+  const toHex = (v: number) => v.toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}

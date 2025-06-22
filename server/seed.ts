@@ -56,15 +56,16 @@ async function seed() {
     .values(clientesAInsertar)
     .returning();
 
-  // 2. Insertar puestos, cada uno con clienteId, color y totalHoras
+  // 2. Insertar 10 puestos, varios por cliente
   const puestosAInsertar = [
+    // Cliente 1
     {
       name: 'Recepcionista',
       siglas: 'REC',
       department: 'Administración',
       description: 'Atiende la recepción',
       color: '#3B82F6',
-      totalHoras: 8,
+      totalHoras: '8',
       clienteId: clientesInsertados[0].id,
     },
     {
@@ -73,17 +74,18 @@ async function seed() {
       department: 'Operaciones',
       description: 'Vigila el edificio',
       color: '#22C55E',
-      totalHoras: 8,
-      clienteId: clientesInsertados[1].id,
+      totalHoras: '8',
+      clienteId: clientesInsertados[0].id,
     },
+    // Cliente 2
     {
       name: 'Limpieza',
       siglas: 'LIM',
       department: 'Servicios',
       description: 'Limpieza general',
       color: '#F59E42',
-      totalHoras: 6,
-      clienteId: clientesInsertados[2].id,
+      totalHoras: '6',
+      clienteId: clientesInsertados[1].id,
     },
     {
       name: 'Administrativo',
@@ -91,19 +93,68 @@ async function seed() {
       department: 'Administración',
       description: 'Tareas administrativas',
       color: '#A855F7',
-      totalHoras: 7.5,
-      clienteId: clientesInsertados[3].id,
+      totalHoras: '7.5',
+      clienteId: clientesInsertados[1].id,
     },
+    // Cliente 3
     {
       name: 'Mantenimiento',
       siglas: 'MAN',
       department: 'Operaciones',
       description: 'Mantenimiento técnico',
       color: '#F43F5E',
-      totalHoras: 8,
+      totalHoras: '8',
+      clienteId: clientesInsertados[2].id,
+    },
+    {
+      name: 'Cajero',
+      siglas: 'CAJ',
+      department: 'Finanzas',
+      description: 'Atiende la caja',
+      color: '#0EA5E9',
+      totalHoras: '8',
+      clienteId: clientesInsertados[2].id,
+    },
+    // Cliente 4
+    {
+      name: 'Supervisor',
+      siglas: 'SUP',
+      department: 'Operaciones',
+      description: 'Supervisa el personal',
+      color: '#FBBF24',
+      totalHoras: '8',
+      clienteId: clientesInsertados[3].id,
+    },
+    {
+      name: 'Soporte IT',
+      siglas: 'IT',
+      department: 'Tecnología',
+      description: 'Soporte técnico',
+      color: '#6366F1',
+      totalHoras: '7',
+      clienteId: clientesInsertados[3].id,
+    },
+    // Cliente 5
+    {
+      name: 'Recursos Humanos',
+      siglas: 'RRHH',
+      department: 'Administración',
+      description: 'Gestión de personal',
+      color: '#10B981',
+      totalHoras: '7.5',
+      clienteId: clientesInsertados[4].id,
+    },
+    {
+      name: 'Logística',
+      siglas: 'LOG',
+      department: 'Logística',
+      description: 'Gestión de envíos',
+      color: '#EF4444',
+      totalHoras: '8',
       clienteId: clientesInsertados[4].id,
     },
   ];
+
   const puestos = await db
     .insert(positions)
     .values(puestosAInsertar)
@@ -150,35 +201,35 @@ async function seed() {
       name: 'Lucía Torres',
       email: 'lucia@example.com',
       phone: '666666666',
-      position: 'Recepcionista',
+      position: 'Cajero',
       status: 'active',
     },
     {
       name: 'Miguel Díaz',
       email: 'miguel@example.com',
       phone: '777777777',
-      position: 'Seguridad',
+      position: 'Supervisor',
       status: 'active',
     },
     {
       name: 'Sofía Romero',
       email: 'sofia@example.com',
       phone: '888888888',
-      position: 'Limpieza',
+      position: 'Soporte IT',
       status: 'active',
     },
     {
       name: 'Diego Fernández',
       email: 'diego@example.com',
       phone: '999999999',
-      position: 'Administrativo',
+      position: 'Recursos Humanos',
       status: 'active',
     },
     {
       name: 'Valentina Castro',
       email: 'valentina@example.com',
       phone: '101010101',
-      position: 'Mantenimiento',
+      position: 'Logística',
       status: 'active',
     },
   ]);

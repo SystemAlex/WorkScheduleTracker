@@ -3,15 +3,28 @@ import { format, getDaysInMonth, getDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import type { ShiftWithDetails, Employee } from '@shared/schema';
-import { getDayName, formatDate } from '@/lib/utils';
+import type {
+  ShiftWithDetails,
+  Employee,
+  Cliente,
+  Position,
+} from '@shared/schema';
+import { getDayName, formatDate, lighten } from '@/lib/utils';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion';
 
 interface EmployeeCalendarGridProps {
   currentDate: Date;
   shifts: ShiftWithDetails[];
   employees: Employee[];
+  positions: Position[];
+  clientes: Cliente[];
   selectedDate?: Date;
-  onDateSelect?: (date: Date, employee: Employee) => void;
+  onDateSelect?: (date: Date, employee?: Employee) => void; // <--- aquí
   onAddShift?: (date: Date, employee: Employee) => void;
   viewMode?: 'month' | 'week' | 'day';
 }
@@ -20,6 +33,8 @@ export function EmployeeCalendarGrid({
   currentDate,
   shifts,
   employees,
+  positions,
+  clientes,
   selectedDate,
   onDateSelect,
   onAddShift,
@@ -28,6 +43,24 @@ export function EmployeeCalendarGrid({
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const daysInMonth = getDaysInMonth(currentDate);
+
+  // Agrupar empleados por cliente
+  const empleadosPorCliente: Record<number, Employee[]> = {};
+
+  employees.forEach((emp) => {
+    const position = positions.find((p) => p.name === emp.position);
+    if (position && position.clienteId) {
+      if (!empleadosPorCliente[position.clienteId]) {
+        empleadosPorCliente[position.clienteId] = [];
+      }
+      empleadosPorCliente[position.clienteId].push(emp);
+    }
+  });
+
+  // Ordenar empleados alfabéticamente por nombre en cada cliente
+  Object.values(empleadosPorCliente).forEach((arr) =>
+    arr.sort((a, b) => a.name.localeCompare(b.name)),
+  );
 
   // Generate array of dates based on view mode
   const getDaysToShow = () => {
@@ -85,33 +118,53 @@ export function EmployeeCalendarGrid({
     onAddShift?.(date, employee);
   };
 
+  // Estado para controlar qué Accordions están abiertos
+  const [openAccordions, setOpenAccordions] = React.useState(
+    clientes.map((c) => `cliente-${c.id}`),
+  );
+
+  // Sincroniza Accordions abiertos si cambia la lista de clientes
+  React.useEffect(() => {
+    setOpenAccordions(clientes.map((c) => `cliente-${c.id}`));
+  }, [clientes]);
+
   return (
     <div className="w-full overflow-auto">
       <div className="min-w-fit">
         {/* Header with day names and numbers */}
         <div
-          className="grid grid-cols-[200px_repeat(var(--days),minmax(38px,1fr))] gap-1 mb-2"
+          className="grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 p-1 bg-neutral-100 rounded-t-md"
           style={{ '--days': daysToShow.length } as React.CSSProperties}
         >
-          <div className="font-semibold text-sm text-neutral-600 p-2">
+          <div className="font-medium text-sm p-2 truncate bg-neutral-50 rounded-md">
             Empleado
           </div>
           {daysToShow.map((date) => {
             const dayOfWeek = getDay(date);
             const isToday = new Date().toDateString() === date.toDateString();
             const dayAbbr = getDayName(dayOfWeek).toUpperCase();
+            const isSelected =
+              selectedDate &&
+              selectedDate.toDateString() === date.toDateString();
 
-            // Colores según el día de la semana
-            let dayColor = 'bg-cyan-100 text-cyan-800'; // Días de semana (lunes-viernes) en celeste
-            if (dayOfWeek === 6) dayColor = 'bg-yellow-100 text-yellow-800'; // Sábado en amarillo
-            if (dayOfWeek === 0) dayColor = 'bg-red-100 text-red-800'; // Domingo en rojo
+            let dayColor = 'bg-sky-100 text-sky-800 border-sky-800';
+            if (dayOfWeek === 6)
+              dayColor = 'bg-yellow-100 text-yellow-800 border-yellow-800';
+            if (dayOfWeek === 0)
+              dayColor = 'bg-red-100 text-red-800 border-red-800';
 
-            if (isToday) dayColor = 'bg-primary text-primary-foreground';
+            if (isToday)
+              dayColor =
+                'bg-primary text-primary-foreground border-primary-foreground';
 
             return (
               <div
                 key={date.toISOString()}
-                className={`text-center p-1 text-xs font-medium rounded-md ${dayColor}`}
+                className={`min-h-[40px] text-center p-1 border text-xs font-medium rounded-md cursor-pointer transition-colors ${dayColor} ${
+                  isSelected ? 'ring-2 ring-green-600 ring-offset-0' : ''
+                }`}
+                onClick={() => onDateSelect?.(date)}
+                title="Seleccionar este día"
               >
                 <div className="font-bold text-[10px] leading-tight">
                   {dayAbbr}
@@ -125,76 +178,112 @@ export function EmployeeCalendarGrid({
         </div>
 
         {/* Employee rows */}
-        <div className="space-y-1">
-          {employees.map((employee) => (
-            <div
-              key={employee.id}
-              className="grid grid-cols-[200px_repeat(var(--days),minmax(38px,1fr))] gap-1 items-center"
-              style={{ '--days': daysToShow.length } as React.CSSProperties}
-            >
-              {/* Employee name */}
-              <div className="font-medium text-sm p-2 truncate bg-neutral-50 rounded-md">
-                {employee.name}
-              </div>
-
-              {/* Days */}
-              {daysToShow.map((date) => {
-                const shift = shifts.find(
-                  (s) =>
-                    s.employeeId === employee.id && s.date === formatDate(date), // <-- compara ambos como string YYYY-MM-DD
-                );
-                const dayOfWeek = getDay(date);
-                const isSelected =
-                  selectedDate &&
-                  selectedDate.toDateString() === date.toDateString();
-
-                // Match the header colors exactly
-                let dayColor = 'bg-cyan-50'; // Días de semana (lunes-viernes) en celeste
-                if (dayOfWeek === 6) dayColor = 'bg-yellow-50'; // Sábado en amarillo
-                if (dayOfWeek === 0) dayColor = 'bg-red-50'; // Domingo en rojo
-
-                return (
-                  <div
-                    key={`${employee.id}-${date.toISOString()}`}
-                    className={`
-                      min-h-[40px] p-1 rounded-md border cursor-pointer flex items-stretch justify-center
-                      transition-colors duration-150 relative group
-                      ${dayColor}
-                      ${
-                        isSelected
-                          ? 'ring-2 ring-primary ring-offset-1'
-                          : 'hover:opacity-80'
-                      }
-                    `}
-                    onClick={() => handleCellClick(date, employee)}
-                  >
-                    {shift ? (
-                      <Badge
-                        variant="outline"
-                        className="text-xs px-1 py-0.5 w-full justify-center font-medium"
-                        style={{
-                          backgroundColor: `${shift.position.color}20`, // fondo con transparencia
-                          color: shift.position.color,
-                          borderColor: shift.position.color,
-                        }}
+        <div className="space-y-2 border-t rounded-b-md overflow-hidden">
+          <Accordion
+            type="multiple"
+            value={openAccordions}
+            onValueChange={setOpenAccordions}
+          >
+            {clientes.map((cliente) => (
+              <AccordionItem key={cliente.id} value={`cliente-${cliente.id}`}>
+                <AccordionTrigger className="p-1 bg-neutral-200">
+                  <span className="font-semibold text-base">
+                    {cliente.empresa}
+                    <span className="ml-2 text-xs text-neutral-500 font-normal">
+                      ({empleadosPorCliente[cliente.id]?.length || 0})
+                    </span>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-1 p-1 bg-neutral-100">
+                  {empleadosPorCliente[cliente.id]?.length ? (
+                    empleadosPorCliente[cliente.id].map((employee) => (
+                      <div
+                        key={employee.id}
+                        className="grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 items-center"
+                        style={
+                          { '--days': daysToShow.length } as React.CSSProperties
+                        }
                       >
-                        {getPositionSiglas(shift)}
-                      </Badge>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 w-full h-full p-0"
-                        onClick={(e) => handleAddClick(e, date, employee)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                        {/* Employee name */}
+                        <div className="font-medium text-sm p-2 truncate bg-neutral-50 rounded-md">
+                          {employee.name}
+                        </div>
+
+                        {/* Days */}
+                        {daysToShow.map((date) => {
+                          const shift = shifts.find(
+                            (s) =>
+                              s.employeeId === employee.id &&
+                              s.date === formatDate(date), // <-- compara ambos como string YYYY-MM-DD
+                          );
+                          const dayOfWeek = getDay(date);
+                          const isSelected =
+                            selectedDate &&
+                            selectedDate.toDateString() === date.toDateString();
+
+                          // Match the header colors exactly
+                          let dayColor = 'bg-sky-50'; // Días de semana (lunes-viernes) en celeste
+                          if (dayOfWeek === 6) dayColor = 'bg-yellow-50'; // Sábado en amarillo
+                          if (dayOfWeek === 0) dayColor = 'bg-red-50'; // Domingo en rojo
+
+                          return (
+                            <div
+                              key={`${employee.id}-${date.toISOString()}`}
+                              className={`
+                                min-h-[40px] p-0 rounded-md border cursor-pointer flex items-stretch justify-center
+                                transition-colors duration-150 relative group
+                                ${dayColor}
+                                ${
+                                  isSelected
+                                    ? 'ring-2 ring-green-600 ring-offset-0'
+                                    : 'hover:opacity-80'
+                                }
+                              `}
+                              onClick={() => handleCellClick(date, employee)}
+                            >
+                              {shift ? (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs px-1 py-0.5 w-full justify-center font-medium"
+                                  style={{
+                                    backgroundColor: lighten(
+                                      shift.position.color,
+                                      0.9,
+                                    ), // 80% más claro
+                                    color: shift.position.color,
+                                    borderColor: shift.position.color,
+                                    outline: `3px solid ${shift.position.color}`,
+                                    outlineOffset: '-1px',
+                                  }}
+                                >
+                                  {getPositionSiglas(shift)}
+                                </Badge>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="opacity-0 group-hover:opacity-100 w-full h-full p-0"
+                                  onClick={(e) =>
+                                    handleAddClick(e, date, employee)
+                                  }
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-neutral-400 text-sm px-4 py-2">
+                      Sin empleados asignados
+                    </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
 
         {/* Legend */}

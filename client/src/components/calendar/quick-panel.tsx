@@ -87,7 +87,7 @@ export function QuickPanel({
       )}
 
       {/* Today Shifts */}
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="flex-1 p-0 overflow-auto">
         {selectedDate && (
           <>
             <h4 className="text-sm font-semibold text-neutral-700 uppercase tracking-wide mb-4">

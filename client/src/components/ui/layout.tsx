@@ -26,7 +26,7 @@ export function LayoutMain({ children, className }: LayoutProps) {
   return (
     <main
       className={cn(
-        'flex-1 flex flex-col overflow-hidden px-4 pt-4',
+        'flex-1 flex flex-col overflow-hidden p-4',
         className,
       )}
     >
@@ -50,7 +50,7 @@ export function LayoutHeader({ children, className }: LayoutProps) {
 
 export function LayoutContent({ children, className }: LayoutProps) {
   return (
-    <div className={cn('flex-1 p-4 overflow-auto', className)}>{children}</div>
+    <div className={cn('flex-1 p-0 overflow-auto', className)}>{children}</div>
   );
 }
 

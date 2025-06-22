@@ -33,6 +33,8 @@ import { formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 const formSchema = insertShiftSchema.extend({
+  employeeId: z.number().min(1, 'El empleado es requerido'),
+  positionId: z.number().min(1, 'El puesto es requerido'),
   date: z.string().min(1, 'La fecha es requerida'),
 });
 
@@ -43,6 +45,7 @@ interface ShiftModalProps {
   onOpenChange: (open: boolean) => void;
   employees: Employee[];
   positions: Position[];
+  selectedEmployee?: Employee | null;
   selectedDate?: Date;
   editingShift?: ShiftWithDetails;
   onSubmit: (data: FormValues) => void;
@@ -54,6 +57,7 @@ export function ShiftModal({
   onOpenChange,
   employees,
   positions,
+  selectedEmployee,
   selectedDate,
   editingShift,
   onSubmit,
@@ -69,6 +73,9 @@ export function ShiftModal({
     },
   });
 
+  const employeeTriggerRef = React.useRef<HTMLButtonElement>(null);
+  const positionTriggerRef = React.useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (editingShift) {
       form.reset({
@@ -77,15 +84,23 @@ export function ShiftModal({
         date: editingShift.date,
         notes: editingShift.notes || '',
       });
-    } else if (selectedDate) {
+    } else if (selectedDate || selectedEmployee) {
+      form.reset({
+        employeeId: selectedEmployee ? selectedEmployee.id : 0,
+        positionId: 0,
+        date: selectedDate ? formatDate(selectedDate) : '',
+        notes: '',
+      });
+    } else {
+      // Caso: todo vacío
       form.reset({
         employeeId: 0,
         positionId: 0,
-        date: formatDate(selectedDate),
+        date: '',
         notes: '',
       });
     }
-  }, [editingShift, selectedDate, form]);
+  }, [editingShift, selectedDate, selectedEmployee, form]);
 
   const handleSubmit = (data: FormValues) => {
     onSubmit(data);
@@ -94,6 +109,18 @@ export function ShiftModal({
   const handleClose = () => {
     onOpenChange(false);
     form.reset();
+  };
+
+  const handleInvalid = (errors: any) => {
+    setTimeout(() => {
+      if (errors.employeeId && employeeTriggerRef.current) {
+        employeeTriggerRef.current.focus();
+      } else if (errors.positionId && positionTriggerRef.current) {
+        positionTriggerRef.current.focus();
+      } else if (errors.date) {
+        form.setFocus('date');
+      }
+    }, 1); // 50ms suele ser suficiente, puedes ajustar si lo ves necesario
   };
 
   return (
@@ -107,7 +134,7 @@ export function ShiftModal({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(handleSubmit, handleInvalid)}
             className="space-y-4"
           >
             {/* Employee Selection */}
@@ -122,7 +149,7 @@ export function ShiftModal({
                     value={field.value ? field.value.toString() : ''}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger ref={employeeTriggerRef}>
                         <SelectValue placeholder="Seleccionar empleado..." />
                       </SelectTrigger>
                     </FormControl>
@@ -156,7 +183,7 @@ export function ShiftModal({
                     value={field.value ? field.value.toString() : ''}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger ref={positionTriggerRef}>
                         <SelectValue placeholder="Seleccionar puesto..." />
                       </SelectTrigger>
                     </FormControl>

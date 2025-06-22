@@ -9,7 +9,12 @@ import { ShiftModal } from '@/components/calendar/shift-modal';
 import { LayoutContent, LayoutPanel } from '@/components/ui/layout';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import type { ShiftWithDetails, Employee, Position } from '@shared/schema';
+import type {
+  ShiftWithDetails,
+  Employee,
+  Position,
+  Cliente,
+} from '@shared/schema';
 import { getApiUrl } from '@/lib/paths';
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -51,6 +56,10 @@ export default function Calendar() {
 
   const { data: positions = [] } = useQuery<Position[]>({
     queryKey: ['/api/positions'],
+  });
+
+  const { data: clientes = [] } = useQuery<Cliente[]>({
+    queryKey: ['/api/clientes'],
   });
 
   // Mutations
@@ -126,13 +135,15 @@ export default function Calendar() {
     setCurrentDate(newDate);
   };
 
-  const handleDateSelect = (date: Date) => {
+  const handleEmployeeDateSelect = (date: Date, employee?: Employee) => {
     setSelectedDate(date);
+    setCurrentDate(date);
+    setSelectedEmployee(employee); // Será undefined si viene del header
   };
 
-  const handleEmployeeDateSelect = (date: Date, employee: Employee) => {
+  const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    setSelectedEmployee(employee);
+    setCurrentDate(date); // <-- agrega esto
   };
 
   const handleEmployeeAddShift = (date: Date, employee: Employee) => {
@@ -144,6 +155,8 @@ export default function Calendar() {
 
   const handleAddShift = () => {
     setEditingShift(undefined);
+    setSelectedEmployee(undefined);
+    setSelectedDate(undefined); // <-- Limpia la fecha seleccionada
     setModalOpen(true);
   };
 
@@ -194,6 +207,8 @@ export default function Calendar() {
             currentDate={currentDate}
             shifts={shifts}
             employees={employees}
+            positions={positions}
+            clientes={clientes}
             selectedDate={selectedDate}
             onDateSelect={handleEmployeeDateSelect}
             onAddShift={handleEmployeeAddShift}
@@ -208,6 +223,7 @@ export default function Calendar() {
         employees={employees}
         positions={positions}
         selectedDate={selectedDate}
+        selectedEmployee={selectedEmployee}
         editingShift={editingShift}
         onSubmit={handleShiftSubmit}
         isLoading={createShiftMutation.isPending}
