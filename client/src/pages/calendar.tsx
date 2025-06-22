@@ -213,6 +213,7 @@ export default function Calendar() {
             onDateSelect={handleEmployeeDateSelect}
             onAddShift={handleEmployeeAddShift}
             viewMode={viewMode}
+            selectedEmployee={selectedEmployee}
           />
         </LayoutContent>
       </div>

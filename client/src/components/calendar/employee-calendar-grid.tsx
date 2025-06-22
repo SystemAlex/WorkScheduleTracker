@@ -25,6 +25,7 @@ interface EmployeeCalendarGridProps {
   clientes: Cliente[];
   selectedDate?: Date;
   onDateSelect?: (date: Date, employee?: Employee) => void; // <--- aquí
+  selectedEmployee?: Employee;
   onAddShift?: (date: Date, employee: Employee) => void;
   viewMode?: 'month' | 'week' | 'day';
 }
@@ -36,6 +37,7 @@ export function EmployeeCalendarGrid({
   positions,
   clientes,
   selectedDate,
+  selectedEmployee, // <--- agrega aquí
   onDateSelect,
   onAddShift,
   viewMode = 'month',
@@ -199,13 +201,19 @@ export function EmployeeCalendarGrid({
                     empleadosPorCliente[cliente.id].map((employee) => (
                       <div
                         key={employee.id}
-                        className="grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 items-center"
+                        className={`grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 items-center`}
                         style={
                           { '--days': daysToShow.length } as React.CSSProperties
                         }
                       >
                         {/* Employee name */}
-                        <div className="font-medium text-sm p-2 truncate bg-neutral-50 rounded-md">
+                        <div
+                          className={`min-h-[40px] font-medium text-sm p-2 truncate bg-neutral-50 rounded-md ${
+                            selectedEmployee?.id === employee.id
+                              ? 'ring-2 ring-green-600 ring-offset-0'
+                              : ''
+                          }`}
+                        >
                           {employee.name}
                         </div>
 
@@ -214,7 +222,7 @@ export function EmployeeCalendarGrid({
                           const shift = shifts.find(
                             (s) =>
                               s.employeeId === employee.id &&
-                              s.date === formatDate(date), // <-- compara ambos como string YYYY-MM-DD
+                              s.date === formatDate(date),
                           );
                           const dayOfWeek = getDay(date);
                           const isSelected =
@@ -222,9 +230,9 @@ export function EmployeeCalendarGrid({
                             selectedDate.toDateString() === date.toDateString();
 
                           // Match the header colors exactly
-                          let dayColor = 'bg-sky-50'; // Días de semana (lunes-viernes) en celeste
-                          if (dayOfWeek === 6) dayColor = 'bg-yellow-50'; // Sábado en amarillo
-                          if (dayOfWeek === 0) dayColor = 'bg-red-50'; // Domingo en rojo
+                          let dayColor = 'bg-sky-50';
+                          if (dayOfWeek === 6) dayColor = 'bg-yellow-50';
+                          if (dayOfWeek === 0) dayColor = 'bg-red-50';
 
                           return (
                             <div
@@ -236,7 +244,9 @@ export function EmployeeCalendarGrid({
                                 ${
                                   isSelected
                                     ? 'ring-2 ring-green-600 ring-offset-0'
-                                    : 'hover:opacity-80'
+                                    : selectedEmployee?.id === employee.id
+                                      ? 'ring-2 ring-green-600 ring-offset-0'
+                                      : 'hover:opacity-80'
                                 }
                               `}
                               onClick={() => handleCellClick(date, employee)}
