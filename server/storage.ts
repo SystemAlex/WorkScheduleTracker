@@ -274,6 +274,36 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
+  async getShiftById(id: number): Promise<ShiftWithDetails | undefined> {
+    const [result] = await db
+      .select({
+        id: shifts.id,
+        employeeId: shifts.employeeId,
+        positionId: shifts.positionId,
+        date: shifts.date,
+        notes: shifts.notes,
+        createdAt: shifts.createdAt,
+        employee: employees,
+        position: positions,
+      })
+      .from(shifts)
+      .leftJoin(employees, eq(shifts.employeeId, employees.id))
+      .leftJoin(positions, eq(shifts.positionId, positions.id))
+      .where(eq(shifts.id, id));
+    return result
+      ? {
+          id: result.id,
+          employeeId: result.employeeId,
+          positionId: result.positionId,
+          date: result.date,
+          notes: result.notes,
+          createdAt: result.createdAt,
+          employee: result.employee!,
+          position: result.position!,
+        }
+      : undefined;
+  }
+
   // Reports
   async getEmployeeHoursReport(
     employeeId?: number,
@@ -352,6 +382,42 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCliente(id: number): Promise<void> {
     await db.delete(clientes).where(eq(clientes.id, id));
+  }
+
+  async updateShift(id: number, data: InsertShift): Promise<ShiftWithDetails> {
+    const [shift] = await db
+      .update(shifts)
+      .set(data)
+      .where(eq(shifts.id, id))
+      .returning();
+
+    // Get the updated shift with details
+    const [result] = await db
+      .select({
+        id: shifts.id,
+        employeeId: shifts.employeeId,
+        positionId: shifts.positionId,
+        date: shifts.date,
+        notes: shifts.notes,
+        createdAt: shifts.createdAt,
+        employee: employees,
+        position: positions,
+      })
+      .from(shifts)
+      .leftJoin(employees, eq(shifts.employeeId, employees.id))
+      .leftJoin(positions, eq(shifts.positionId, positions.id))
+      .where(eq(shifts.id, id));
+
+    return {
+      id: result.id,
+      employeeId: result.employeeId,
+      positionId: result.positionId,
+      date: result.date,
+      notes: result.notes,
+      createdAt: result.createdAt,
+      employee: result.employee!,
+      position: result.position!,
+    };
   }
 }
 

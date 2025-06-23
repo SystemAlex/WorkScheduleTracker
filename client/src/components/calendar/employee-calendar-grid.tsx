@@ -27,6 +27,7 @@ interface EmployeeCalendarGridProps {
   onDateSelect?: (date: Date, employee?: Employee) => void; // <--- aquí
   selectedEmployee?: Employee;
   onAddShift?: (date: Date, employee: Employee) => void;
+  onEditShift?: (shift: ShiftWithDetails) => void;
   viewMode?: 'month' | 'week' | 'day';
 }
 
@@ -40,6 +41,7 @@ export function EmployeeCalendarGrid({
   selectedEmployee, // <--- agrega aquí
   onDateSelect,
   onAddShift,
+  onEditShift,
   viewMode = 'month',
 }: EmployeeCalendarGridProps) {
   const year = currentDate.getFullYear();
@@ -131,11 +133,11 @@ export function EmployeeCalendarGrid({
   }, [clientes]);
 
   return (
-    <div className="w-full overflow-auto">
-      <div className="min-w-fit">
+    <div className="w-full overflow-y-hidden overflow-x-auto p-2 h-full">
+      <div className="min-w-fit overflow-auto relative h-full">
         {/* Header with day names and numbers */}
         <div
-          className="grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 p-1 bg-neutral-100 rounded-t-md"
+          className="sticky top-0 z-10 grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 p-1 bg-neutral-100 rounded-t-md"
           style={{ '--days': daysToShow.length } as React.CSSProperties}
         >
           <div className="font-medium text-sm p-2 truncate bg-neutral-50 rounded-md">
@@ -254,17 +256,19 @@ export function EmployeeCalendarGrid({
                               {shift ? (
                                 <Badge
                                   variant="outline"
-                                  className="text-xs px-1 py-0.5 w-full justify-center font-medium"
+                                  className="text-xs px-1 py-0.5 w-full justify-center font-medium cursor-pointer"
                                   style={{
                                     backgroundColor: lighten(
                                       shift.position.color,
                                       0.9,
-                                    ), // 80% más claro
+                                    ),
                                     color: shift.position.color,
                                     borderColor: shift.position.color,
-                                    outline: `3px solid ${shift.position.color}`,
+                                    outline: `2px solid ${shift.position.color}`,
                                     outlineOffset: '-1px',
                                   }}
+                                  onClick={() => onEditShift?.(shift)}
+                                  title="Editar turno"
                                 >
                                   {getPositionSiglas(shift)}
                                 </Badge>
@@ -272,7 +276,7 @@ export function EmployeeCalendarGrid({
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="opacity-0 group-hover:opacity-100 w-full h-full p-0"
+                                  className="opacity-0 group-hover:opacity-100 group-hover:bg-primary self-center w-fit h-full p-1 hover:text-primary-foreground"
                                   onClick={(e) =>
                                     handleAddClick(e, date, employee)
                                   }

@@ -66,6 +66,19 @@ export default function Calendar() {
   const createShiftMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest('POST', '/api/shifts', data);
+
+      if (response.status === 409) {
+        const body = await response.json();
+        throw new Error(body.message || 'Conflicto de turno');
+      }
+      if (response.status === 400) {
+        const body = await response.json();
+        throw new Error(body.message || 'Datos inválidos');
+      }
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message || 'Error inesperado');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -78,9 +91,80 @@ export default function Calendar() {
       });
     },
     onError: (error: any) => {
+      let description = 'No se pudo asignar el turno.';
+      if (
+        error.message?.includes('conflict') ||
+        error.message?.includes('Conflicto')
+      ) {
+        description = 'Ya existe un turno para ese empleado en esa fecha.';
+      } else if (
+        error.message?.includes('inválidos') ||
+        error.message?.includes('Invalid')
+      ) {
+        description = 'Los datos ingresados no son válidos.';
+      } else if (error.message?.includes('not found')) {
+        description = 'El turno no existe.';
+      }
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo asignar el turno.',
+        description,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const updateShiftMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const response = await apiRequest('PUT', `/api/shifts/${id}`, data);
+
+      if (response.status === 409) {
+        const body = await response.json();
+        throw new Error(body.message || 'Conflicto de turno');
+      }
+      if (response.status === 400) {
+        const body = await response.json();
+        throw new Error(body.message || 'Datos inválidos');
+      }
+      if (response.status === 404) {
+        const body = await response.json();
+        throw new Error(body.message || 'Turno no encontrado');
+      }
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message || 'Error inesperado');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
+      setModalOpen(false);
+      setEditingShift(undefined);
+      toast({
+        title: 'Turno actualizado',
+        description: 'El turno ha sido actualizado correctamente.',
+      });
+    },
+    onError: (error: any) => {
+      let description = 'No se pudo actualizar el turno.';
+      if (
+        error.message?.includes('conflict') ||
+        error.message?.includes('Conflicto')
+      ) {
+        description = 'Ya existe un turno para ese empleado en esa fecha.';
+      } else if (
+        error.message?.includes('inválidos') ||
+        error.message?.includes('Invalid')
+      ) {
+        description = 'Los datos ingresados no son válidos.';
+      } else if (
+        error.message?.includes('not found') ||
+        error.message?.includes('no encontrado')
+      ) {
+        description = 'El turno no existe.';
+      }
+      toast({
+        title: 'Error',
+        description,
         variant: 'destructive',
       });
     },
@@ -88,7 +172,16 @@ export default function Calendar() {
 
   const deleteShiftMutation = useMutation({
     mutationFn: async (shiftId: number) => {
-      await apiRequest('DELETE', `/api/shifts/${shiftId}`);
+      const response = await apiRequest('DELETE', `/api/shifts/${shiftId}`);
+      if (response.status === 404) {
+        const body = await response.json();
+        throw new Error(body.message || 'Turno no encontrado');
+      }
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message || 'Error inesperado');
+      }
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
@@ -97,10 +190,17 @@ export default function Calendar() {
         description: 'El turno ha sido eliminado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      let description = 'No se pudo eliminar el turno.';
+      if (
+        error.message?.includes('not found') ||
+        error.message?.includes('no encontrado')
+      ) {
+        description = 'El turno no existe.';
+      }
       toast({
         title: 'Error',
-        description: 'No se pudo eliminar el turno.',
+        description,
         variant: 'destructive',
       });
     },
@@ -172,7 +272,11 @@ export default function Calendar() {
   };
 
   const handleShiftSubmit = (data: any) => {
-    createShiftMutation.mutate(data);
+    if (editingShift) {
+      updateShiftMutation.mutate({ id: editingShift.id, data });
+    } else {
+      createShiftMutation.mutate(data);
+    }
   };
 
   if (shiftsLoading) {
@@ -214,6 +318,7 @@ export default function Calendar() {
             onAddShift={handleEmployeeAddShift}
             viewMode={viewMode}
             selectedEmployee={selectedEmployee}
+            onEditShift={handleEditShift}
           />
         </LayoutContent>
       </div>

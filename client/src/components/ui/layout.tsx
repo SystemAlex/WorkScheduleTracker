@@ -26,7 +26,7 @@ export function LayoutMain({ children, className }: LayoutProps) {
   return (
     <main
       className={cn(
-        'flex-1 flex flex-col overflow-hidden p-4',
+        'flex-1 flex flex-col overflow-hidden',
         className,
       )}
     >

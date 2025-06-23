@@ -72,6 +72,7 @@ export function ShiftModal({
       notes: '',
     },
   });
+  const { isDirty } = form.formState;
 
   const employeeTriggerRef = React.useRef<HTMLButtonElement>(null);
   const positionTriggerRef = React.useRef<HTMLButtonElement>(null);
@@ -103,6 +104,18 @@ export function ShiftModal({
   }, [editingShift, selectedDate, selectedEmployee, form]);
 
   const handleSubmit = (data: FormValues) => {
+    if (
+      editingShift &&
+      data.employeeId === editingShift.employeeId &&
+      data.positionId === editingShift.positionId &&
+      data.date === editingShift.date &&
+      (data.notes || '') === (editingShift.notes || '')
+    ) {
+      // No hay cambios, cerrar el modal
+      onOpenChange(false);
+      form.reset();
+      return;
+    }
     onSubmit(data);
   };
 
@@ -147,6 +160,7 @@ export function ShiftModal({
                   <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
                     value={field.value ? field.value.toString() : ''}
+                    disabled={!!editingShift}
                   >
                     <FormControl>
                       <SelectTrigger ref={employeeTriggerRef}>
@@ -211,7 +225,7 @@ export function ShiftModal({
                 <FormItem>
                   <FormLabel>Fecha</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} disabled={!!editingShift} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -249,7 +263,10 @@ export function ShiftModal({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button
+                type="submit"
+                disabled={isLoading || (editingShift && !isDirty)}
+              >
                 {isLoading
                   ? 'Guardando...'
                   : editingShift

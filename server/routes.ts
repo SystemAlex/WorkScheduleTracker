@@ -328,6 +328,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @openapi
+   * /api/shifts/{id}:
+   *   put:
+   *     summary: Actualiza un turno existente
+   *     tags: [Shifts]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       200:
+   *         description: Turno actualizado
+   *       400:
+   *         description: Datos inválidos
+   *       409:
+   *         description: Conflicto de turno
+   */
+  app.put('/api/shifts/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const validatedData = insertShiftSchema.parse(req.body);
+
+      // Obtén el turno actual
+      const currentShift = await storage.getShiftById(id);
+
+      if (!currentShift) {
+        return res.status(404).json({ message: 'Shift not found' });
+      }
+
+      // Si se intenta cambiar empleado o fecha, verifica conflicto
+      const changingEmployeeOrDate =
+        validatedData.employeeId !== currentShift.employeeId ||
+        validatedData.date !== currentShift.date;
+
+      if (changingEmployeeOrDate) {
+        const conflicts = await storage.checkShiftConflicts(
+          validatedData.employeeId,
+          validatedData.date,
+          id, // excluye el turno actual
+        );
+
+        if (conflicts.length > 0) {
+          return res.status(409).json({
+            message: 'Shift conflict detected',
+            conflicts,
+          });
+        }
+      }
+
+      const updated = await storage.updateShift(id, validatedData);
+      res.json(updated);
+    } catch (error) {
+      res.status(400).json({ message: 'Invalid data' });
+    }
+  });
+
   // Reports routes
 
   /**
