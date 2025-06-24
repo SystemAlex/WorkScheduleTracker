@@ -332,7 +332,12 @@ export default function Calendar() {
         selectedEmployee={selectedEmployee}
         editingShift={editingShift}
         onSubmit={handleShiftSubmit}
-        isLoading={createShiftMutation.isPending}
+        isLoading={
+          createShiftMutation.isPending ||
+          updateShiftMutation.isPending ||
+          deleteShiftMutation.isPending
+        }
+        onDelete={editingShift ? handleDeleteShift : undefined} // <-- agrega esto
       />
     </>
   );

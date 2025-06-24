@@ -50,6 +50,7 @@ interface ShiftModalProps {
   editingShift?: ShiftWithDetails;
   onSubmit: (data: FormValues) => void;
   isLoading?: boolean;
+  onDelete?: (shiftId: number) => void; // <-- agrega esto
 }
 
 export function ShiftModal({
@@ -255,6 +256,24 @@ export function ShiftModal({
 
             {/* Actions */}
             <div className="flex justify-end space-x-3 pt-4">
+              {editingShift && onDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => {
+                    if (
+                      confirm(
+                        '¿Estás seguro de que quieres eliminar este turno? Esta acción no se puede deshacer.',
+                      )
+                    ) {
+                      onDelete(editingShift.id);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  Eliminar
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
