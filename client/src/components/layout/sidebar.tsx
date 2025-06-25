@@ -78,11 +78,6 @@ export function Sidebar() {
       label: 'Calendario',
     },
     {
-      href: withBase('/organigrama'),
-      icon: <Map className="w-5 h-5" />,
-      label: 'Organigrama',
-    },
-    {
       href: withBase('/employees'),
       icon: <Users className="w-5 h-5" />,
       label: 'Empleados',
@@ -101,6 +96,11 @@ export function Sidebar() {
       href: withBase('/reports'),
       icon: <BarChart3 className="w-5 h-5" />,
       label: 'Reportes',
+    },
+    {
+      href: withBase('/organigrama'),
+      icon: <Map className="w-5 h-5" />,
+      label: 'Organigrama',
     },
   ];
 

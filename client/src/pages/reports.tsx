@@ -95,14 +95,14 @@ export default function Reports() {
         subtitle="Analiza las horas trabajadas y estadísticas del equipo"
       />
 
-      <LayoutContent>
+      <LayoutContent className='p-2'>
         {/* Filters */}
         <Card className="mb-4">
           <CardHeader>
             <CardTitle>Filtros de Reporte</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Mes
@@ -195,7 +195,7 @@ export default function Reports() {
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Horas</CardTitle>

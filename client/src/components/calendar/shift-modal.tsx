@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { ConfirmDialog } from '../ui/confirm';
 import { insertShiftSchema } from '@shared/schema';
 import type { Employee, Position, ShiftWithDetails } from '@shared/schema';
 import { formatDate } from '@/lib/utils';
@@ -61,6 +62,7 @@ export function ShiftModal({
   selectedEmployee,
   selectedDate,
   editingShift,
+  onDelete,
   onSubmit,
   isLoading = false,
 }: ShiftModalProps) {
@@ -257,22 +259,21 @@ export function ShiftModal({
             {/* Actions */}
             <div className="flex justify-end space-x-3 pt-4">
               {editingShift && onDelete && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => {
-                    if (
-                      confirm(
-                        '¿Estás seguro de que quieres eliminar este turno? Esta acción no se puede deshacer.',
-                      )
-                    ) {
-                      onDelete(editingShift.id);
-                    }
-                  }}
-                  disabled={isLoading}
-                >
-                  Eliminar
-                </Button>
+                <ConfirmDialog
+                  trigger={
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={isLoading}
+                    >
+                      Eliminar
+                    </Button>
+                  }
+                  title="¿Eliminar turno?"
+                  description="Esta acción no se puede deshacer. ¿Querés continuar?"
+                  onConfirm={() => onDelete(editingShift.id)}
+                  isLoading={isLoading}
+                />
               )}
               <Button
                 type="button"
@@ -290,7 +291,7 @@ export function ShiftModal({
                   ? 'Guardando...'
                   : editingShift
                     ? 'Actualizar'
-                    : 'Asignar Turno'}
+                    : 'Asignar'}
               </Button>
             </div>
           </form>

@@ -24,7 +24,7 @@ interface EmployeeCalendarGridProps {
   positions: Position[];
   clientes: Cliente[];
   selectedDate?: Date;
-  onDateSelect?: (date: Date, employee?: Employee) => void; // <--- aquí
+  onDateSelect?: (date: Date, employee?: Employee) => void;
   selectedEmployee?: Employee;
   onAddShift?: (date: Date, employee: Employee) => void;
   onEditShift?: (shift: ShiftWithDetails) => void;
@@ -38,7 +38,7 @@ export function EmployeeCalendarGrid({
   positions,
   clientes,
   selectedDate,
-  selectedEmployee, // <--- agrega aquí
+  selectedEmployee,
   onDateSelect,
   onAddShift,
   onEditShift,

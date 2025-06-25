@@ -166,25 +166,19 @@ export default function Clientes() {
       <Header
         title="Gestión de Clientes"
         subtitle="Administra los clientes de tu organización"
+        onAddClient={handleAdd}
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center p-2">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
-              Clientes ({clientes.length})
+              Total Clientes ({clientes.length})
             </h3>
-            <p className="text-sm text-neutral-500">
-              Lista de empresas y contactos asociados
-            </p>
           </div>
-          <Button onClick={handleAdd}>
-            <Plus className="w-4 h-4 mr-2" />
-            Agregar Cliente
-          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-2">
           {clientes.map((cliente) => (
             <Card key={cliente.id}>
               <CardHeader className="pb-4">
@@ -361,7 +355,7 @@ export default function Clientes() {
                     updateClienteMutation.isPending
                   }
                 >
-                  {editingCliente ? 'Actualizar' : 'Crear'}
+                  {editingCliente ? 'Actualizar' : 'Agregar'}
                 </Button>
               </div>
             </form>

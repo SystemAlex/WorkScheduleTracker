@@ -185,11 +185,19 @@ export default function Calendar() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
+      if (editingShift) {
+        setSelectedDate(new Date(editingShift.date));
+        setSelectedEmployee(
+          employees.find((e) => e.id === editingShift.employeeId),
+        );
+        setEditingShift(undefined);
+      }
       toast({
         title: 'Turno eliminado',
         description: 'El turno ha sido eliminado correctamente.',
       });
     },
+
     onError: (error: any) => {
       let description = 'No se pudo eliminar el turno.';
       if (
@@ -243,7 +251,7 @@ export default function Calendar() {
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    setCurrentDate(date); // <-- agrega esto
+    setCurrentDate(date);
   };
 
   const handleEmployeeAddShift = (date: Date, employee: Employee) => {
@@ -256,7 +264,7 @@ export default function Calendar() {
   const handleAddShift = () => {
     setEditingShift(undefined);
     setSelectedEmployee(undefined);
-    setSelectedDate(undefined); // <-- Limpia la fecha seleccionada
+    setSelectedDate(undefined);
     setModalOpen(true);
   };
 
@@ -266,9 +274,7 @@ export default function Calendar() {
   };
 
   const handleDeleteShift = (shiftId: number) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este turno?')) {
-      deleteShiftMutation.mutate(shiftId);
-    }
+    deleteShiftMutation.mutate(shiftId);
   };
 
   const handleShiftSubmit = (data: any) => {
@@ -337,7 +343,7 @@ export default function Calendar() {
           updateShiftMutation.isPending ||
           deleteShiftMutation.isPending
         }
-        onDelete={editingShift ? handleDeleteShift : undefined} // <-- agrega esto
+        onDelete={editingShift ? handleDeleteShift : undefined}
       />
     </>
   );

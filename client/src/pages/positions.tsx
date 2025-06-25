@@ -120,25 +120,19 @@ export default function Positions() {
       <Header
         title="Gestión de Puestos"
         subtitle="Administra los puestos de trabajo de tu organización"
+        onAddPosition={handleAdd}
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center p-2">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
-              Puestos ({positions.length})
+              Total Puestos ({positions.length})
             </h3>
-            <p className="text-sm text-neutral-500">
-              Define los puestos de trabajo disponibles
-            </p>
           </div>
-          <Button onClick={handleAdd}>
-            <Plus className="w-4 h-4 mr-2" />
-            Agregar Puesto
-          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-2">
           {positions.map((position) => (
             <Card key={position.id}>
               <CardHeader className="pb-4">
@@ -382,9 +376,7 @@ export default function Positions() {
                   type="submit"
                   disabled={createPositionMutation.isPending}
                 >
-                  {createPositionMutation.isPending
-                    ? 'Creando...'
-                    : 'Crear Puesto'}
+                  {createPositionMutation.isPending ? 'Creando...' : 'Agregar'}
                 </Button>
               </div>
             </form>

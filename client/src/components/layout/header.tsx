@@ -23,6 +23,9 @@ interface HeaderProps {
   onPreviousMonth?: () => void;
   onNextMonth?: () => void;
   onAddShift?: () => void;
+  onAddEmployee?: () => void;
+  onAddPosition?: () => void;
+  onAddClient?: () => void;
   viewMode?: 'month' | 'week' | 'day';
   onViewModeChange?: (mode: 'month' | 'week' | 'day') => void;
 }
@@ -34,6 +37,9 @@ export function Header({
   onPreviousMonth,
   onNextMonth,
   onAddShift,
+  onAddEmployee,
+  onAddPosition,
+  onAddClient,
   viewMode = 'month',
   onViewModeChange,
 }: HeaderProps) {
@@ -53,10 +59,15 @@ export function Header({
 
       <>
         {/* Add Shift Button */}
-        {currentDate && onAddShift && onViewModeChange && (
+        {((currentDate && onAddShift && onViewModeChange) ||
+          onAddEmployee ||
+          onAddPosition ||
+          onAddClient) && (
           <>
             {/* Toolbar visible en md+ */}
-            <div className="hidden lg:flex items-center space-x-4">
+            <div
+              className={`hidden ${onAddEmployee || onAddPosition || onAddClient ? 'md:flex' : 'lg:flex'} items-center space-x-4`}
+            >
               {/* Month Selector */}
               {currentDate && (
                 <div className="flex items-center space-x-2">
@@ -120,14 +131,88 @@ export function Header({
                   Asignar Turno
                 </Button>
               )}
+
+              {/* Add Employee Button */}
+              {onAddEmployee && (
+                <Button onClick={onAddEmployee}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Empleado
+                </Button>
+              )}
+
+              {/* Add Employee Button */}
+              {onAddPosition && (
+                <Button onClick={onAddPosition}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Puesto
+                </Button>
+              )}
+
+              {/* Add Employee Button */}
+              {onAddClient && (
+                <Button onClick={onAddClient}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Cliente
+                </Button>
+              )}
             </div>
 
             {/* Dropdown para móvil */}
-            <div className="flex lg:hidden">
+            <div
+              className={`${onAddEmployee || onAddPosition || onAddClient ? 'md:hidden' : 'lg:hidden'}`}
+            >
               <DropdownMenu>
-                <TooltipProvider>
-                  {/* Add Shift Button */}
-                  {onAddShift && (
+                {/* Add Employee Button */}
+                {onAddEmployee && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button onClick={onAddEmployee}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">
+                        <p>Agregar Empleado</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
+                {/* Add Position Button */}
+                {onAddPosition && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button onClick={onAddPosition}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">
+                        <p>Agregar Puesto</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
+                {/* Add Client Button */}
+                {onAddClient && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button onClick={onAddClient}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">
+                        <p>Agregar Cliente</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
+                {/* Add Shift Button */}
+                {onAddShift && (
+                  <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -141,20 +226,21 @@ export function Header({
                         <p>Asignar Turno</p>
                       </TooltipContent>
                     </Tooltip>
-                  )}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="w-5 h-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>Más</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="w-5 h-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Más</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
                 <DropdownMenuContent
                   align="end"
                   className="flex flex-col items-center space-x-2"

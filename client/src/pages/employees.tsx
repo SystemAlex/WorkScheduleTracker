@@ -190,25 +190,19 @@ export default function Employees() {
       <Header
         title="Gestión de Empleados"
         subtitle="Administra la información de tu equipo de trabajo"
+        onAddEmployee={handleAdd}
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center p-2">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
-              Empleados ({employees.length})
+              Total Empleados ({employees.length})
             </h3>
-            <p className="text-sm text-neutral-500">
-              Gestiona los empleados de tu organización
-            </p>
           </div>
-          <Button onClick={handleAdd}>
-            <Plus className="w-4 h-4 mr-2" />
-            Agregar Empleado
-          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-2">
           {employees.map((employee) => (
             <Card key={employee.id}>
               <CardHeader className="pb-4">
@@ -402,7 +396,7 @@ export default function Employees() {
                     updateEmployeeMutation.isPending
                   }
                 >
-                  {editingEmployee ? 'Actualizar' : 'Crear'}
+                  {editingEmployee ? 'Actualizar' : 'Agregar'}
                 </Button>
               </div>
             </form>
