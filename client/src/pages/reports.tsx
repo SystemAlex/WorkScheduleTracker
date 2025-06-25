@@ -274,88 +274,112 @@ export default function Reports() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-neutral-700">
-                        Empleado
-                      </th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
-                        Total Horas
-                      </th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
-                        Total Turnos
-                      </th>
-                      {allPositions.map((pid) => (
-                        <th
-                          key={pid}
-                          className="text-center py-3 px-4 font-medium text-neutral-700"
-                        >
-                          {positionMap[pid].siglas}
+              <div className="rounded-lg overflow-hidden border">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-neutral-100">
+                        <th className="text-center font-medium text-neutral-700 whitespace-nowrap">
+                          Empleado
                         </th>
+                        <th className="text-center font-medium text-neutral-700">
+                          Total Horas
+                        </th>
+                        <th className="text-center font-medium text-neutral-700">
+                          Total Turnos
+                        </th>
+                        {allPositions.map((pid) => (
+                          <th
+                            key={pid}
+                            className="text-center font-medium text-neutral-700 p-2"
+                            style={{
+                              backgroundColor: positionMap[pid].color + '20',
+                              color: positionMap[pid].color,
+                            }}
+                          >
+                            {positionMap[pid].siglas}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.map((employee) => (
+                        <tr
+                          key={employee.employeeId}
+                          className="border-b hover:bg-neutral-50"
+                        >
+                          <td className="p-2 font-medium text-neutral-900 bg-neutral-300/20 whitespace-nowrap">
+                            {employee.employeeName}
+                          </td>
+                          <td className="text-center font-semibold">
+                            {employee.totalHours}
+                          </td>
+                          <td className="text-center">
+                            {employee.totalShifts}
+                          </td>
+                          {allPositions.map((pid) => {
+                            const match = employee.shiftBreakdown.find(
+                              (s) => s.positionId === pid,
+                            );
+                            return (
+                              <td
+                                key={pid}
+                                className="text-center p-1"
+                                style={{
+                                  backgroundColor:
+                                    positionMap[pid].color + '20',
+                                  color: positionMap[pid].color,
+                                }}
+                              >
+                                {match ? (
+                                  <span
+                                    className="inline-block w-full text-center items-center rounded-md border-2 transition-colors text-foreground p-1"
+                                    style={{
+                                      backgroundColor: match.color + '20',
+                                      color: match.color,
+                                      borderColor: match.color,
+                                    }}
+                                  >
+                                    {match.totalHoras}
+                                  </span>
+                                ) : (
+                                  '—'
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
                       ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.map((employee) => (
-                      <tr
-                        key={employee.employeeId}
-                        className="border-b hover:bg-neutral-50"
-                      >
-                        <td className="py-3 px-4 font-medium text-neutral-900">
-                          {employee.employeeName}
+                      <tr className="border-t font-semibold text-neutral-800 bg-neutral-100">
+                        <td className="text-right p-2 whitespace-nowrap">
+                          Total
                         </td>
-                        <td className="text-center py-3 px-4 font-semibold">
-                          {employee.totalHours}
-                        </td>
-                        <td className="text-center py-3 px-4">
-                          {employee.totalShifts}
-                        </td>
+                        <td className="text-center">{totalHours}</td>
+                        <td className="text-center">{totalShifts}</td>
                         {allPositions.map((pid) => {
-                          const match = employee.shiftBreakdown.find(
-                            (s) => s.positionId === pid,
-                          );
+                          const totalPos = report.reduce((sum, e) => {
+                            const match = e.shiftBreakdown.find(
+                              (s) => s.positionId === pid,
+                            );
+                            return sum + (match ? match.totalHoras : 0);
+                          }, 0);
                           return (
-                            <td key={pid} className="text-center py-3 px-4">
-                              {match ? (
-                                <span
-                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs"
-                                  style={{
-                                    backgroundColor: match.color + '20',
-                                    color: match.color,
-                                  }}
-                                >
-                                  {match.totalHoras}
-                                </span>
-                              ) : (
-                                '—'
-                              )}
+                            <td
+                              key={pid}
+                              className="text-center"
+                              style={{
+                                backgroundColor: positionMap[pid].color + '20',
+                                color: positionMap[pid].color,
+                              }}
+                            >
+                              {totalPos}
                             </td>
                           );
                         })}
                       </tr>
-                    ))}
-                    <tr className="border-t font-semibold text-neutral-800 bg-neutral-50">
-                      <td className="py-3 px-4">Total</td>
-                      <td className="text-center py-3 px-4">{totalHours}</td>
-                      <td className="text-center py-3 px-4">{totalShifts}</td>
-                      {allPositions.map((pid) => {
-                        const totalPos = report.reduce((sum, e) => {
-                          const match = e.shiftBreakdown.find(
-                            (s) => s.positionId === pid,
-                          );
-                          return sum + (match ? match.totalHoras : 0);
-                        }, 0);
-                        return (
-                          <td key={pid} className="text-center py-3 px-4">
-                            {totalPos}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </CardContent>
