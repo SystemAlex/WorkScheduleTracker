@@ -17,17 +17,22 @@ import type { Employee } from '@shared/schema';
 import { getMonthName } from '@/lib/utils';
 import { getApiUrl } from '@/lib/paths';
 
+// ...imports y definiciones iniciales...
+
+interface ShiftBreakdownItem {
+  positionId: number;
+  name: string;
+  siglas: string;
+  color: string;
+  totalHoras: number;
+}
+
 interface EmployeeHoursReport {
   employeeId: number;
   employeeName: string;
   totalHours: number;
   totalShifts: number;
-  shiftBreakdown: {
-    morning: number;
-    afternoon: number;
-    night: number;
-    special: number;
-  };
+  shiftBreakdown: ShiftBreakdownItem[];
 }
 
 export default function Reports() {
@@ -57,9 +62,9 @@ export default function Reports() {
       }
 
       const response = await fetch(
-        getApiUrl(`/reports/employee-hours?${params}`),
+        getApiUrl(`/api/reports/employee-hours?${params.toString()}`),
       );
-      if (!response.ok) throw new Error('Failed to fetch report');
+      if (!response.ok) throw new Error('Error al obtener el reporte');
       return response.json();
     },
   });
@@ -76,6 +81,19 @@ export default function Reports() {
 
   const totalHours = report.reduce((sum, emp) => sum + emp.totalHours, 0);
   const totalShifts = report.reduce((sum, emp) => sum + emp.totalShifts, 0);
+
+  const allPositions = Array.from(
+    new Set(report.flatMap((e) => e.shiftBreakdown.map((s) => s.positionId))),
+  );
+
+  const positionMap: Record<number, ShiftBreakdownItem> = {};
+  report.forEach((e) =>
+    e.shiftBreakdown.forEach((s) => {
+      if (!positionMap[s.positionId]) {
+        positionMap[s.positionId] = s;
+      }
+    }),
+  );
 
   if (isLoading) {
     return (
@@ -95,7 +113,7 @@ export default function Reports() {
         subtitle="Analiza las horas trabajadas y estadísticas del equipo"
       />
 
-      <LayoutContent className='p-2'>
+      <LayoutContent className="p-2">
         {/* Filters */}
         <Card className="mb-4">
           <CardHeader>
@@ -195,7 +213,7 @@ export default function Reports() {
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+        <div className="grid-cols-1 md:grid-cols-3 gap-2 mb-4 hidden md:grid">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Horas</CardTitle>
@@ -269,18 +287,14 @@ export default function Reports() {
                       <th className="text-center py-3 px-4 font-medium text-neutral-700">
                         Total Turnos
                       </th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
-                        Mañana
-                      </th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
-                        Tarde
-                      </th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
-                        Noche
-                      </th>
-                      <th className="text-center py-3 px-4 font-medium text-neutral-700">
-                        Especial
-                      </th>
+                      {allPositions.map((pid) => (
+                        <th
+                          key={pid}
+                          className="text-center py-3 px-4 font-medium text-neutral-700"
+                        >
+                          {positionMap[pid].siglas}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -289,10 +303,8 @@ export default function Reports() {
                         key={employee.employeeId}
                         className="border-b hover:bg-neutral-50"
                       >
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-neutral-900">
-                            {employee.employeeName}
-                          </div>
+                        <td className="py-3 px-4 font-medium text-neutral-900">
+                          {employee.employeeName}
                         </td>
                         <td className="text-center py-3 px-4 font-semibold">
                           {employee.totalHours}
@@ -300,28 +312,48 @@ export default function Reports() {
                         <td className="text-center py-3 px-4">
                           {employee.totalShifts}
                         </td>
-                        <td className="text-center py-3 px-4">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                            {employee.shiftBreakdown.morning}
-                          </span>
-                        </td>
-                        <td className="text-center py-3 px-4">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                            {employee.shiftBreakdown.afternoon}
-                          </span>
-                        </td>
-                        <td className="text-center py-3 px-4">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
-                            {employee.shiftBreakdown.night}
-                          </span>
-                        </td>
-                        <td className="text-center py-3 px-4">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-                            {employee.shiftBreakdown.special}
-                          </span>
-                        </td>
+                        {allPositions.map((pid) => {
+                          const match = employee.shiftBreakdown.find(
+                            (s) => s.positionId === pid,
+                          );
+                          return (
+                            <td key={pid} className="text-center py-3 px-4">
+                              {match ? (
+                                <span
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs"
+                                  style={{
+                                    backgroundColor: match.color + '20',
+                                    color: match.color,
+                                  }}
+                                >
+                                  {match.totalHoras}
+                                </span>
+                              ) : (
+                                '—'
+                              )}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
+                    <tr className="border-t font-semibold text-neutral-800 bg-neutral-50">
+                      <td className="py-3 px-4">Total</td>
+                      <td className="text-center py-3 px-4">{totalHours}</td>
+                      <td className="text-center py-3 px-4">{totalShifts}</td>
+                      {allPositions.map((pid) => {
+                        const totalPos = report.reduce((sum, e) => {
+                          const match = e.shiftBreakdown.find(
+                            (s) => s.positionId === pid,
+                          );
+                          return sum + (match ? match.totalHoras : 0);
+                        }, 0);
+                        return (
+                          <td key={pid} className="text-center py-3 px-4">
+                            {totalPos}
+                          </td>
+                        );
+                      })}
+                    </tr>
                   </tbody>
                 </table>
               </div>
