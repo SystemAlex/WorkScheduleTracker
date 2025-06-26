@@ -37,7 +37,7 @@ function App() {
 
   const customHook = React.useMemo(() => {
     return () => createBaseLocationHook(base(''), rawLocation, navigate);
-  }, [rawLocation, navigate, base]);
+  }, [rawLocation, navigate, base('')]);
 
   return (
     <QueryClientProvider client={queryClient}>

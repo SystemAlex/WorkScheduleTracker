@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { format, getDaysInMonth, getDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -253,37 +254,64 @@ export function EmployeeCalendarGrid({
                               `}
                               onClick={() => handleCellClick(date, employee)}
                             >
-                              {shift ? (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs px-1 py-0.5 w-full justify-center font-medium cursor-pointer"
-                                  style={{
-                                    backgroundColor: lighten(
-                                      shift.position.color,
-                                      0.9,
-                                    ),
-                                    color: shift.position.color,
-                                    borderColor: shift.position.color,
-                                    outline: `2px solid ${shift.position.color}`,
-                                    outlineOffset: '-1px',
-                                  }}
-                                  onClick={() => onEditShift?.(shift)}
-                                  title="Editar turno"
-                                >
-                                  {getPositionSiglas(shift)}
-                                </Badge>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="opacity-0 group-hover:opacity-100 group-hover:bg-primary self-center w-fit h-full p-1 hover:text-primary-foreground"
-                                  onClick={(e) =>
-                                    handleAddClick(e, date, employee)
-                                  }
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              )}
+                              <Tooltip.Root>
+                                {shift ? (
+                                  <>
+                                    <Tooltip.Trigger asChild>
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs px-1 py-0.5 w-full justify-center font-medium cursor-pointer"
+                                        style={{
+                                          backgroundColor: lighten(
+                                            shift.position.color,
+                                            0.9,
+                                          ),
+                                          color: shift.position.color,
+                                          borderColor: shift.position.color,
+                                          outline: `2px solid ${shift.position.color}`,
+                                          outlineOffset: '-1px',
+                                        }}
+                                        onClick={() => onEditShift?.(shift)}
+                                      >
+                                        {getPositionSiglas(shift)}
+                                      </Badge>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Portal>
+                                      <Tooltip.Content
+                                        side="bottom"
+                                        sideOffset={4}
+                                        className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md z-50"
+                                      >
+                                        Editar turno
+                                      </Tooltip.Content>
+                                    </Tooltip.Portal>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Tooltip.Trigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="opacity-0 group-hover:opacity-100 group-hover:bg-primary self-center w-fit h-full p-1 hover:text-primary-foreground"
+                                        onClick={(e) =>
+                                          handleAddClick(e, date, employee)
+                                        }
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                      </Button>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Portal>
+                                      <Tooltip.Content
+                                        side="bottom"
+                                        sideOffset={4}
+                                        className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md z-50"
+                                      >
+                                        Asignar turno
+                                      </Tooltip.Content>
+                                    </Tooltip.Portal>
+                                  </>
+                                )}
+                              </Tooltip.Root>
                             </div>
                           );
                         })}

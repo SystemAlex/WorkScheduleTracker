@@ -376,7 +376,7 @@ export class DatabaseStorage implements IStorage {
 
     return Object.values(report).sort((a: any, b: any) =>
       a.employeeName.localeCompare(b.employeeName),
-    ); 
+    );
   }
 
   // Clientes

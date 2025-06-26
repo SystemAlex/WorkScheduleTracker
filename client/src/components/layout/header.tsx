@@ -164,55 +164,49 @@ export function Header({
               <DropdownMenu>
                 {/* Add Employee Button */}
                 {onAddEmployee && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button onClick={onAddEmployee}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Agregar Empleado</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button onClick={onAddEmployee}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>Agregar Empleado</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
 
                 {/* Add Position Button */}
                 {onAddPosition && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button onClick={onAddPosition}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Agregar Puesto</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button onClick={onAddPosition}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>Agregar Puesto</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
 
                 {/* Add Client Button */}
                 {onAddClient && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button onClick={onAddClient}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>Agregar Cliente</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button onClick={onAddClient}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>Agregar Cliente</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
 
                 {/* Add Shift Button */}
                 {onAddShift && (
-                  <TooltipProvider>
+                  <>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -239,7 +233,7 @@ export function Header({
                         <p>Más</p>
                       </TooltipContent>
                     </Tooltip>
-                  </TooltipProvider>
+                  </>
                 )}
                 <DropdownMenuContent
                   align="end"

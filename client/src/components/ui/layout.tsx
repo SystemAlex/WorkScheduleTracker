@@ -26,7 +26,11 @@ export function LayoutSidebar({ children, className }: LayoutProps) {
 
 export function LayoutMain({ id, tabIndex, children, className }: LayoutProps) {
   return (
-    <main id={id} tabIndex={tabIndex} className={cn('flex-1 flex flex-col overflow-hidden', className)}>
+    <main
+      id={id}
+      tabIndex={tabIndex}
+      className={cn('flex-1 flex flex-col overflow-hidden', className)}
+    >
       {children}
     </main>
   );

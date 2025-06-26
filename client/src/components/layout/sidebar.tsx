@@ -48,7 +48,7 @@ function SidebarLink({
         'flex justify-start items-center space-x-0 space-y-0 p-2 rounded-lg transition-colors text-sm font-medium',
         isActive
           ? 'bg-primary text-primary-foreground'
-          : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
+          : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100',
       )}
     >
       <span className="flex justify-center items-center flex-grow-0 flex-shrink-0 self-center w-fit">
@@ -188,20 +188,22 @@ export function Sidebar() {
           isCollapsed ? 'hidden md:block' : '',
         )}
       >
-        <TooltipProvider>
-          {navigation.map((item) => (
-            <SidebarLink
-              key={item.href}
-              href={item.href}
-              icon={item.icon}
-              isActive={location === item.href}
-              isCollapsed={isCollapsed}
-              onClick={handleNavigate}
-            >
-              {item.label}
-            </SidebarLink>
-          ))}
-        </TooltipProvider>
+        {navigation.map(
+          (item) => (
+            (
+              <SidebarLink
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                isActive={base(location) === item.href}
+                isCollapsed={isCollapsed}
+                onClick={handleNavigate}
+              >
+                {item.label}
+              </SidebarLink>
+            )
+          ),
+        )}
       </nav>
 
       {/* User */}

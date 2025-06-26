@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -289,16 +290,28 @@ export default function Reports() {
                           Total Turnos
                         </th>
                         {allPositions.map((pid) => (
-                          <th
-                            key={pid}
-                            className="text-center font-medium text-neutral-700 p-2"
-                            style={{
-                              backgroundColor: positionMap[pid].color + '20',
-                              color: positionMap[pid].color,
-                            }}
-                          >
-                            {positionMap[pid].siglas}
-                          </th>
+                          <Tooltip.Root key={pid}>
+                            <Tooltip.Trigger asChild>
+                              <th
+                                className="text-center font-medium text-neutral-700 p-2"
+                                style={{
+                                  backgroundColor:
+                                    positionMap[pid].color + '20',
+                                  color: positionMap[pid].color,
+                                }}
+                              >
+                                {positionMap[pid].siglas}
+                              </th>
+                            </Tooltip.Trigger>
+                            <Tooltip.Portal>
+                              <Tooltip.Content
+                                className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md"
+                                sideOffset={5}
+                              >
+                                {positionMap[pid].name}
+                              </Tooltip.Content>
+                            </Tooltip.Portal>
+                          </Tooltip.Root>
                         ))}
                       </tr>
                     </thead>
