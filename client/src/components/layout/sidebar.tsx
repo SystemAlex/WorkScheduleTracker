@@ -20,7 +20,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { withBase } from '@/lib/paths';
+import { base } from '@/lib/paths';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SidebarLinkProps {
   href: string;
@@ -28,6 +29,7 @@ interface SidebarLinkProps {
   children: React.ReactNode;
   isActive?: boolean;
   isCollapsed?: boolean;
+  onClick?: () => void;
 }
 
 function SidebarLink({
@@ -36,20 +38,31 @@ function SidebarLink({
   children,
   isActive,
   isCollapsed,
+  onClick,
 }: SidebarLinkProps) {
   const linkContent = (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
-        'flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium',
+        'flex justify-start items-center space-x-0 space-y-0 p-2 rounded-lg transition-colors text-sm font-medium',
         isActive
           ? 'bg-primary text-primary-foreground'
-          : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100',
-        isCollapsed && 'justify-center px-2',
+          : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
       )}
     >
-      {icon}
-      {!isCollapsed && <span>{children}</span>}
+      <span className="flex justify-center items-center flex-grow-0 flex-shrink-0 self-center w-fit">
+        {icon}
+      </span>
+      <span
+        className={cn(
+          'overflow-hidden transition-all duration-300',
+          !isCollapsed && 'px-3 w-full',
+          isCollapsed && 'px-0 w-[0%]',
+        )}
+      >
+        {children}
+      </span>
     </Link>
   );
 
@@ -70,48 +83,62 @@ function SidebarLink({
 export function Sidebar() {
   const [location] = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const isMobile = useIsMobile();
 
   const navigation = [
     {
-      href: withBase('/'),
-      icon: <Calendar className="w-5 h-5" />,
+      href: base('/'),
+      icon: <Calendar className="w-[23px] h-[23px]" />,
       label: 'Calendario',
     },
     {
-      href: withBase('/employees'),
-      icon: <Users className="w-5 h-5" />,
+      href: base('/employees'),
+      icon: <Users className="w-[23px] h-[23px]" />,
       label: 'Empleados',
     },
     {
-      href: withBase('/positions'),
-      icon: <Briefcase className="w-5 h-5" />,
+      href: base('/positions'),
+      icon: <Briefcase className="w-[23px] h-[23px]" />,
       label: 'Puestos',
     },
     {
-      href: withBase('/clientes'),
-      icon: <Building className="w-5 h-5" />,
+      href: base('/clientes'),
+      icon: <Building className="w-[23px] h-[23px]" />,
       label: 'Clientes',
     },
     {
-      href: withBase('/reports'),
-      icon: <BarChart3 className="w-5 h-5" />,
+      href: base('/reports'),
+      icon: <BarChart3 className="w-[23px] h-[23px]" />,
       label: 'Reportes',
     },
     {
-      href: withBase('/organigrama'),
-      icon: <Map className="w-5 h-5" />,
+      href: base('/organigrama'),
+      icon: <Map className="w-[23px] h-[23px]" />,
       label: 'Organigrama',
     },
   ];
 
+  const activeItem = navigation.find((item) => item.href === location);
+
+  const handleNavigate = () => {
+    setIsCollapsed(true);
+    setTimeout(() => {
+      const main = document.getElementById('main-content');
+      if (main) {
+        main.focus();
+        main.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 50);
+  };
+
   return (
     <div
       className={cn(
-        'flex flex-col h-full bg-white border-r border-neutral-200 transition-all duration-300',
-        isCollapsed ? 'w-16' : 'w-64',
+        'flex flex-col h-fit md:h-full bg-white border-neutral-200 border-r transition-all duration-300 absolute md:static z-50 md:z-auto',
+        isCollapsed ? 'w-16' : 'w-64 border-b md:border-0 md:border-r',
       )}
     >
-      {/* Header with toggle button */}
+      {/* Header */}
       <div
         className={cn(
           'flex items-center justify-between p-4 border-b border-neutral-200',
@@ -119,33 +146,48 @@ export function Sidebar() {
         )}
       >
         {!isCollapsed && (
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Calendar className="text-white w-4 h-4" />
+          <div
+            className={cn(
+              'flex items-center space-x-3 cursor-pointer transition-all duration-300',
+              !isCollapsed && 'w-full',
+              isCollapsed && 'w-[0%]',
+            )}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            <div className="w-[32px] h-[32px] bg-primary rounded-lg flex-grow-0 flex-shrink-0 flex items-center justify-center">
+              <Calendar className="text-white w-[20px] h-[20px]" />
             </div>
-            <div>
-              <h1 className="text-sm font-bold text-neutral-900">
-                HorariosPro
-              </h1>
-            </div>
+            <h1 className="text-sm font-bold text-neutral-900">HorariosPro</h1>
           </div>
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1 h-8 w-8"
+          className={cn(
+            'p-1 h-[32px] w-[32px]',
+            isMobile && isCollapsed && 'bg-primary text-primary-foreground',
+          )}
         >
           {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
+            isMobile && activeItem?.icon ? (
+              activeItem.icon
+            ) : (
+              <ChevronRight className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
+            )
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
           )}
         </Button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1">
+      {/* Nav */}
+      <nav
+        className={cn(
+          'flex-1 p-3 space-y-1',
+          isCollapsed ? 'hidden md:block' : '',
+        )}
+      >
         <TooltipProvider>
           {navigation.map((item) => (
             <SidebarLink
@@ -154,6 +196,7 @@ export function Sidebar() {
               icon={item.icon}
               isActive={location === item.href}
               isCollapsed={isCollapsed}
+              onClick={handleNavigate}
             >
               {item.label}
             </SidebarLink>
@@ -161,7 +204,7 @@ export function Sidebar() {
         </TooltipProvider>
       </nav>
 
-      {/* User Profile */}
+      {/* User */}
       {!isCollapsed && (
         <div className="p-4 border-t border-neutral-200">
           <div className="flex items-center space-x-3">

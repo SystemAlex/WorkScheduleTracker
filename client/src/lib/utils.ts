@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
+import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -104,4 +105,21 @@ export function lighten(hex: string, percent: number) {
 
   const toHex = (v: number) => v.toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Hook para detectar si la pantalla es menor a md (768px)
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const handleChange = () => setIsMobile(mediaQuery.matches);
+
+    handleChange(); // Estado inicial
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  return isMobile;
 }

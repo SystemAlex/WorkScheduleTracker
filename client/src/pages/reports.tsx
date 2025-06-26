@@ -15,7 +15,7 @@ import { LayoutContent } from '@/components/ui/layout';
 import { BarChart3, Clock, Users, Download } from 'lucide-react';
 import type { Employee } from '@shared/schema';
 import { getMonthName } from '@/lib/utils';
-import { getApiUrl } from '@/lib/paths';
+import { base } from '@/lib/paths';
 
 // ...imports y definiciones iniciales...
 
@@ -62,7 +62,7 @@ export default function Reports() {
       }
 
       const response = await fetch(
-        getApiUrl(`/api/reports/employee-hours?${params.toString()}`),
+        base(`/api/reports/employee-hours?${params.toString()}`),
       );
       if (!response.ok) throw new Error('Error al obtener el reporte');
       return response.json();

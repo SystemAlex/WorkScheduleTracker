@@ -15,7 +15,7 @@ import type {
   Position,
   Cliente,
 } from '@shared/schema';
-import { getApiUrl } from '@/lib/paths';
+import { base } from '@/lib/paths';
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -41,7 +41,7 @@ export default function Calendar() {
     ],
     queryFn: async () => {
       const response = await fetch(
-        getApiUrl(
+        base(
           `/api/shifts?month=${currentDate.getMonth() + 1}&year=${currentDate.getFullYear()}`,
         ),
       );

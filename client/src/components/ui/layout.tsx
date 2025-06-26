@@ -2,6 +2,8 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
+  id?: string;
+  tabIndex?: number;
   children: React.ReactNode;
   className?: string;
 }
@@ -22,14 +24,9 @@ export function LayoutSidebar({ children, className }: LayoutProps) {
   );
 }
 
-export function LayoutMain({ children, className }: LayoutProps) {
+export function LayoutMain({ id, tabIndex, children, className }: LayoutProps) {
   return (
-    <main
-      className={cn(
-        'flex-1 flex flex-col overflow-hidden',
-        className,
-      )}
-    >
+    <main id={id} tabIndex={tabIndex} className={cn('flex-1 flex flex-col overflow-hidden', className)}>
       {children}
     </main>
   );

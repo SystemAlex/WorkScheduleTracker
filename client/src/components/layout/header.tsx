@@ -45,7 +45,7 @@ export function Header({
 }: HeaderProps) {
   return (
     <div className="flex items-center justify-between border-b gap-2 px-2 mt-2">
-      <div className="relative overflow-hidden flex-grow">
+      <div className="relative overflow-hidden flex-grow ml-16 md:ml-0">
         <h2 className="text-2xl font-bold text-neutral-900 truncate whitespace-nowrap overflow-hidden">
           {title}
         </h2>

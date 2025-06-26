@@ -16,6 +16,7 @@ import Positions from '@/pages/positions';
 import Reports from '@/pages/reports';
 import NotFound from '@/pages/not-found';
 import Clientes from '@/pages/clientes';
+import { base } from './lib/paths';
 
 function MyRouter() {
   return (
@@ -34,10 +35,8 @@ function MyRouter() {
 function App() {
   const [rawLocation, navigate] = useLocation();
 
-  const base = import.meta.env.MODE === 'production' ? '/vipsrl' : '/';
-
   const customHook = React.useMemo(() => {
-    return () => createBaseLocationHook(base, rawLocation, navigate);
+    return () => createBaseLocationHook(base(''), rawLocation, navigate);
   }, [rawLocation, navigate, base]);
 
   return (
@@ -45,10 +44,8 @@ function App() {
       <TooltipProvider>
         <Router hook={customHook}>
           <Layout>
-            <LayoutSidebar>
-              <Sidebar />
-            </LayoutSidebar>
-            <LayoutMain>
+            <Sidebar />
+            <LayoutMain id="main-content" tabIndex={-1}>
               <MyRouter />
             </LayoutMain>
           </Layout>
