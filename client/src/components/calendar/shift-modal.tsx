@@ -257,7 +257,7 @@ export function ShiftModal({
             />
 
             {/* Actions */}
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end space-x-3">
               {editingShift && onDelete && (
                 <ConfirmDialog
                   trigger={
@@ -265,6 +265,7 @@ export function ShiftModal({
                       type="button"
                       variant="destructive"
                       disabled={isLoading}
+                      className="mr-auto"
                     >
                       Eliminar
                     </Button>

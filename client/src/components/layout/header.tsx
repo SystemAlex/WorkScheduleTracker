@@ -123,10 +123,7 @@ export function Header({
 
               {/* Add Shift Button */}
               {onAddShift && (
-                <Button
-                  onClick={onAddShift}
-                  className="bg-primary hover:bg-blue-700"
-                >
+                <Button onClick={onAddShift}>
                   <Plus className="w-4 h-4 mr-2" />
                   Asignar Turno
                 </Button>
@@ -159,7 +156,7 @@ export function Header({
 
             {/* Dropdown para móvil */}
             <div
-              className={`${onAddEmployee || onAddPosition || onAddClient ? 'md:hidden' : 'lg:hidden'}`}
+              className={`${onAddEmployee || onAddPosition || onAddClient ? 'md:hidden' : 'flex lg:hidden'}`}
             >
               <DropdownMenu>
                 {/* Add Employee Button */}
@@ -209,10 +206,7 @@ export function Header({
                   <>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button
-                          onClick={onAddShift}
-                          className="bg-primary hover:bg-blue-700"
-                        >
+                        <Button onClick={onAddShift}>
                           <Plus className="w-4 h-4" />
                         </Button>
                       </TooltipTrigger>

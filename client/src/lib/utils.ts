@@ -89,22 +89,69 @@ export function generateCalendarDays(year: number, month: number) {
 }
 
 /**
- * Aclara un color HEX en el porcentaje indicado (0-100).
- * Ejemplo: lighten('#3B82F6', 0.8) => color muy claro.
+ * Aclara u oscurece un color HEX según el factor:
+ * - 0.0 → blanco
+ * - 1.0 → sin cambios
+ * - >1.0 → oscurece proporcionalmente hacia negro
  */
-export function lighten(hex: string, percent: number) {
+export function colorLightenDarken(hex: string, factor: number): string {
   const num = parseInt(hex.slice(1), 16);
-  let r = (num >> 16) + Math.round((255 - (num >> 16)) * percent);
-  let g =
-    ((num >> 8) & 0x00ff) + Math.round((255 - ((num >> 8) & 0x00ff)) * percent);
-  let b = (num & 0x0000ff) + Math.round((255 - (num & 0x0000ff)) * percent);
+  let r = (num >> 16) & 0xff;
+  let g = (num >> 8) & 0xff;
+  let b = num & 0xff;
 
-  r = Math.min(255, r);
-  g = Math.min(255, g);
-  b = Math.min(255, b);
+  const blend = (channel: number) => {
+    if (factor < 1) {
+      return channel + (255 - channel) * factor; // aclara hacia blanco
+    } else if (factor > 1) {
+      return channel * (2 - factor); // oscurece hacia negro
+    }
+    return channel; // sin cambio
+  };
+
+  r = Math.round(Math.min(255, Math.max(0, blend(r))));
+  g = Math.round(Math.min(255, Math.max(0, blend(g))));
+  b = Math.round(Math.min(255, Math.max(0, blend(b))));
 
   const toHex = (v: number) => v.toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+export function getCssVarValue(name: string): string {
+  if (typeof window === 'undefined') return '';
+
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+
+  if (raw.startsWith('hsl')) {
+    return hslToHex(raw);
+  }
+
+  return raw;
+}
+
+function hslToHex(hsl: string): string {
+  const match = hsl.match(
+    /hsl\(\s*(\d+)(?:deg)?\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)/i,
+  );
+
+  if (!match) return '#000000';
+
+  const h = parseInt(match[1], 10);
+  const s = parseFloat(match[2]) / 100;
+  const l = parseFloat(match[3]) / 100;
+
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, '0');
+  };
+
+  return `#${f(0)}${f(8)}${f(4)}`;
 }
 
 // Hook para detectar si la pantalla es menor a md (768px)

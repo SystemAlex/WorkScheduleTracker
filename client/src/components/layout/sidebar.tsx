@@ -188,22 +188,18 @@ export function Sidebar() {
           isCollapsed ? 'hidden md:block' : '',
         )}
       >
-        {navigation.map(
-          (item) => (
-            (
-              <SidebarLink
-                key={item.href}
-                href={item.href}
-                icon={item.icon}
-                isActive={base(location) === item.href}
-                isCollapsed={isCollapsed}
-                onClick={handleNavigate}
-              >
-                {item.label}
-              </SidebarLink>
-            )
-          ),
-        )}
+        {navigation.map((item) => (
+          <SidebarLink
+            key={item.href}
+            href={item.href}
+            icon={item.icon}
+            isActive={base(location) === item.href}
+            isCollapsed={isCollapsed}
+            onClick={handleNavigate}
+          >
+            {item.label}
+          </SidebarLink>
+        ))}
       </nav>
 
       {/* User */}

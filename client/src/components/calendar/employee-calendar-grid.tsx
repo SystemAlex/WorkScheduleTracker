@@ -10,7 +10,7 @@ import type {
   Cliente,
   Position,
 } from '@shared/schema';
-import { getDayName, formatDate, lighten } from '@/lib/utils';
+import { getDayName, formatDate, colorLightenDarken } from '@/lib/utils';
 import {
   Accordion,
   AccordionItem,
@@ -25,7 +25,7 @@ interface EmployeeCalendarGridProps {
   positions: Position[];
   clientes: Cliente[];
   selectedDate?: Date;
-  onDateSelect?: (date: Date, employee?: Employee) => void;
+  onDateSelect?: (date?: Date, employee?: Employee) => void;
   selectedEmployee?: Employee;
   onAddShift?: (date: Date, employee: Employee) => void;
   onEditShift?: (shift: ShiftWithDetails) => void;
@@ -112,6 +112,10 @@ export function EmployeeCalendarGrid({
 
   const handleCellClick = (date: Date, employee: Employee) => {
     onDateSelect?.(date, employee);
+  };
+
+  const onEmployeeSelect = (employee: Employee) => {
+    onDateSelect?.(undefined, employee);
   };
 
   const handleAddClick = (
@@ -211,11 +215,12 @@ export function EmployeeCalendarGrid({
                       >
                         {/* Employee name */}
                         <div
-                          className={`min-h-[40px] font-medium text-sm p-2 truncate bg-neutral-50 rounded-md ${
+                          className={`min-h-[40px] font-medium text-sm p-2 cursor-pointer truncate bg-neutral-50 rounded-md ${
                             selectedEmployee?.id === employee.id
                               ? 'ring-2 ring-green-600 ring-offset-0'
                               : ''
                           }`}
+                          onClick={() => onEmployeeSelect?.(employee)}
                         >
                           {employee.name}
                         </div>
@@ -262,7 +267,7 @@ export function EmployeeCalendarGrid({
                                         variant="outline"
                                         className="text-xs px-1 py-0.5 w-full justify-center font-medium cursor-pointer"
                                         style={{
-                                          backgroundColor: lighten(
+                                          backgroundColor: colorLightenDarken(
                                             shift.position.color,
                                             0.9,
                                           ),
@@ -332,7 +337,10 @@ export function EmployeeCalendarGrid({
         <div className="mt-4 p-3 bg-neutral-50 rounded-md">
           <h4 className="text-sm font-medium mb-2">Leyenda:</h4>
           <div className="text-xs text-neutral-600">
-            <p>• Las siglas representan el puesto asignado</p>
+            <p>
+              • Las siglas representan el puesto asignado, haz clic para
+              editar/eliminar
+            </p>
             <p>• Haz clic en una celda vacía para asignar un turno</p>
             {/*<p>• Los fines de semana están marcados en gris</p>*/}
           </div>

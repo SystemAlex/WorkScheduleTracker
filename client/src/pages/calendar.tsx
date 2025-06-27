@@ -243,10 +243,12 @@ export default function Calendar() {
     setCurrentDate(newDate);
   };
 
-  const handleEmployeeDateSelect = (date: Date, employee?: Employee) => {
+  const handleEmployeeDateSelect = (date?: Date, employee?: Employee) => {
     setSelectedDate(date);
-    setCurrentDate(date);
-    setSelectedEmployee(employee); // Será undefined si viene del header
+    if (date) {
+      setCurrentDate(date);
+    }
+    setSelectedEmployee(employee);
   };
 
   const handleDateSelect = (date: Date) => {
