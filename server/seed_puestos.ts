@@ -312,7 +312,7 @@ export const turnosPorEmpleado: Record<string, Record<string, string>> = {
     '2025-06-27': 'APD',
     '2025-06-28': 'APR',
   },
-  'GONZALEZ JULIO ': {
+  'GONZALEZ JULIO': {
     '2025-06-04': 'APD',
     '2025-06-05': 'APD',
     '2025-06-06': 'APD',
@@ -683,7 +683,7 @@ export const turnosPorEmpleado: Record<string, Record<string, string>> = {
     '2025-06-29': 'SCD',
     '2025-06-30': 'GT',
   },
-  'BENÍTEZ FABIAN ': {
+  'BENÍTEZ FABIAN': {
     '2025-06-01': 'ABN',
     '2025-06-02': 'ABN',
     '2025-06-04': 'SLN',
@@ -1038,4 +1038,3 @@ export const turnosPorEmpleado: Record<string, Record<string, string>> = {
     '2025-06-29': 'FFN',
   },
 };
-  

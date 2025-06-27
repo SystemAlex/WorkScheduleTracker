@@ -257,12 +257,12 @@ async function seed() {
       const diaSemana = fecha.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
 
       if (diaSemana >= 1 && diaSemana <= 5) {
-          turnosAInsertar.push({
-            employeeId: empleado.id,
-            date: fecha.toISOString().slice(0, 10),
-            notes: '',
-          });
-          diasAsignados++;
+        turnosAInsertar.push({
+          employeeId: empleado.id,
+          date: fecha.toISOString().slice(0, 10),
+          notes: '',
+        });
+        diasAsignados++;
         if (diasAsignados >= 20) break; // Máximo 20 turnos por mes por empleado
       }
     }

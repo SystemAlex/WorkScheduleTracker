@@ -376,7 +376,8 @@ export function EmployeeCalendarGrid({
           <h4 className="text-sm font-medium mb-2">Leyenda:</h4>
           <div className="text-xs text-neutral-600">
             <p>
-              • Las siglas representan el puesto asignado, haz clic para editar/eliminar
+              • Las siglas representan el puesto asignado, haz clic para
+              editar/eliminar
             </p>
             <p>• Haz clic en una celda vacía para asignar un turno</p>
           </div>
