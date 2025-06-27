@@ -131,7 +131,6 @@ export default function Employees() {
       name: '',
       email: '',
       phone: '',
-      position: '',
       status: 'active',
     },
   });
@@ -150,7 +149,6 @@ export default function Employees() {
       name: employee.name,
       email: employee.email || '',
       phone: employee.phone || '',
-      position: employee.position || '',
       status: employee.status,
     });
     setModalOpen(true);
@@ -162,7 +160,6 @@ export default function Employees() {
       name: '',
       email: '',
       phone: '',
-      position: '',
       status: 'active',
     });
     setModalOpen(true);
@@ -254,12 +251,6 @@ export default function Employees() {
                       <span>{employee.phone}</span>
                     </div>
                   )}
-                  {employee.position && (
-                    <div className="flex items-center space-x-2 text-sm text-neutral-600">
-                      <Briefcase className="w-4 h-4" />
-                      <span>{employee.position}</span>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -339,20 +330,6 @@ export default function Employees() {
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
                       <Input placeholder="Número de teléfono" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="position"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Puesto</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Puesto de trabajo" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

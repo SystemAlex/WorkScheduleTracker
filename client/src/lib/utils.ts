@@ -131,7 +131,7 @@ export function getCssVarValue(name: string): string {
   return raw;
 }
 
-function hslToHex(hsl: string): string {
+export function hslToHex(hsl: string): string {
   const match = hsl.match(
     /hsl\(\s*(\d+)(?:deg)?\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)/i,
   );

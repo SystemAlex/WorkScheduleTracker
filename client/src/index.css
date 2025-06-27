@@ -59,6 +59,10 @@
   --ring: hsl(240, 4.9%, 83.9%);
 }
 
+html {
+  @apply select-none;
+}
+
 @layer base {
   * {
     @apply border-border;

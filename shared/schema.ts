@@ -19,7 +19,6 @@ export const employees = pgTable('employees', {
   name: text('name').notNull(),
   email: text('email'),
   phone: text('phone'),
-  position: text('position'),
   status: text('status').notNull().default('active'), // active, inactive
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });

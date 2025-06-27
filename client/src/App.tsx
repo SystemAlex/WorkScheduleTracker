@@ -43,7 +43,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Router hook={customHook}>
-          <Layout className="select-none">
+          <Layout>
             <Sidebar />
             <LayoutMain id="main-content" tabIndex={-1}>
               <MyRouter />

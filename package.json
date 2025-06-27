@@ -11,7 +11,8 @@
     "db:push": "drizzle-kit push",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "seed": "tsx server/seed.ts"
+    "seed": "tsx server/seed.ts",
+    "seed:custom": "tsx server/seed_custom.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

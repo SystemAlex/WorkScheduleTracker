@@ -49,25 +49,74 @@ export function EmployeeCalendarGrid({
   const month = currentDate.getMonth();
   const daysInMonth = getDaysInMonth(currentDate);
 
-  // Agrupar empleados por cliente
-  const empleadosPorCliente: Record<number, Employee[]> = {};
-
-  employees.forEach((emp) => {
-    const position = positions.find((p) => p.name === emp.position);
-    if (position && position.clienteId) {
-      if (!empleadosPorCliente[position.clienteId]) {
-        empleadosPorCliente[position.clienteId] = [];
-      }
-      empleadosPorCliente[position.clienteId].push(emp);
-    }
+  // Filtrar turnos del mes actual
+  const shiftsInCurrentMonth = shifts.filter((shift) => {
+    const shiftDate = new Date(shift.date);
+    return shiftDate.getFullYear() === year && shiftDate.getMonth() === month;
   });
 
-  // Ordenar empleados alfabéticamente por nombre en cada cliente
+  // 1. Contar turnos por empleado y cliente
+  const turnosPorEmpleadoCliente: Record<number, Record<number, number>> = {};
+
+  shiftsInCurrentMonth.forEach((shift) => {
+    const position = positions.find((p) => p.id === shift.positionId);
+    if (!position) return;
+
+    const clienteId = position.clienteId;
+    const empId = shift.employeeId;
+
+    if (!turnosPorEmpleadoCliente[empId]) {
+      turnosPorEmpleadoCliente[empId] = {};
+    }
+    if (!turnosPorEmpleadoCliente[empId][clienteId]) {
+      turnosPorEmpleadoCliente[empId][clienteId] = 0;
+    }
+    turnosPorEmpleadoCliente[empId][clienteId]++;
+  });
+
+  // 2. Determinar el cliente con más turnos para cada empleado
+  const clientePrincipalPorEmpleado: Record<number, number> = {};
+
+  for (const empIdStr in turnosPorEmpleadoCliente) {
+    const empId = Number(empIdStr);
+    const clientesTurnos = turnosPorEmpleadoCliente[empId];
+
+    let maxClienteId = -1;
+    let maxTurnos = -1;
+
+    for (const clienteIdStr in clientesTurnos) {
+      const clienteId = Number(clienteIdStr);
+      const count = clientesTurnos[clienteId];
+      if (count > maxTurnos) {
+        maxTurnos = count;
+        maxClienteId = clienteId;
+      }
+    }
+
+    clientePrincipalPorEmpleado[empId] = maxClienteId;
+  }
+
+  // 3. Agrupar empleados sólo en su cliente principal
+  const empleadosPorCliente: Record<number, Employee[]> = {};
+
+  for (const empIdStr in clientePrincipalPorEmpleado) {
+    const empId = Number(empIdStr);
+    const clienteId = clientePrincipalPorEmpleado[empId];
+    if (!empleadosPorCliente[clienteId]) {
+      empleadosPorCliente[clienteId] = [];
+    }
+    const emp = employees.find((e) => e.id === empId);
+    if (emp) {
+      empleadosPorCliente[clienteId].push(emp);
+    }
+  }
+
+  // 4. Ordenar empleados alfabéticamente por nombre en cada cliente
   Object.values(empleadosPorCliente).forEach((arr) =>
     arr.sort((a, b) => a.name.localeCompare(b.name)),
   );
 
-  // Generate array of dates based on view mode
+  // Generar array de fechas según viewMode
   const getDaysToShow = () => {
     if (viewMode === 'day') {
       return [currentDate];
@@ -93,17 +142,7 @@ export function EmployeeCalendarGrid({
 
   const daysToShow = getDaysToShow();
 
-  // Get shifts for a specific employee and date
-  const getShiftForEmployeeAndDate = (employeeId: number, date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return shifts.find(
-      (shift) =>
-        shift.employeeId === employeeId &&
-        format(new Date(shift.date), 'yyyy-MM-dd') === dateStr,
-    );
-  };
-
-  // Get position siglas from shift
+  // Obtener siglas de posición
   const getPositionSiglas = (shift: ShiftWithDetails) => {
     return (
       shift.position.siglas || shift.position.name.substring(0, 3).toUpperCase()
@@ -132,7 +171,7 @@ export function EmployeeCalendarGrid({
     clientes.map((c) => `cliente-${c.id}`),
   );
 
-  // Sincroniza Accordions abiertos si cambia la lista de clientes
+  // Sincronizar Accordions abiertos si cambia la lista de clientes
   React.useEffect(() => {
     setOpenAccordions(clientes.map((c) => `cliente-${c.id}`));
   }, [clientes]);
@@ -237,7 +276,6 @@ export function EmployeeCalendarGrid({
                             selectedDate &&
                             selectedDate.toDateString() === date.toDateString();
 
-                          // Match the header colors exactly
                           let dayColor = 'bg-sky-50';
                           if (dayOfWeek === 6) dayColor = 'bg-yellow-50';
                           if (dayOfWeek === 0) dayColor = 'bg-red-50';
@@ -246,7 +284,7 @@ export function EmployeeCalendarGrid({
                             <div
                               key={`${employee.id}-${date.toISOString()}`}
                               className={`
-                                min-h-[40px] p-0 rounded-md border cursor-pointer flex items-stretch justify-center
+                                min-h-[40px] p-0 rounded-md border flex items-stretch justify-center
                                 transition-colors duration-150 relative group
                                 ${dayColor}
                                 ${
@@ -308,7 +346,7 @@ export function EmployeeCalendarGrid({
                                     <Tooltip.Portal>
                                       <Tooltip.Content
                                         side="bottom"
-                                        sideOffset={4}
+                                        sideOffset={11}
                                         className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md z-50"
                                       >
                                         Asignar turno
@@ -333,16 +371,14 @@ export function EmployeeCalendarGrid({
           </Accordion>
         </div>
 
-        {/* Legend */}
+        {/* Leyenda */}
         <div className="mt-4 p-3 bg-neutral-50 rounded-md">
           <h4 className="text-sm font-medium mb-2">Leyenda:</h4>
           <div className="text-xs text-neutral-600">
             <p>
-              • Las siglas representan el puesto asignado, haz clic para
-              editar/eliminar
+              • Las siglas representan el puesto asignado, haz clic para editar/eliminar
             </p>
             <p>• Haz clic en una celda vacía para asignar un turno</p>
-            {/*<p>• Los fines de semana están marcados en gris</p>*/}
           </div>
         </div>
       </div>

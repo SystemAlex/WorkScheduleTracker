@@ -1,10 +1,12 @@
+'use client';
+
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Building, Briefcase, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Header } from '@/components/layout/header';
 import { LayoutContent } from '@/components/ui/layout';
-import type { Employee, Position } from '@shared/schema';
+import type { Employee, Position, ShiftWithDetails } from '@shared/schema';
 
 export default function Organigrama() {
   const { data: employees = [], isLoading: employeesLoading } = useQuery<
@@ -19,7 +21,13 @@ export default function Organigrama() {
     queryKey: ['/api/positions'],
   });
 
-  if (employeesLoading || positionsLoading) {
+  const { data: shifts = [], isLoading: shiftsLoading } = useQuery<
+    ShiftWithDetails[]
+  >({
+    queryKey: ['/api/shifts'],
+  });
+
+  if (employeesLoading || positionsLoading || shiftsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
@@ -32,24 +40,33 @@ export default function Organigrama() {
     );
   }
 
-  // Group employees by department/position
+  // Agrupar puestos por departamento
   const departments = positions.reduce(
     (acc, position) => {
       const dept = position.department || 'Sin Departamento';
-      if (!acc[dept]) {
-        acc[dept] = [];
-      }
+      if (!acc[dept]) acc[dept] = [];
       acc[dept].push(position);
       return acc;
     },
     {} as Record<string, Position[]>,
   );
 
-  // Get employees for each position
-  const getEmployeesForPosition = (positionName: string) => {
-    return employees.filter(
-      (emp) => emp.position === positionName && emp.status === 'active',
-    );
+  // Obtener empleados para cada puesto a partir de los shifts
+  const getEmployeesForPosition = (positionName: string): Employee[] => {
+    const empleadosConTurno = shifts
+      .filter(
+        (s) =>
+          s.position.name === positionName && s.employee.status === 'active',
+      )
+      .map((s) => s.employee);
+
+    // Eliminar duplicados
+    const únicos = new Map<number, Employee>();
+    for (const emp of empleadosConTurno) {
+      únicos.set(emp.id, emp);
+    }
+
+    return Array.from(únicos.values());
   };
 
   return (
@@ -61,7 +78,6 @@ export default function Organigrama() {
 
       <div className="flex flex-1 overflow-hidden">
         <LayoutContent>
-          {/* Overview Stats w-full overflow-y-hidden overflow-x-auto p-2 h-full */}
           <div className="grid grid-cols-1 md:grid-cols-3 p-2 gap-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -111,7 +127,6 @@ export default function Organigrama() {
             </Card>
           </div>
 
-          {/* Organizational Structure */}
           <div className="space-y-4 p-2">
             {Object.entries(departments).map(
               ([departmentName, deptPositions]) => (
@@ -126,7 +141,7 @@ export default function Organigrama() {
                       </h3>
                       <p className="text-sm text-neutral-500">
                         {deptPositions.length} puesto
-                        {deptPositions.length !== 1 ? 's' : ''}•{' '}
+                        {deptPositions.length !== 1 ? 's' : ''} •{' '}
                         {deptPositions.reduce(
                           (acc, pos) =>
                             acc + getEmployeesForPosition(pos.name).length,
