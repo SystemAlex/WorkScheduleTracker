@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { format } from 'date-fns'; // Import format from date-fns
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -169,4 +170,8 @@ function useIsMobile() {
   }, []);
 
   return isMobile;
+}
+
+export function formatYearMonth(date: Date): string {
+  return format(date, 'yyyy-MM');
 }

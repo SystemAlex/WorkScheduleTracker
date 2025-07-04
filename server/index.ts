@@ -25,7 +25,13 @@ const swaggerDefinition = {
 
 const swaggerOptions = {
   swaggerDefinition,
-  apis: ['./server/routes.ts'], // Cambia la ruta si tus rutas están en otro archivo
+  apis: [
+    './server/routes/employees.ts',
+    './server/routes/positions.ts',
+    './server/routes/shifts.ts',
+    './server/routes/clients.ts',
+    './server/routes/reports.ts',
+  ], // Actualiza las rutas para incluir los nuevos archivos modulares
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);

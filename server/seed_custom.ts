@@ -166,70 +166,60 @@ async function seed() {
       name: 'Juan Pérez',
       email: 'juan@example.com',
       phone: '111111111',
-      position: 'Recepcionista',
       status: 'active',
     },
     {
       name: 'Ana Gómez',
       email: 'ana@example.com',
       phone: '222222222',
-      position: 'Seguridad',
       status: 'active',
     },
     {
       name: 'Carlos Ruiz',
       email: 'carlos@example.com',
       phone: '333333333',
-      position: 'Limpieza',
       status: 'active',
     },
     {
       name: 'María López',
       email: 'maria@example.com',
       phone: '444444444',
-      position: 'Administrativo',
       status: 'active',
     },
     {
       name: 'Pedro Sánchez',
       email: 'pedro@example.com',
       phone: '555555555',
-      position: 'Mantenimiento',
       status: 'active',
     },
     {
       name: 'Lucía Torres',
       email: 'lucia@example.com',
       phone: '666666666',
-      position: 'Cajero',
       status: 'active',
     },
     {
       name: 'Miguel Díaz',
       email: 'miguel@example.com',
       phone: '777777777',
-      position: 'Supervisor',
       status: 'active',
     },
     {
       name: 'Sofía Romero',
       email: 'sofia@example.com',
       phone: '888888888',
-      position: 'Soporte IT',
       status: 'active',
     },
     {
       name: 'Diego Fernández',
       email: 'diego@example.com',
       phone: '999999999',
-      position: 'Recursos Humanos',
       status: 'active',
     },
     {
       name: 'Valentina Castro',
       email: 'valentina@example.com',
       phone: '101010101',
-      position: 'Logística',
       status: 'active',
     },
   ]);
@@ -237,9 +227,6 @@ async function seed() {
   // Obtener IDs y datos necesarios
   const empleados = await db.select().from(employees);
   const puestosDb = await db.select().from(positions);
-
-  // Mapas para lookup rápido
-  const puestoPorNombre = Object.fromEntries(puestosDb.map((p) => [p.name, p]));
 
   // Generar turnos para el mes actual
   const now = new Date();
@@ -250,6 +237,11 @@ async function seed() {
   const turnosAInsertar = [];
 
   for (const empleado of empleados) {
+    // Assign a random position to each employee for the seed data
+    const randomPosition =
+      puestosDb[Math.floor(Math.random() * puestosDb.length)];
+    if (!randomPosition) continue; // Should not happen with valid data
+
     // 5 turnos por semana: Lunes a Viernes
     let diasAsignados = 0;
     for (let day = 1; day <= daysInMonth; day++) {
@@ -259,6 +251,7 @@ async function seed() {
       if (diaSemana >= 1 && diaSemana <= 5) {
         turnosAInsertar.push({
           employeeId: empleado.id,
+          positionId: randomPosition.id, // Assign a positionId
           date: fecha.toISOString().slice(0, 10),
           notes: '',
         });

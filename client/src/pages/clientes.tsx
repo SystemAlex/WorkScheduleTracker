@@ -281,7 +281,11 @@ export default function Clientes() {
                   <FormItem>
                     <FormLabel>Dirección</FormLabel>
                     <FormControl>
-                      <Input placeholder="Dirección" {...field} />
+                      <Input
+                        placeholder="Dirección"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -294,7 +298,11 @@ export default function Clientes() {
                   <FormItem>
                     <FormLabel>Localidad</FormLabel>
                     <FormControl>
-                      <Input placeholder="Localidad" {...field} />
+                      <Input
+                        placeholder="Localidad"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -307,7 +315,11 @@ export default function Clientes() {
                   <FormItem>
                     <FormLabel>Nombre de Contacto</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nombre de contacto" {...field} />
+                      <Input
+                        placeholder="Nombre de contacto"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -320,7 +332,11 @@ export default function Clientes() {
                   <FormItem>
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <Input placeholder="Teléfono" {...field} />
+                      <Input
+                        placeholder="Teléfono"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -333,7 +349,11 @@ export default function Clientes() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Email" {...field} />
+                      <Input
+                        placeholder="Email"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

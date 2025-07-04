@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Copy } from 'lucide-react'; // Import Copy icon
 import { getMonthName, getWeekRange, getDayDisplay } from '@/lib/utils';
 
 interface HeaderProps {
@@ -26,6 +26,8 @@ interface HeaderProps {
   onAddEmployee?: () => void;
   onAddPosition?: () => void;
   onAddClient?: () => void;
+  onGenerateShifts?: () => void; // New prop for generating shifts
+  disableGenerateShifts?: boolean; // New prop to disable the generate button
   viewMode?: 'month' | 'week' | 'day';
   onViewModeChange?: (mode: 'month' | 'week' | 'day') => void;
 }
@@ -40,6 +42,8 @@ export function Header({
   onAddEmployee,
   onAddPosition,
   onAddClient,
+  onGenerateShifts, // Destructure new prop
+  disableGenerateShifts = false, // Default to false
   viewMode = 'month',
   onViewModeChange,
 }: HeaderProps) {
@@ -62,11 +66,12 @@ export function Header({
         {((currentDate && onAddShift && onViewModeChange) ||
           onAddEmployee ||
           onAddPosition ||
-          onAddClient) && (
+          onAddClient ||
+          onGenerateShifts) && ( // Include new prop here
           <>
             {/* Toolbar visible en md+ */}
             <div
-              className={`hidden ${onAddEmployee || onAddPosition || onAddClient ? 'md:flex' : 'lg:flex'} items-center space-x-4`}
+              className={`hidden ${onAddEmployee || onAddPosition || onAddClient || onGenerateShifts ? 'md:flex' : 'lg:flex'} items-center space-x-4`}
             >
               {/* Month Selector */}
               {currentDate && (
@@ -121,6 +126,18 @@ export function Header({
                 </div>
               )}
 
+              {/* Generate Shifts Button */}
+              {onGenerateShifts && (
+                <Button
+                  onClick={onGenerateShifts}
+                  variant="outline"
+                  disabled={disableGenerateShifts}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Generar desde mes anterior
+                </Button>
+              )}
+
               {/* Add Shift Button */}
               {onAddShift && (
                 <Button onClick={onAddShift}>
@@ -145,7 +162,7 @@ export function Header({
                 </Button>
               )}
 
-              {/* Add Employee Button */}
+              {/* Add Client Button */}
               {onAddClient && (
                 <Button onClick={onAddClient}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -156,7 +173,7 @@ export function Header({
 
             {/* Dropdown para móvil */}
             <div
-              className={`${onAddEmployee || onAddPosition || onAddClient ? 'md:hidden' : 'flex lg:hidden'}`}
+              className={`${onAddEmployee || onAddPosition || onAddClient || onGenerateShifts ? 'md:hidden' : 'flex lg:hidden'}`}
             >
               <DropdownMenu>
                 {/* Add Employee Button */}
@@ -284,6 +301,17 @@ export function Header({
                         </Button>
                       ))}
                     </div>
+                  )}
+
+                  {/* Generate Shifts Button (in dropdown for mobile) */}
+                  {onGenerateShifts && (
+                    <DropdownMenuItem
+                      onClick={onGenerateShifts}
+                      disabled={disableGenerateShifts}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Generar desde mes anterior
+                    </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -315,6 +315,7 @@ export default function Employees() {
                         type="email"
                         placeholder="email@ejemplo.com"
                         {...field}
+                        value={field.value || ''}
                       />
                     </FormControl>
                     <FormMessage />
@@ -329,7 +330,11 @@ export default function Employees() {
                   <FormItem>
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <Input placeholder="Número de teléfono" {...field} />
+                      <Input
+                        placeholder="Número de teléfono"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

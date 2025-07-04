@@ -16,6 +16,7 @@ import type {
   Cliente,
 } from '@shared/schema';
 import { base } from '@/lib/paths';
+import { subMonths } from 'date-fns'; // Import subMonths
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -46,9 +47,31 @@ export default function Calendar() {
         ),
       );
       if (!response.ok) throw new Error('Failed to fetch shifts');
-      return response.json();
+      const data = await response.json();
+      return data;
     },
   });
+
+  const previousMonthDate = subMonths(currentDate, 1);
+  const { data: previousMonthShifts = [], isLoading: previousShiftsLoading } =
+    useQuery<ShiftWithDetails[]>({
+      queryKey: [
+        '/api/shifts',
+        previousMonthDate.getMonth() + 1,
+        previousMonthDate.getFullYear(),
+        'previousMonth', // Add a distinct key part for previous month shifts
+      ],
+      queryFn: async () => {
+        const response = await fetch(
+          base(
+            `/api/shifts?month=${previousMonthDate.getMonth() + 1}&year=${previousMonthDate.getFullYear()}`,
+          ),
+        );
+        if (!response.ok)
+          throw new Error('Failed to fetch previous month shifts');
+        return response.json();
+      },
+    });
 
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ['/api/employees'],
@@ -214,6 +237,49 @@ export default function Calendar() {
     },
   });
 
+  const generateShiftsMutation = useMutation({
+    mutationFn: async ({ month, year }: { month: number; year: number }) => {
+      const loadingToastId = toast({
+        title: 'Generando turnos...',
+        description: 'Esto puede tomar un momento.',
+        duration: Infinity, // Keep open until dismissed
+      });
+
+      try {
+        const response = await apiRequest(
+          'POST',
+          '/api/shifts/generate-from-previous-month',
+          { month, year },
+        );
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(body.message || 'Error al generar turnos.');
+        }
+        const data = await response.json();
+        toast.dismiss(loadingToastId);
+        toast({
+          title: 'Turnos generados',
+          description: `Se generaron ${data.count} turnos para el mes actual.`,
+        });
+        return data;
+      } catch (error: any) {
+        toast.dismiss(loadingToastId);
+        toast({
+          title: 'Error',
+          description: error.message || 'No se pudieron generar los turnos.',
+          variant: 'destructive',
+        });
+        throw error; // Re-throw to let React Query handle it
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
+    },
+    onError: () => {
+      // Toast is handled within mutationFn
+    },
+  });
+
   // Event handlers
   const handlePreviousMonth = () => {
     const newDate = new Date(currentDate);
@@ -287,7 +353,19 @@ export default function Calendar() {
     }
   };
 
-  if (shiftsLoading) {
+  const handleGenerateShifts = () => {
+    // Pass the current month and year to the mutation
+    generateShiftsMutation.mutate({
+      month: currentDate.getMonth() + 1,
+      year: currentDate.getFullYear(),
+    });
+  };
+
+  // Determine if the generate shifts button should be disabled
+  const disableGenerateShifts =
+    shifts.length > 0 || generateShiftsMutation.isPending;
+
+  if (shiftsLoading || previousShiftsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
@@ -309,6 +387,8 @@ export default function Calendar() {
         onPreviousMonth={handlePreviousMonth}
         onNextMonth={handleNextMonth}
         onAddShift={handleAddShift}
+        onGenerateShifts={handleGenerateShifts} // Pass the new handler
+        disableGenerateShifts={disableGenerateShifts} // Pass the disable state
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
@@ -318,6 +398,7 @@ export default function Calendar() {
           <EmployeeCalendarGrid
             currentDate={currentDate}
             shifts={shifts}
+            previousMonthShifts={previousMonthShifts} // Pass previous month shifts
             employees={employees}
             positions={positions}
             clientes={clientes}
@@ -343,7 +424,8 @@ export default function Calendar() {
         isLoading={
           createShiftMutation.isPending ||
           updateShiftMutation.isPending ||
-          deleteShiftMutation.isPending
+          deleteShiftMutation.isPending ||
+          generateShiftsMutation.isPending // Include new mutation's loading state
         }
         onDelete={editingShift ? handleDeleteShift : undefined}
       />

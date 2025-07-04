@@ -10,7 +10,12 @@ import type {
   Cliente,
   Position,
 } from '@shared/schema';
-import { getDayName, formatDate, colorLightenDarken } from '@/lib/utils';
+import {
+  getDayName,
+  formatDate,
+  colorLightenDarken,
+  formatYearMonth,
+} from '@/lib/utils';
 import {
   Accordion,
   AccordionItem,
@@ -21,6 +26,7 @@ import {
 interface EmployeeCalendarGridProps {
   currentDate: Date;
   shifts: ShiftWithDetails[];
+  previousMonthShifts: ShiftWithDetails[];
   employees: Employee[];
   positions: Position[];
   clientes: Cliente[];
@@ -32,9 +38,71 @@ interface EmployeeCalendarGridProps {
   viewMode?: 'month' | 'week' | 'day';
 }
 
+// Helper function to group employees by their primary client based on a given set of shifts
+function groupEmployeesByPrimaryClient(
+  allShifts: ShiftWithDetails[],
+  employees: Employee[],
+  positions: Position[],
+): Record<number, Employee[]> {
+  const employeeShiftCounts: Record<number, Record<number, number>> = {}; // employeeId -> clientId -> count
+
+  allShifts.forEach((shift) => {
+    const position = positions.find((p) => p.id === shift.positionId);
+    if (!position) return;
+
+    const clienteId = position.clienteId;
+    const empId = shift.employeeId;
+
+    if (!employeeShiftCounts[empId]) {
+      employeeShiftCounts[empId] = {};
+    }
+    if (!employeeShiftCounts[empId][clienteId]) {
+      employeeShiftCounts[empId][clienteId] = 0;
+    }
+    employeeShiftCounts[empId][clienteId]++;
+  });
+
+  const employeePrimaryClientMap: Record<number, number> = {};
+  for (const empIdStr in employeeShiftCounts) {
+    const empId = Number(empIdStr);
+    const clientCounts = employeeShiftCounts[empId];
+    let maxClienteId = -1;
+    let maxTurnos = -1;
+    for (const clienteIdStr in clientCounts) {
+      const clienteId = Number(clienteIdStr);
+      const count = clientCounts[clienteId];
+      if (count > maxTurnos) {
+        maxTurnos = count;
+        maxClienteId = clienteId;
+      }
+    }
+    employeePrimaryClientMap[empId] = maxClienteId;
+  }
+
+  const employeesGroupedByClient: Record<number, Employee[]> = {};
+  for (const empIdStr in employeePrimaryClientMap) {
+    const empId = Number(empIdStr);
+    const primaryClientId = employeePrimaryClientMap[empId];
+    if (!employeesGroupedByClient[primaryClientId]) {
+      employeesGroupedByClient[primaryClientId] = [];
+    }
+    const emp = employees.find((e) => e.id === empId);
+    if (emp) {
+      employeesGroupedByClient[primaryClientId].push(emp);
+    }
+  }
+
+  Object.values(employeesGroupedByClient).forEach((arr) =>
+    arr.sort((a, b) => a.name.localeCompare(b.name)),
+  );
+
+  return employeesGroupedByClient;
+}
+
 export function EmployeeCalendarGrid({
   currentDate,
   shifts,
+  previousMonthShifts,
   employees,
   positions,
   clientes,
@@ -46,77 +114,50 @@ export function EmployeeCalendarGrid({
   viewMode = 'month',
 }: EmployeeCalendarGridProps) {
   const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  const month = currentDate.getMonth(); // 0-indexed
   const daysInMonth = getDaysInMonth(currentDate);
 
-  // Filtrar turnos del mes actual
+  const currentMonthYearString = formatYearMonth(currentDate);
+
+  // Filter shifts for the current month
   const shiftsInCurrentMonth = shifts.filter((shift) => {
-    const shiftDate = new Date(shift.date);
-    return shiftDate.getFullYear() === year && shiftDate.getMonth() === month;
+    const shiftMonthYearString = shift.date.substring(0, 7);
+    return shiftMonthYearString === currentMonthYearString;
   });
 
-  // 1. Contar turnos por empleado y cliente
-  const turnosPorEmpleadoCliente: Record<number, Record<number, number>> = {};
+  // Filter shifts for the previous month
+  const previousMonthDate = new Date(currentDate);
+  previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
+  const previousMonthYearString = formatYearMonth(previousMonthDate);
 
-  shiftsInCurrentMonth.forEach((shift) => {
-    const position = positions.find((p) => p.id === shift.positionId);
-    if (!position) return;
-
-    const clienteId = position.clienteId;
-    const empId = shift.employeeId;
-
-    if (!turnosPorEmpleadoCliente[empId]) {
-      turnosPorEmpleadoCliente[empId] = {};
-    }
-    if (!turnosPorEmpleadoCliente[empId][clienteId]) {
-      turnosPorEmpleadoCliente[empId][clienteId] = 0;
-    }
-    turnosPorEmpleadoCliente[empId][clienteId]++;
+  const shiftsInPreviousMonth = previousMonthShifts.filter((shift) => {
+    const shiftMonthYearString = shift.date.substring(0, 7);
+    return shiftMonthYearString === previousMonthYearString;
   });
 
-  // 2. Determinar el cliente con más turnos para cada empleado
-  const clientePrincipalPorEmpleado: Record<number, number> = {};
+  // Combine all relevant shifts (current and previous month) for overall employee-client mapping
+  const allRelevantShifts = React.useMemo(() => {
+    return shiftsInCurrentMonth.concat(shiftsInPreviousMonth);
+  }, [shiftsInCurrentMonth, shiftsInPreviousMonth]);
 
-  for (const empIdStr in turnosPorEmpleadoCliente) {
-    const empId = Number(empIdStr);
-    const clientesTurnos = turnosPorEmpleadoCliente[empId];
-
-    let maxClienteId = -1;
-    let maxTurnos = -1;
-
-    for (const clienteIdStr in clientesTurnos) {
-      const clienteId = Number(clienteIdStr);
-      const count = clientesTurnos[clienteId];
-      if (count > maxTurnos) {
-        maxTurnos = count;
-        maxClienteId = clienteId;
-      }
-    }
-
-    clientePrincipalPorEmpleado[empId] = maxClienteId;
-  }
-
-  // 3. Agrupar empleados sólo en su cliente principal
-  const empleadosPorCliente: Record<number, Employee[]> = {};
-
-  for (const empIdStr in clientePrincipalPorEmpleado) {
-    const empId = Number(empIdStr);
-    const clienteId = clientePrincipalPorEmpleado[empId];
-    if (!empleadosPorCliente[clienteId]) {
-      empleadosPorCliente[clienteId] = [];
-    }
-    const emp = employees.find((e) => e.id === empId);
-    if (emp) {
-      empleadosPorCliente[clienteId].push(emp);
-    }
-  }
-
-  // 4. Ordenar empleados alfabéticamente por nombre en cada cliente
-  Object.values(empleadosPorCliente).forEach((arr) =>
-    arr.sort((a, b) => a.name.localeCompare(b.name)),
+  // Group employees by their primary client based on ALL relevant shifts
+  const employeesGroupedByPrimaryClient = React.useMemo(
+    () =>
+      groupEmployeesByPrimaryClient(allRelevantShifts, employees, positions),
+    [allRelevantShifts, employees, positions],
   );
 
-  // Generar array de fechas según viewMode
+  // Determine which clients to show: only those that have at least one employee assigned to them
+  const clientsToShow = React.useMemo(() => {
+    return clientes
+      .filter(
+        (cliente) =>
+          (employeesGroupedByPrimaryClient[cliente.id]?.length || 0) > 0,
+      )
+      .sort((a, b) => a.empresa.localeCompare(b.empresa));
+  }, [clientes, employeesGroupedByPrimaryClient]);
+
+  // Generate array of dates according to viewMode
   const getDaysToShow = () => {
     if (viewMode === 'day') {
       return [currentDate];
@@ -142,7 +183,7 @@ export function EmployeeCalendarGrid({
 
   const daysToShow = getDaysToShow();
 
-  // Obtener siglas de posición
+  // Get position siglas
   const getPositionSiglas = (shift: ShiftWithDetails) => {
     return (
       shift.position.siglas || shift.position.name.substring(0, 3).toUpperCase()
@@ -166,15 +207,15 @@ export function EmployeeCalendarGrid({
     onAddShift?.(date, employee);
   };
 
-  // Estado para controlar qué Accordions están abiertos
+  // State to control which Accordions are open
   const [openAccordions, setOpenAccordions] = React.useState(
     clientes.map((c) => `cliente-${c.id}`),
   );
 
-  // Sincronizar Accordions abiertos si cambia la lista de clientes
+  // Synchronize open Accordions if client list changes
   React.useEffect(() => {
-    setOpenAccordions(clientes.map((c) => `cliente-${c.id}`));
-  }, [clientes]);
+    setOpenAccordions(clientsToShow.map((c) => `cliente-${c.id}`));
+  }, [clientsToShow]);
 
   return (
     <div className="w-full overflow-y-hidden overflow-x-auto p-2 h-full">
@@ -232,142 +273,153 @@ export function EmployeeCalendarGrid({
             value={openAccordions}
             onValueChange={setOpenAccordions}
           >
-            {clientes.map((cliente) => (
-              <AccordionItem key={cliente.id} value={`cliente-${cliente.id}`}>
-                <AccordionTrigger className="p-1 bg-neutral-200">
-                  <span className="font-semibold text-base">
-                    {cliente.empresa}
-                    <span className="ml-2 text-xs text-neutral-500 font-normal">
-                      ({empleadosPorCliente[cliente.id]?.length || 0})
+            {clientsToShow.map((cliente) => {
+              const employeesForThisClient =
+                employeesGroupedByPrimaryClient[cliente.id] || [];
+
+              return (
+                <AccordionItem key={cliente.id} value={`cliente-${cliente.id}`}>
+                  <AccordionTrigger className="p-1 bg-neutral-200">
+                    <span className="font-semibold text-base">
+                      {cliente.empresa}
+                      <span className="ml-2 text-xs text-neutral-500 font-normal">
+                        ({employeesForThisClient.length || 0})
+                      </span>
                     </span>
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-1 p-1 bg-neutral-100">
-                  {empleadosPorCliente[cliente.id]?.length ? (
-                    empleadosPorCliente[cliente.id].map((employee) => (
-                      <div
-                        key={employee.id}
-                        className={`grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 items-center`}
-                        style={
-                          { '--days': daysToShow.length } as React.CSSProperties
-                        }
-                      >
-                        {/* Employee name */}
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-1 p-1 bg-neutral-100">
+                    {employeesForThisClient.length ? (
+                      employeesForThisClient.map((employee) => (
                         <div
-                          className={`min-h-[40px] font-medium text-sm p-2 cursor-pointer truncate bg-neutral-50 rounded-md ${
-                            selectedEmployee?.id === employee.id
-                              ? 'ring-2 ring-green-600 ring-offset-0'
-                              : ''
-                          }`}
-                          onClick={() => onEmployeeSelect?.(employee)}
+                          key={employee.id}
+                          className={`grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 items-center`}
+                          style={
+                            {
+                              '--days': daysToShow.length,
+                            } as React.CSSProperties
+                          }
                         >
-                          {employee.name}
-                        </div>
+                          {/* Employee name */}
+                          <div
+                            className={`min-h-[40px] font-medium text-sm p-2 cursor-pointer truncate bg-neutral-50 rounded-md ${
+                              selectedEmployee?.id === employee.id
+                                ? 'ring-2 ring-green-600 ring-offset-0'
+                                : ''
+                            }`}
+                            onClick={() => onEmployeeSelect?.(employee)}
+                          >
+                            {employee.name}
+                          </div>
 
-                        {/* Days */}
-                        {daysToShow.map((date) => {
-                          const shift = shifts.find(
-                            (s) =>
-                              s.employeeId === employee.id &&
-                              s.date === formatDate(date),
-                          );
-                          const dayOfWeek = getDay(date);
-                          const isSelected =
-                            selectedDate &&
-                            selectedDate.toDateString() === date.toDateString();
+                          {/* Days */}
+                          {daysToShow.map((date) => {
+                            const formattedDate = formatDate(date);
+                            const shift = shiftsInCurrentMonth.find(
+                              (s) =>
+                                s.employeeId === employee.id &&
+                                s.date === formattedDate,
+                            );
 
-                          let dayColor = 'bg-sky-50';
-                          if (dayOfWeek === 6) dayColor = 'bg-yellow-50';
-                          if (dayOfWeek === 0) dayColor = 'bg-red-50';
+                            const dayOfWeek = getDay(date);
+                            const isSelected =
+                              selectedDate &&
+                              selectedDate.toDateString() ===
+                                date.toDateString();
 
-                          return (
-                            <div
-                              key={`${employee.id}-${date.toISOString()}`}
-                              className={`
-                                min-h-[40px] p-0 rounded-md border flex items-stretch justify-center
-                                transition-colors duration-150 relative group
-                                ${dayColor}
-                                ${
-                                  isSelected
-                                    ? 'ring-2 ring-green-600 ring-offset-0'
-                                    : selectedEmployee?.id === employee.id
+                            let dayColor = 'bg-sky-50';
+                            if (dayOfWeek === 6) dayColor = 'bg-yellow-50';
+                            if (dayOfWeek === 0) dayColor = 'bg-red-50';
+
+                            return (
+                              <div
+                                key={`${employee.id}-${date.toISOString()}`}
+                                className={`
+                                  min-h-[40px] p-0 rounded-md border flex items-stretch justify-center
+                                  transition-colors duration-150 relative group
+                                  ${dayColor}
+                                  ${
+                                    isSelected
                                       ? 'ring-2 ring-green-600 ring-offset-0'
-                                      : 'hover:opacity-80'
-                                }
-                              `}
-                              onClick={() => handleCellClick(date, employee)}
-                            >
-                              <Tooltip.Root>
-                                {shift ? (
-                                  <>
-                                    <Tooltip.Trigger asChild>
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs px-1 py-0.5 w-full justify-center font-medium cursor-pointer"
-                                        style={{
-                                          backgroundColor: colorLightenDarken(
-                                            shift.position.color,
-                                            0.9,
-                                          ),
-                                          color: shift.position.color,
-                                          borderColor: shift.position.color,
-                                          outline: `2px solid ${shift.position.color}`,
-                                          outlineOffset: '-1px',
-                                        }}
-                                        onClick={() => onEditShift?.(shift)}
-                                      >
-                                        {getPositionSiglas(shift)}
-                                      </Badge>
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Portal>
-                                      <Tooltip.Content
-                                        side="bottom"
-                                        sideOffset={4}
-                                        className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md z-50"
-                                      >
-                                        Editar turno
-                                      </Tooltip.Content>
-                                    </Tooltip.Portal>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Tooltip.Trigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="opacity-0 group-hover:opacity-100 group-hover:bg-primary self-center w-fit h-full p-1 hover:text-primary-foreground"
-                                        onClick={(e) =>
-                                          handleAddClick(e, date, employee)
-                                        }
-                                      >
-                                        <Plus className="h-3 w-3" />
-                                      </Button>
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Portal>
-                                      <Tooltip.Content
-                                        side="bottom"
-                                        sideOffset={11}
-                                        className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md z-50"
-                                      >
-                                        Asignar turno
-                                      </Tooltip.Content>
-                                    </Tooltip.Portal>
-                                  </>
-                                )}
-                              </Tooltip.Root>
-                            </div>
-                          );
-                        })}
+                                      : selectedEmployee?.id === employee.id
+                                        ? 'ring-2 ring-green-600 ring-offset-0'
+                                        : 'hover:opacity-80'
+                                  }
+                                `}
+                                onClick={() => handleCellClick(date, employee)}
+                              >
+                                <Tooltip.Root>
+                                  {shift ? (
+                                    <>
+                                      <Tooltip.Trigger asChild>
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs px-1 py-0.5 w-full justify-center font-medium cursor-pointer"
+                                          style={{
+                                            backgroundColor: colorLightenDarken(
+                                              shift.position.color,
+                                              0.9,
+                                            ),
+                                            color: shift.position.color,
+                                            borderColor: shift.position.color,
+                                            outline: `2px solid ${shift.position.color}`,
+                                            outlineOffset: '-1px',
+                                          }}
+                                          onClick={() => onEditShift?.(shift)}
+                                        >
+                                          {getPositionSiglas(shift)}
+                                        </Badge>
+                                      </Tooltip.Trigger>
+                                      <Tooltip.Portal>
+                                        <Tooltip.Content
+                                          side="bottom"
+                                          sideOffset={4}
+                                          className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md z-50"
+                                        >
+                                          Editar turno
+                                        </Tooltip.Content>
+                                      </Tooltip.Portal>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Tooltip.Trigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="opacity-0 group-hover:opacity-100 group-hover:bg-primary self-center w-fit h-full p-1 hover:text-primary-foreground"
+                                          onClick={(e) =>
+                                            handleAddClick(e, date, employee)
+                                          }
+                                        >
+                                          <Plus className="h-3 w-3" />
+                                        </Button>
+                                      </Tooltip.Trigger>
+                                      <Tooltip.Portal>
+                                        <Tooltip.Content
+                                          side="bottom"
+                                          sideOffset={11}
+                                          className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md z-50"
+                                        >
+                                          Asignar turno
+                                        </Tooltip.Content>
+                                      </Tooltip.Portal>
+                                    </>
+                                  )}
+                                </Tooltip.Root>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-neutral-400 text-sm px-4 py-2">
+                        Sin empleados asignados para este cliente en este mes o
+                        el anterior.
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-neutral-400 text-sm px-4 py-2">
-                      Sin empleados asignados
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
           </Accordion>
         </div>
 

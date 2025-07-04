@@ -26,7 +26,7 @@ import { LayoutContent } from '@/components/ui/layout';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { insertPositionSchema } from '@shared/schema';
-import type { Position, InsertPosition } from '@shared/schema';
+import type { Position, InsertPosition, Cliente } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import {
@@ -72,7 +72,7 @@ export default function Positions() {
   });
 
   // Obtener clientes
-  const { data: clientes = [] } = useQuery({
+  const { data: clientes = [] } = useQuery<Cliente[]>({
     queryKey: ['/api/clientes'],
   });
 
@@ -84,7 +84,7 @@ export default function Positions() {
       department: '',
       siglas: '',
       color: '#3B82F6',
-      totalHoras: 8,
+      totalHoras: '8', // Changed to string
       clienteId: undefined,
     },
   });
@@ -100,6 +100,9 @@ export default function Positions() {
       description: '',
       department: '',
       siglas: '',
+      color: '#3B82F6', // Reset color to default
+      totalHoras: '8', // Reset totalHoras to default string
+      clienteId: undefined, // Reset clienteId
     });
     setModalOpen(true);
   };
@@ -257,6 +260,7 @@ export default function Positions() {
                       <Input
                         placeholder="Ej: Administración, Operaciones, etc."
                         {...field}
+                        value={field.value || ''}
                       />
                     </FormControl>
                     <FormMessage />
@@ -274,6 +278,7 @@ export default function Positions() {
                       <Textarea
                         placeholder="Describe las responsabilidades del puesto..."
                         {...field}
+                        value={field.value || ''}
                       />
                     </FormControl>
                     <FormMessage />
@@ -322,9 +327,9 @@ export default function Positions() {
                         min={0}
                         placeholder="Ej: 6.5"
                         {...field}
-                        value={field.value ?? ''}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value))
+                        value={field.value} // Keep as string for input type="number"
+                        onChange={
+                          (e) => field.onChange(e.target.value) // Keep as string
                         }
                       />
                     </FormControl>
