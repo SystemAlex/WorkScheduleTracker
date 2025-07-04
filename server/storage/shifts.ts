@@ -20,7 +20,15 @@ export class ShiftStorage {
     this.positionStorage = positionStorage;
   }
 
-  async getShifts(): Promise<ShiftWithDetails[]> {
+  async getShifts(startDate?: string, endDate?: string): Promise<ShiftWithDetails[]> {
+    const whereConditions = [];
+    if (startDate) {
+      whereConditions.push(gte(shifts.date, startDate));
+    }
+    if (endDate) {
+      whereConditions.push(lte(shifts.date, endDate));
+    }
+
     const results = await db
       .select({
         id: shifts.id,
@@ -34,7 +42,9 @@ export class ShiftStorage {
       })
       .from(shifts)
       .innerJoin(employees, eq(shifts.employeeId, employees.id))
-      .innerJoin(positions, eq(shifts.positionId, positions.id));
+      .innerJoin(positions, eq(shifts.positionId, positions.id))
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(shifts.date); // Order by date for upcoming shifts
 
     return results.map((row) => ({
       id: row.id,
@@ -263,19 +273,21 @@ export class ShiftStorage {
     targetMonth: number,
     targetYear: number,
   ): Promise<{ count: number }> {
-    const targetDate = new Date(targetYear, targetMonth - 1, 1); // Create a date object for the target month
-    const previousMonthDate = subMonths(targetDate, 1); // Get the previous month relative to targetDate
+    const targetDate = new Date(targetYear, targetMonth - 1, 1);
+    const previousMonthDate = subMonths(targetDate, 1);
     const prevMonth = previousMonthDate.getMonth() + 1;
     const prevYear = previousMonthDate.getFullYear();
 
-    // Define a monthly hour cap (e.g., 160 hours for full-time)
-    const MONTHLY_HOUR_CAP = 160;
-
-    // 1. Get shifts from the previous month
-    const previousMonthShifts = await this.getShiftsByMonth(
+    // 1. Get total hours for each employee from the PREVIOUS month
+    const previousMonthEmployeeReports = await this.reportStorage.getEmployeeHoursReport(
+      undefined, // all employees
       prevMonth,
       prevYear,
     );
+    const employeePreviousMonthHoursMap = new Map<number, number>();
+    previousMonthEmployeeReports.forEach((report) => {
+      employeePreviousMonthHoursMap.set(report.employeeId, report.totalHours);
+    });
 
     // 2. Get existing shifts for the current month to avoid duplicates
     const existingCurrentMonthShifts = await this.getShiftsByMonth(
@@ -286,7 +298,7 @@ export class ShiftStorage {
       existingCurrentMonthShifts.map((s) => `${s.employeeId}-${s.date}`),
     );
 
-    // 3. Get current month's total hours for each employee
+    // 3. Get current month's total hours for each employee (already existing in current month)
     const currentMonthEmployeeHours =
       await this.reportStorage.getEmployeeHoursReport(
         undefined, // all employees
@@ -298,8 +310,11 @@ export class ShiftStorage {
       employeeCurrentHoursMap.set(report.employeeId, report.totalHours);
     });
 
+    // 4. Get shifts from the previous month to use as a template
+    const previousMonthShifts = await this.getShiftsByMonth(prevMonth, prevYear);
+
     const newShiftsToInsert: InsertShift[] = [];
-    let insertedCount = 0; // Use a counter for actual insertions
+    let insertedCount = 0;
 
     for (const prevShift of previousMonthShifts) {
       const prevShiftDate = new Date(prevShift.date);
@@ -323,10 +338,13 @@ export class ShiftStorage {
           const positionHours = position
             ? parseFloat(position.totalHoras.toString())
             : 0;
-          const currentHours = employeeCurrentHoursMap.get(employeeId) || 0;
 
-          // Check if adding this shift would exceed the monthly hour cap
-          if (currentHours + positionHours <= MONTHLY_HOUR_CAP) {
+          const currentHours = employeeCurrentHoursMap.get(employeeId) || 0;
+          // Get the target hours for this employee based on previous month's total, fallback to 160 if no previous data
+          const targetHoursForEmployee = employeePreviousMonthHoursMap.get(employeeId) || 160;
+
+          // Check if adding this shift would exceed the monthly hour cap based on previous month's total
+          if (currentHours + positionHours <= targetHoursForEmployee) {
             newShiftsToInsert.push({
               employeeId: prevShift.employeeId,
               positionId: prevShift.positionId,
@@ -340,7 +358,7 @@ export class ShiftStorage {
             );
           } else {
             console.log(
-              `Skipping shift for employee ${prevShift.employee.name} on ${newDateFormatted} due to monthly hour cap.`,
+              `Skipping shift for employee ${prevShift.employee.name} on ${newDateFormatted} due to exceeding previous month's total hours (${targetHoursForEmployee}).`,
             );
           }
         }

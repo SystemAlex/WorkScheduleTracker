@@ -1,10 +1,14 @@
 import { db } from '../db';
-import { clientes, type Cliente, type InsertCliente } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { clientes, positions, type Cliente, type InsertCliente } from '@shared/schema';
+import { eq, ilike, asc, isNull, count, and } from 'drizzle-orm';
 
 export class ClientStorage {
-  async getClientes(): Promise<Cliente[]> {
-    return await db.select().from(clientes);
+  async getClientes(searchFilter?: string): Promise<Cliente[]> {
+    const conditions = [isNull(clientes.deletedAt)];
+    if (searchFilter) {
+      conditions.push(ilike(clientes.empresa, `%${searchFilter}%`));
+    }
+    return await db.select().from(clientes).where(and(...conditions)).orderBy(asc(clientes.empresa));
   }
 
   async createCliente(data: InsertCliente): Promise<Cliente> {
@@ -22,6 +26,18 @@ export class ClientStorage {
   }
 
   async deleteCliente(id: number): Promise<void> {
-    await db.delete(clientes).where(eq(clientes.id, id));
+    // Check if there are any positions associated with this client
+    const positionsCount = await db
+      .select({ count: count() })
+      .from(positions)
+      .where(eq(positions.clienteId, id));
+
+    if (positionsCount[0].count > 0) {
+      // If there are associated positions, perform a soft delete
+      await db.update(clientes).set({ deletedAt: new Date() }).where(eq(clientes.id, id));
+    } else {
+      // If no associated positions, perform a hard delete
+      await db.delete(clientes).where(eq(clientes.id, id));
+    }
   }
 }

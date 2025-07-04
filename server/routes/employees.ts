@@ -11,13 +11,20 @@ const employeesRouter = Router();
  *   get:
  *     summary: Obtiene todos los empleados
  *     tags: [Employees]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda para filtrar empleados por nombre.
  *     responses:
  *       200:
  *         description: Lista de empleados
  */
 employeesRouter.get('/', async (req, res) => {
   try {
-    const employees = await storage.getEmployees();
+    const { search } = req.query;
+    const employees = await storage.getEmployees(search as string);
     res.json(employees);
   } catch (error) {
     console.error('Error fetching employees:', error);

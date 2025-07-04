@@ -20,25 +20,39 @@ const shiftsRouter = Router();
  *         name: year
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
  *     responses:
  *       200:
  *         description: Lista de turnos
  */
 shiftsRouter.get('/', async (req, res) => {
   try {
-    const { month, year } = req.query;
-    let shifts;
+    const { month, year, startDate, endDate } = req.query;
+    let shiftsData;
 
     if (month && year) {
-      shifts = await storage.getShiftsByMonth(
+      shiftsData = await storage.getShiftsByMonth(
         parseInt(month as string),
         parseInt(year as string),
       );
+    } else if (startDate || endDate) {
+      // If startDate or endDate are provided, use the more flexible getShifts
+      shiftsData = await storage.getShifts(startDate as string, endDate as string);
     } else {
-      shifts = await storage.getShifts();
+      // Default to fetching all shifts if no specific filters
+      shiftsData = await storage.getShifts();
     }
 
-    res.json(shifts);
+    res.json(shiftsData);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch shifts' });
   }
@@ -252,7 +266,7 @@ const generateShiftsSchema = z.object({
 shiftsRouter.post('/generate-from-previous-month', async (req, res) => {
   try {
     const { month, year } = generateShiftsSchema.parse(req.body);
-    const result = await storage.generateShiftsFromPreviousMonth(month, year);
+    const result = await storage.generateShiftsFromPreviousMonth(month, year); // Pass month and year
     res.status(200).json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {

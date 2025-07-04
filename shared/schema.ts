@@ -10,7 +10,7 @@ import {
   varchar,
   decimal,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations } from 'drizzle-orm'; // Removed 'one' from here
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -35,6 +35,7 @@ export const positions = pgTable('positions', {
     .notNull()
     .references(() => clientes.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'), // New column for soft delete
 });
 
 export const shifts = pgTable('shifts', {
@@ -59,6 +60,7 @@ export const clientes = pgTable('clientes', {
   telefono: varchar('telefono', { length: 30 }),
   email: varchar('email', { length: 100 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'), // New column for soft delete
 });
 
 // Relations
@@ -66,11 +68,15 @@ export const employeesRelations = relations(employees, ({ many }) => ({
   shifts: many(shifts),
 }));
 
-export const positionsRelations = relations(positions, ({ many }) => ({
+export const positionsRelations = relations(positions, ({ many, one }) => ({ // 'one' is available here
   shifts: many(shifts),
+  clientes: one(clientes, {
+    fields: [positions.clienteId],
+    references: [clientes.id],
+  }),
 }));
 
-export const shiftsRelations = relations(shifts, ({ one }) => ({
+export const shiftsRelations = relations(shifts, ({ one }) => ({ // 'one' is available here
   employee: one(employees, {
     fields: [shifts.employeeId],
     references: [employees.id],
@@ -79,6 +85,10 @@ export const shiftsRelations = relations(shifts, ({ one }) => ({
     fields: [shifts.positionId],
     references: [positions.id],
   }),
+}));
+
+export const clientesRelations = relations(clientes, ({ many }) => ({
+  positions: many(positions),
 }));
 
 // Insert schemas
@@ -90,6 +100,7 @@ export const insertEmployeeSchema = createInsertSchema(employees).omit({
 export const insertPositionSchema = createInsertSchema(positions).omit({
   id: true,
   createdAt: true,
+  deletedAt: true, // Omit deletedAt from insert schema
 });
 
 export const insertShiftSchema = createInsertSchema(shifts).omit({
@@ -98,7 +109,7 @@ export const insertShiftSchema = createInsertSchema(shifts).omit({
 });
 
 export const insertClienteSchema = createInsertSchema(clientes)
-  .omit({ id: true, createdAt: true })
+  .omit({ id: true, createdAt: true, deletedAt: true }) // Omit deletedAt from insert schema
   .extend({
     empresa: z.string().min(1, 'La empresa es obligatoria'),
   });

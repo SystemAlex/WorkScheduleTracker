@@ -28,7 +28,7 @@ export default function Calendar() {
   const [editingShift, setEditingShift] = useState<ShiftWithDetails>();
   const [viewMode, setViewMode] = useState<ViewMode>('month');
 
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast(); // Destructure toast and dismiss
   const queryClient = useQueryClient();
 
   // Queries
@@ -256,14 +256,14 @@ export default function Calendar() {
           throw new Error(body.message || 'Error al generar turnos.');
         }
         const data = await response.json();
-        toast.dismiss(loadingToastId);
+        dismiss(loadingToastId.id); // Use dismiss from useToast hook
         toast({
           title: 'Turnos generados',
           description: `Se generaron ${data.count} turnos para el mes actual.`,
         });
         return data;
       } catch (error: any) {
-        toast.dismiss(loadingToastId);
+        dismiss(loadingToastId.id); // Use dismiss from useToast hook
         toast({
           title: 'Error',
           description: error.message || 'No se pudieron generar los turnos.',

@@ -18,18 +18,20 @@ import type {
 
 export interface IStorage {
   // Employees
-  getEmployees(): Promise<Employee[]>;
+  getEmployees(nameFilter?: string): Promise<Employee[]>;
   getEmployee(id: number): Promise<Employee | undefined>;
   createEmployee(insertEmployee: InsertEmployee): Promise<Employee>;
   updateEmployee(id: number, data: InsertEmployee): Promise<Employee>;
   deleteEmployee(id: number): Promise<void>;
 
   // Positions
-  getPositions(): Promise<Position[]>;
+  getPositions(nameFilter?: string): Promise<Position[]>;
   createPosition(insertPosition: InsertPosition): Promise<Position>;
+  updatePosition(id: number, data: InsertPosition): Promise<Position>; // Added
+  deletePosition(id: number): Promise<void>; // Added
 
   // Shifts
-  getShifts(): Promise<ShiftWithDetails[]>;
+  getShifts(startDate?: string, endDate?: string): Promise<ShiftWithDetails[]>;
   getShiftsByMonth(month: number, year: number): Promise<ShiftWithDetails[]>;
   getShiftsByDate(date: string): Promise<ShiftWithDetails[]>;
   createShift(insertShift: InsertShift): Promise<ShiftWithDetails>;
@@ -41,7 +43,10 @@ export interface IStorage {
   ): Promise<ShiftWithDetails[]>;
   getShiftById(id: number): Promise<ShiftWithDetails | undefined>;
   updateShift(id: number, data: InsertShift): Promise<ShiftWithDetails>;
-  generateShiftsFromPreviousMonth(): Promise<ShiftWithDetails[]>;
+  generateShiftsFromPreviousMonth(
+    month: number,
+    year: number,
+  ): Promise<{ count: number }>;
 
   // Reports
   getEmployeeHoursReport(
@@ -51,7 +56,7 @@ export interface IStorage {
   ): Promise<any[]>;
 
   // Clientes
-  getClientes(): Promise<Cliente[]>;
+  getClientes(searchFilter?: string): Promise<Cliente[]>;
   createCliente(data: InsertCliente): Promise<Cliente>;
   updateCliente(id: number, data: InsertCliente): Promise<Cliente>;
   deleteCliente(id: number): Promise<void>;
@@ -78,8 +83,8 @@ class CombinedStorage implements IStorage {
 
   // Delegate methods to respective storage classes
   // Employees
-  getEmployees() {
-    return this.employeeStorage.getEmployees();
+  getEmployees(nameFilter?: string) {
+    return this.employeeStorage.getEmployees(nameFilter);
   }
   getEmployee(id: number) {
     return this.employeeStorage.getEmployee(id);
@@ -95,16 +100,22 @@ class CombinedStorage implements IStorage {
   }
 
   // Positions
-  getPositions() {
-    return this.positionStorage.getPositions();
+  getPositions(nameFilter?: string) {
+    return this.positionStorage.getPositions(nameFilter);
   }
   createPosition(insertPosition: InsertPosition) {
     return this.positionStorage.createPosition(insertPosition);
   }
+  updatePosition(id: number, data: InsertPosition) { // Delegated
+    return this.positionStorage.updatePosition(id, data);
+  }
+  deletePosition(id: number) { // Delegated
+    return this.positionStorage.deletePosition(id);
+  }
 
   // Shifts
-  getShifts() {
-    return this.shiftStorage.getShifts();
+  getShifts(startDate?: string, endDate?: string) {
+    return this.shiftStorage.getShifts(startDate, endDate);
   }
   getShiftsByMonth(month: number, year: number) {
     return this.shiftStorage.getShiftsByMonth(month, year);
@@ -135,8 +146,8 @@ class CombinedStorage implements IStorage {
   updateShift(id: number, data: InsertShift) {
     return this.shiftStorage.updateShift(id, data);
   }
-  generateShiftsFromPreviousMonth() {
-    return this.shiftStorage.generateShiftsFromPreviousMonth();
+  generateShiftsFromPreviousMonth(month: number, year: number) {
+    return this.shiftStorage.generateShiftsFromPreviousMonth(month, year);
   }
 
   // Reports
@@ -145,8 +156,8 @@ class CombinedStorage implements IStorage {
   }
 
   // Clientes
-  getClientes() {
-    return this.clientStorage.getClientes();
+  getClientes(searchFilter?: string) {
+    return this.clientStorage.getClientes(searchFilter);
   }
   createCliente(data: InsertCliente) {
     return this.clientStorage.createCliente(data);

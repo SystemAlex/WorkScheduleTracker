@@ -1,43 +1,73 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit3, Trash2, Building, Mail, Phone, User } from 'lucide-react';
+import { Plus, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Header } from '@/components/layout/header';
 import { LayoutContent } from '@/components/ui/layout';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { insertClienteSchema } from '@shared/schema';
-import type { Cliente, InsertCliente } from '@shared/schema';
+import type { Cliente, InsertCliente, Position } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { SearchInput } from '@/components/common/search-input';
+import { base } from '@/lib/paths';
+import { ClientForm } from '@/components/clients/client-form'; // Import new form component
+import { ClientCard } from '@/components/clients/client-card'; // Import new card component
+import { z } from 'zod'; // Import z for formSchema type
+
+const formSchema = insertClienteSchema;
+type FormValues = z.infer<typeof formSchema>;
 
 export default function Clientes() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente>();
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: clientes = [], isLoading } = useQuery<Cliente[]>({
+  // Fetch all clients
+  const { data: allClientes = [], isLoading: clientsLoading } = useQuery<Cliente[]>({
     queryKey: ['/api/clientes'],
+    queryFn: async ({ queryKey }) => {
+      const [path] = queryKey;
+      const response = await fetch(base(path as string));
+      if (!response.ok) throw new Error('Failed to fetch clientes');
+      return response.json();
+    },
   });
+
+  // Fetch all positions
+  const { data: allPositions = [], isLoading: positionsLoading } = useQuery<Position[]>({
+    queryKey: ['/api/positions'],
+    queryFn: async ({ queryKey }) => {
+      const [path] = queryKey;
+      const response = await fetch(base(path as string));
+      if (!response.ok) throw new Error('Failed to fetch positions');
+      return response.json();
+    },
+  });
+
+  // Filter clients on the frontend based on searchTerm
+  const filteredClientes = React.useMemo(() => {
+    if (!searchTerm) {
+      return allClientes;
+    }
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
+    return allClientes.filter(cliente =>
+      cliente.empresa.toLowerCase().includes(lowercasedSearchTerm) ||
+      (cliente.localidad && cliente.localidad.toLowerCase().includes(lowercasedSearchTerm)) ||
+      (cliente.nombreContacto && cliente.nombreContacto.toLowerCase().includes(lowercasedSearchTerm))
+    );
+  }, [allClientes, searchTerm]);
 
   const createClienteMutation = useMutation({
     mutationFn: async (data: InsertCliente) => {
@@ -105,8 +135,8 @@ export default function Clientes() {
     },
   });
 
-  const form = useForm<InsertCliente>({
-    resolver: zodResolver(insertClienteSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       empresa: '',
       direccion: '',
@@ -117,7 +147,7 @@ export default function Clientes() {
     },
   });
 
-  const handleSubmit = (data: InsertCliente) => {
+  const handleSubmit = (data: FormValues) => {
     if (editingCliente) {
       updateClienteMutation.mutate({ ...data, id: editingCliente.id });
     } else {
@@ -150,12 +180,12 @@ export default function Clientes() {
     }
   };
 
-  if (isLoading) {
+  if (clientsLoading || positionsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-neutral-500 mt-2">Cargando clientes...</p>
+          <p className="text-sm text-neutral-500 mt-2">Cargando clientes y puestos...</p>
         </div>
       </div>
     );
@@ -173,78 +203,51 @@ export default function Clientes() {
         <div className="flex justify-between items-center p-2">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
-              Total Clientes ({clientes.length})
+              Total Clientes ({filteredClientes.length})
             </h3>
+          </div>
+          <div className="w-full max-w-xs">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Buscar cliente..."
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-2">
-          {clientes.map((cliente) => (
-            <Card key={cliente.id}>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                      <Building className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {cliente.empresa}
-                      </CardTitle>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-xs text-neutral-500">
-                          {cliente.localidad}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(cliente)}
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(cliente.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {cliente.direccion && (
-                    <div className="flex items-center space-x-2 text-sm text-neutral-600">
-                      <span>{cliente.direccion}</span>
-                    </div>
-                  )}
-                  {cliente.nombreContacto && (
-                    <div className="flex items-center space-x-2 text-sm text-neutral-600">
-                      <User className="w-4 h-4" />
-                      <span>{cliente.nombreContacto}</span>
-                    </div>
-                  )}
-                  {cliente.telefono && (
-                    <div className="flex items-center space-x-2 text-sm text-neutral-600">
-                      <Phone className="w-4 h-4" />
-                      <span>{cliente.telefono}</span>
-                    </div>
-                  )}
-                  {cliente.email && (
-                    <div className="flex items-center space-x-2 text-sm text-neutral-600">
-                      <Mail className="w-4 h-4" />
-                      <span>{cliente.email}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {filteredClientes.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <Building className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-neutral-900 mb-2">
+                No hay clientes registrados
+              </h3>
+              <p className="text-neutral-500 mb-4">
+                Comienza agregando clientes a tu organización
+              </p>
+              <Button onClick={handleAdd}>
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Primer Cliente
+              </Button>
+            </div>
+          ) : (
+            filteredClientes.map((cliente) => {
+              const clientPositions = allPositions.filter(
+                (position) => position.clienteId === cliente.id
+              );
+
+              return (
+                <ClientCard
+                  key={cliente.id}
+                  cliente={cliente}
+                  clientPositions={clientPositions}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  isDeleting={deleteClienteMutation.isPending}
+                />
+              );
+            })
+          )}
         </div>
       </LayoutContent>
 
@@ -255,131 +258,17 @@ export default function Clientes() {
               {editingCliente ? 'Editar Cliente' : 'Agregar Cliente'}
             </DialogTitle>
           </DialogHeader>
-
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-4"
-            >
-              <FormField
-                control={form.control}
-                name="empresa"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Empresa</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre de la empresa" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="direccion"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dirección</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Dirección"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="localidad"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Localidad</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Localidad"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="nombreContacto"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre de Contacto</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Nombre de contacto"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="telefono"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Teléfono</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Teléfono"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Email"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setModalOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    createClienteMutation.isPending ||
-                    updateClienteMutation.isPending
-                  }
-                >
-                  {editingCliente ? 'Actualizar' : 'Agregar'}
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <FormProvider {...form}>
+            <ClientForm
+              onSubmit={handleSubmit}
+              onCancel={() => setModalOpen(false)}
+              isLoading={
+                createClienteMutation.isPending ||
+                updateClienteMutation.isPending
+              }
+              editingCliente={editingCliente}
+            />
+          </FormProvider>
         </DialogContent>
       </Dialog>
     </>

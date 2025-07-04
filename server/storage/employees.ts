@@ -1,10 +1,14 @@
 import { db } from '../db';
 import { employees, type Employee, type InsertEmployee } from '@shared/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, ilike, and } from 'drizzle-orm';
 
 export class EmployeeStorage {
-  async getEmployees(): Promise<Employee[]> {
-    return await db.select().from(employees).orderBy(asc(employees.name));
+  async getEmployees(nameFilter?: string): Promise<Employee[]> {
+    const conditions = [eq(employees.status, 'active')];
+    if (nameFilter) {
+      conditions.push(ilike(employees.name, `%${nameFilter}%`));
+    }
+    return await db.select().from(employees).where(and(...conditions)).orderBy(asc(employees.name));
   }
 
   async getEmployee(id: number): Promise<Employee | undefined> {
@@ -33,6 +37,7 @@ export class EmployeeStorage {
   }
 
   async deleteEmployee(id: number): Promise<void> {
-    await db.delete(employees).where(eq(employees.id, id));
+    // Implement soft delete for employees by setting status to 'inactive'
+    await db.update(employees).set({ status: 'inactive' }).where(eq(employees.id, id));
   }
 }

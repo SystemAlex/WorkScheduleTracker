@@ -11,13 +11,20 @@ const clientsRouter = Router();
  *   get:
  *     summary: Obtiene todos los clientes
  *     tags: [Clientes]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda para filtrar clientes por nombre de empresa.
  *     responses:
  *       200:
  *         description: Lista de clientes
  */
 clientsRouter.get('/', async (req, res) => {
   try {
-    const clientes = await storage.getClientes();
+    const { search } = req.query;
+    const clientes = await storage.getClientes(search as string);
     res.json(clientes);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch clientes' });
