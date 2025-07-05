@@ -1,6 +1,7 @@
 {
   "name": "workscheduletracker",
   "version": "1.1.0",
+  "type": "module",
   "description": "A full-stack web application for managing work shifts, employees, positions, and clients.",
   "main": "dist/index.js",
   "private": true,
