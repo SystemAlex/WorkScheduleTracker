@@ -127,7 +127,7 @@ Puedes usar `server/seed.ts` para datos predefinidos o `server/seed_custom.ts` p
 
 ## 📄 Licencia
 
-Este proyecto está bajo la licencia MIT. Consulta el archivo [`LICENSE.txt`](https://github.com/SystemAlex/WorkScheduleTracker/tree/main?tab=MIT-1-ov-file) para más información.
+Este proyecto está bajo la licencia MIT. Consulta el archivo [`LICENSE.txt`](LICENSE.txt) para más información.
 
 ---
 
