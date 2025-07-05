@@ -54,6 +54,24 @@ export interface IStorage {
     month?: number,
     year?: number,
   ): Promise<any[]>;
+  generateExcelReport( // Added to IStorage
+    report: any[],
+    groupedPositionsByClient: Array<[number, Position[]]>,
+    clientes: Cliente[],
+    selectedMonth: number,
+    selectedYear: number,
+    totalReportHours: number,
+    totalReportShifts: number,
+  ): Promise<Buffer>;
+  generatePdfReport( // Added to IStorage
+    report: any[],
+    groupedPositionsByClient: Array<[number, Position[]]>,
+    clientes: Cliente[],
+    selectedMonth: number,
+    selectedYear: number,
+    totalReportHours: number,
+    totalReportShifts: number,
+  ): Promise<Buffer>;
 
   // Clientes
   getClientes(searchFilter?: string): Promise<Cliente[]>;
@@ -67,13 +85,13 @@ class CombinedStorage implements IStorage {
   private positionStorage: PositionStorage;
   private shiftStorage: ShiftStorage;
   private clientStorage: ClientStorage;
-  private reportStorage: ReportStorage;
+  private reportStorage: ReportStorage; // Now directly instantiates ReportStorage
 
   constructor() {
     this.employeeStorage = new EmployeeStorage();
     this.positionStorage = new PositionStorage();
     this.clientStorage = new ClientStorage();
-    this.reportStorage = new ReportStorage();
+    this.reportStorage = new ReportStorage(); // ReportStorage now handles its own generators
     // ShiftStorage depends on ReportStorage and PositionStorage
     this.shiftStorage = new ShiftStorage(
       this.reportStorage,
@@ -106,10 +124,12 @@ class CombinedStorage implements IStorage {
   createPosition(insertPosition: InsertPosition) {
     return this.positionStorage.createPosition(insertPosition);
   }
-  updatePosition(id: number, data: InsertPosition) { // Delegated
+  updatePosition(id: number, data: InsertPosition) {
+    // Delegated
     return this.positionStorage.updatePosition(id, data);
   }
-  deletePosition(id: number) { // Delegated
+  deletePosition(id: number) {
+    // Delegated
     return this.positionStorage.deletePosition(id);
   }
 
@@ -153,6 +173,46 @@ class CombinedStorage implements IStorage {
   // Reports
   getEmployeeHoursReport(employeeId?: number, month?: number, year?: number) {
     return this.reportStorage.getEmployeeHoursReport(employeeId, month, year);
+  }
+  generateExcelReport(
+    // Delegated
+    report: any[],
+    groupedPositionsByClient: Array<[number, Position[]]>,
+    clientes: Cliente[],
+    selectedMonth: number,
+    selectedYear: number,
+    totalReportHours: number,
+    totalReportShifts: number,
+  ) {
+    return this.reportStorage.generateExcelReport(
+      report,
+      groupedPositionsByClient,
+      clientes,
+      selectedMonth,
+      selectedYear,
+      totalReportHours,
+      totalReportShifts,
+    );
+  }
+  generatePdfReport(
+    // Delegated
+    report: any[],
+    groupedPositionsByClient: Array<[number, Position[]]>,
+    clientes: Cliente[],
+    selectedMonth: number,
+    selectedYear: number,
+    totalReportHours: number,
+    totalReportShifts: number,
+  ) {
+    return this.reportStorage.generatePdfReport(
+      report,
+      groupedPositionsByClient,
+      clientes,
+      selectedMonth,
+      selectedYear,
+      totalReportHours,
+      totalReportShifts,
+    );
   }
 
   // Clientes

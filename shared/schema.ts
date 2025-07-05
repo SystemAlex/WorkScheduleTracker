@@ -68,7 +68,8 @@ export const employeesRelations = relations(employees, ({ many }) => ({
   shifts: many(shifts),
 }));
 
-export const positionsRelations = relations(positions, ({ many, one }) => ({ // 'one' is available here
+export const positionsRelations = relations(positions, ({ many, one }) => ({
+  // 'one' is available here
   shifts: many(shifts),
   clientes: one(clientes, {
     fields: [positions.clienteId],
@@ -76,7 +77,8 @@ export const positionsRelations = relations(positions, ({ many, one }) => ({ // 
   }),
 }));
 
-export const shiftsRelations = relations(shifts, ({ one }) => ({ // 'one' is available here
+export const shiftsRelations = relations(shifts, ({ one }) => ({
+  // 'one' is available here
   employee: one(employees, {
     fields: [shifts.employeeId],
     references: [employees.id],

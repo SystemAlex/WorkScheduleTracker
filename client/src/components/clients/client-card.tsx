@@ -1,10 +1,19 @@
 import * as React from 'react';
-import { Edit3, Trash2, Building, Mail, Phone, User, Briefcase } from 'lucide-react';
+import {
+  Edit3,
+  Trash2,
+  Building,
+  Mail,
+  Phone,
+  User,
+  Briefcase,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm';
 import type { Cliente, Position } from '@shared/schema';
+import { IconWrapper } from '../ui/iconwrapper';
 
 interface ClientCardProps {
   cliente: Cliente;
@@ -22,17 +31,15 @@ export function ClientCard({
   isDeleting,
 }: ClientCardProps) {
   return (
-    <Card>
+    <Card className="border-l-4 border-l-primary">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Building className="w-5 h-5 text-white" />
-            </div>
+            <IconWrapper>
+              <Building className="text-white" />
+            </IconWrapper>
             <div>
-              <CardTitle className="text-lg">
-                {cliente.empresa}
-              </CardTitle>
+              <CardTitle className="text-lg">{cliente.empresa}</CardTitle>
               <div className="mt-1 flex items-center gap-2">
                 <span className="text-xs text-neutral-500">
                   {cliente.localidad}
@@ -41,11 +48,7 @@ export function ClientCard({
             </div>
           </div>
           <div className="flex space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(cliente)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onEdit(cliente)}>
               <Edit3 className="w-4 h-4" />
             </Button>
             <ConfirmDialog
@@ -99,7 +102,7 @@ export function ClientCard({
                   <Badge
                     key={position.id}
                     variant="outline"
-                    className="text-xs font-mono"
+                    className="text-sm rounded-full"
                     style={{
                       backgroundColor: `${position.color}20`,
                       color: position.color,

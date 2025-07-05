@@ -1,13 +1,45 @@
 import { db } from '../db';
-import { employees, positions, shifts } from '@shared/schema';
+import {
+  employees,
+  positions,
+  shifts,
+  Cliente,
+  Position,
+} from '@shared/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
+import { ExcelGenerator } from '../utils/excel-generator'; // Import new ExcelGenerator
+import { PdfGenerator } from '../utils/pdf-generator'; // Import new PdfGenerator
+
+interface ShiftBreakdownItem {
+  positionId: number;
+  name: string;
+  siglas: string;
+  color: string;
+  totalHoras: number;
+}
+
+interface EmployeeHoursReport {
+  employeeId: number;
+  employeeName: string;
+  totalHours: number;
+  totalShifts: number;
+  shiftBreakdown: ShiftBreakdownItem[];
+}
 
 export class ReportStorage {
+  private excelGenerator: ExcelGenerator;
+  private pdfGenerator: PdfGenerator;
+
+  constructor() {
+    this.excelGenerator = new ExcelGenerator();
+    this.pdfGenerator = new PdfGenerator();
+  }
+
   async getEmployeeHoursReport(
     employeeId?: number,
     month?: number,
     year?: number,
-  ): Promise<any[]> {
+  ): Promise<EmployeeHoursReport[]> {
     const whereConditions = [];
 
     if (employeeId) {
@@ -33,47 +65,92 @@ export class ReportStorage {
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
 
     // Group by employee and calculate stats
-    const report = shiftData.reduce((acc, row) => {
-      const employeeId = row.employee!.id;
-      const employeeName = row.employee!.name;
-      const position = row.position!;
-      const horas = parseFloat(position.totalHoras.toString());
+    const report = shiftData.reduce(
+      (acc, row) => {
+        const employeeId = row.employee!.id;
+        const employeeName = row.employee!.name;
+        const position = row.position!;
+        const horas = parseFloat(position.totalHoras.toString());
 
-      if (!acc[employeeId]) {
-        acc[employeeId] = {
-          employeeId,
-          employeeName,
-          totalHours: 0,
-          totalShifts: 0,
-          shiftBreakdown: [],
-        };
-      }
+        if (!acc[employeeId]) {
+          acc[employeeId] = {
+            employeeId,
+            employeeName,
+            totalHours: 0,
+            totalShifts: 0,
+            shiftBreakdown: [],
+          };
+        }
 
-      acc[employeeId].totalShifts++;
-      acc[employeeId].totalHours += horas;
+        acc[employeeId].totalShifts++;
+        acc[employeeId].totalHours += horas;
 
-      // Buscar si ya existe este positionId en el breakdown
-      const existing = acc[employeeId].shiftBreakdown.find(
-        (p: any) => p.positionId === position.id,
-      );
+        // Buscar si ya existe este positionId en el breakdown
+        const existing = acc[employeeId].shiftBreakdown.find(
+          (p: ShiftBreakdownItem) => p.positionId === position.id,
+        );
 
-      if (existing) {
-        existing.totalHoras += horas;
-      } else {
-        acc[employeeId].shiftBreakdown.push({
-          positionId: position.id,
-          name: position.name,
-          siglas: position.siglas,
-          color: position.color,
-          totalHoras: horas,
-        });
-      }
+        if (existing) {
+          existing.totalHoras += horas;
+        } else {
+          acc[employeeId].shiftBreakdown.push({
+            positionId: position.id,
+            name: position.name,
+            siglas: position.siglas,
+            color: position.color,
+            totalHoras: horas,
+          });
+        }
 
-      return acc;
-    }, {} as any);
+        return acc;
+      },
+      {} as Record<number, EmployeeHoursReport>,
+    );
 
-    return Object.values(report).sort((a: any, b: any) =>
+    return Object.values(report).sort((a, b) =>
       a.employeeName.localeCompare(b.employeeName),
+    );
+  }
+
+  // Delegate to ExcelGenerator
+  async generateExcelReport(
+    report: EmployeeHoursReport[],
+    groupedPositionsByClient: Array<[number, Position[]]>,
+    clientes: Cliente[],
+    selectedMonth: number,
+    selectedYear: number,
+    totalReportHours: number,
+    totalReportShifts: number,
+  ): Promise<Buffer> {
+    return this.excelGenerator.generateExcelReport(
+      report,
+      groupedPositionsByClient,
+      clientes,
+      selectedMonth,
+      selectedYear,
+      totalReportHours,
+      totalReportShifts,
+    );
+  }
+
+  // Delegate to PdfGenerator
+  async generatePdfReport(
+    report: EmployeeHoursReport[],
+    groupedPositionsByClient: Array<[number, Position[]]>,
+    clientes: Cliente[],
+    selectedMonth: number,
+    selectedYear: number,
+    totalReportHours: number,
+    totalReportShifts: number,
+  ): Promise<Buffer> {
+    return this.pdfGenerator.generatePdfReport(
+      report,
+      groupedPositionsByClient,
+      clientes,
+      selectedMonth,
+      selectedYear,
+      totalReportHours,
+      totalReportShifts,
     );
   }
 }

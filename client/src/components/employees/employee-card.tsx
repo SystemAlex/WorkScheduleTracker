@@ -6,6 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm';
 import type { Employee, ShiftWithDetails } from '@shared/schema';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { colorLightenDarken } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { IconWrapper } from '../ui/iconwrapper';
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -23,30 +27,24 @@ export function EmployeeCard({
   isDeleting,
 }: EmployeeCardProps) {
   return (
-    <Card>
+    <Card className="border-l-4 border-l-primary">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-neutral-300 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-neutral-600" />
-            </div>
+            <IconWrapper>
+              <User />
+            </IconWrapper>
             <div>
               <CardTitle className="text-lg">{employee.name}</CardTitle>
               <Badge
-                variant={
-                  employee.status === 'active' ? 'default' : 'secondary'
-                }
+                variant={employee.status === 'active' ? 'default' : 'secondary'}
               >
                 {employee.status === 'active' ? 'Activo' : 'Inactivo'}
               </Badge>
             </div>
           </div>
           <div className="flex space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(employee)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onEdit(employee)}>
               <Edit3 className="w-4 h-4" />
             </Button>
             <ConfirmDialog
@@ -86,21 +84,35 @@ export function EmployeeCard({
             {upcomingShifts.length > 0 ? (
               <div className="space-y-2">
                 {upcomingShifts.map((shift) => (
-                  <div
-                    key={shift.id}
-                    className="flex items-center justify-between text-sm text-neutral-700 bg-neutral-50 p-2 rounded-md"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: shift.position.color }}
-                      />
-                      <span>{shift.position.name}</span>
-                    </div>
-                    <span className="text-xs text-neutral-500">
-                      {format(new Date(shift.date), 'dd/MM/yyyy')}
-                    </span>
-                  </div>
+                  <Tooltip key={shift.id}>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        key={shift.id}
+                        variant="outline"
+                        className="text-sm rounded-full mr-2 space-x-1"
+                        style={{
+                          backgroundColor: `${shift.position.color}20`,
+                          color: shift.position.color,
+                          borderColor: shift.position.color,
+                        }}
+                      >
+                        <span className="">
+                          {format(new Date(shift.date), 'eeee', {
+                            locale: es,
+                          }).toLocaleUpperCase()}
+                        </span>
+                        <span className="font-bold">
+                          {format(new Date(shift.date), 'dd/MMM', {
+                            locale: es,
+                          }).toLocaleUpperCase()}
+                        </span>
+                        <span> - {shift.position.siglas}</span>
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{shift.position.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 ))}
               </div>
             ) : (

@@ -35,7 +35,9 @@ export default function Clientes() {
   const queryClient = useQueryClient();
 
   // Fetch all clients
-  const { data: allClientes = [], isLoading: clientsLoading } = useQuery<Cliente[]>({
+  const { data: allClientes = [], isLoading: clientsLoading } = useQuery<
+    Cliente[]
+  >({
     queryKey: ['/api/clientes'],
     queryFn: async ({ queryKey }) => {
       const [path] = queryKey;
@@ -46,7 +48,9 @@ export default function Clientes() {
   });
 
   // Fetch all positions
-  const { data: allPositions = [], isLoading: positionsLoading } = useQuery<Position[]>({
+  const { data: allPositions = [], isLoading: positionsLoading } = useQuery<
+    Position[]
+  >({
     queryKey: ['/api/positions'],
     queryFn: async ({ queryKey }) => {
       const [path] = queryKey;
@@ -62,10 +66,13 @@ export default function Clientes() {
       return allClientes;
     }
     const lowercasedSearchTerm = searchTerm.toLowerCase();
-    return allClientes.filter(cliente =>
-      cliente.empresa.toLowerCase().includes(lowercasedSearchTerm) ||
-      (cliente.localidad && cliente.localidad.toLowerCase().includes(lowercasedSearchTerm)) ||
-      (cliente.nombreContacto && cliente.nombreContacto.toLowerCase().includes(lowercasedSearchTerm))
+    return allClientes.filter(
+      (cliente) =>
+        cliente.empresa.toLowerCase().includes(lowercasedSearchTerm) ||
+        (cliente.localidad &&
+          cliente.localidad.toLowerCase().includes(lowercasedSearchTerm)) ||
+        (cliente.nombreContacto &&
+          cliente.nombreContacto.toLowerCase().includes(lowercasedSearchTerm)),
     );
   }, [allClientes, searchTerm]);
 
@@ -185,7 +192,9 @@ export default function Clientes() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-neutral-500 mt-2">Cargando clientes y puestos...</p>
+          <p className="text-sm text-neutral-500 mt-2">
+            Cargando clientes y puestos...
+          </p>
         </div>
       </div>
     );
@@ -200,13 +209,14 @@ export default function Clientes() {
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center p-2">
+        <div className="sticky top-0 z-10 flex justify-between items-center p-2 bg-background">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
-              Total Clientes ({filteredClientes.length})
+              Total <span className="hidden md:inline">Clientes</span>(
+              {filteredClientes.length})
             </h3>
           </div>
-          <div className="w-full max-w-xs">
+          <div className="w-full max-w-56 md:max-w-xs">
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}
@@ -215,7 +225,7 @@ export default function Clientes() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 p-2">
           {filteredClientes.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <Building className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
@@ -233,7 +243,7 @@ export default function Clientes() {
           ) : (
             filteredClientes.map((cliente) => {
               const clientPositions = allPositions.filter(
-                (position) => position.clienteId === cliente.id
+                (position) => position.clienteId === cliente.id,
               );
 
               return (

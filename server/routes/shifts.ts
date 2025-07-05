@@ -46,7 +46,10 @@ shiftsRouter.get('/', async (req, res) => {
       );
     } else if (startDate || endDate) {
       // If startDate or endDate are provided, use the more flexible getShifts
-      shiftsData = await storage.getShifts(startDate as string, endDate as string);
+      shiftsData = await storage.getShifts(
+        startDate as string,
+        endDate as string,
+      );
     } else {
       // Default to fetching all shifts if no specific filters
       shiftsData = await storage.getShifts();

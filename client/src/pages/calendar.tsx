@@ -14,9 +14,11 @@ import type {
   Employee,
   Position,
   Cliente,
+  InsertShift, // Import InsertShift type
 } from '@shared/schema';
 import { base } from '@/lib/paths';
 import { subMonths } from 'date-fns'; // Import subMonths
+import { formatYearMonth } from '@shared/utils'; // Import formatYearMonth from shared
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -87,7 +89,8 @@ export default function Calendar() {
 
   // Mutations
   const createShiftMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: InsertShift) => {
+      // Use InsertShift type
       const response = await apiRequest('POST', '/api/shifts', data);
 
       if (response.status === 409) {
@@ -137,7 +140,8 @@ export default function Calendar() {
   });
 
   const updateShiftMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+    mutationFn: async ({ id, data }: { id: number; data: InsertShift }) => {
+      // Use InsertShift type
       const response = await apiRequest('PUT', `/api/shifts/${id}`, data);
 
       if (response.status === 409) {
@@ -345,7 +349,8 @@ export default function Calendar() {
     deleteShiftMutation.mutate(shiftId);
   };
 
-  const handleShiftSubmit = (data: any) => {
+  const handleShiftSubmit = (data: InsertShift) => {
+    // Define handleShiftSubmit
     if (editingShift) {
       updateShiftMutation.mutate({ id: editingShift.id, data });
     } else {
@@ -365,7 +370,11 @@ export default function Calendar() {
   const disableGenerateShifts =
     shifts.length > 0 || generateShiftsMutation.isPending;
 
-  if (shiftsLoading || previousShiftsLoading) {
+  if (
+    shiftsLoading ||
+    previousShiftsLoading ||
+    generateShiftsMutation.isPending
+  ) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
@@ -425,7 +434,7 @@ export default function Calendar() {
           createShiftMutation.isPending ||
           updateShiftMutation.isPending ||
           deleteShiftMutation.isPending ||
-          generateShiftsMutation.isPending // Include new mutation's loading state
+          generateShiftsMutation.isPending
         }
         onDelete={editingShift ? handleDeleteShift : undefined}
       />

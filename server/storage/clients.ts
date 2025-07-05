@@ -1,5 +1,10 @@
 import { db } from '../db';
-import { clientes, positions, type Cliente, type InsertCliente } from '@shared/schema';
+import {
+  clientes,
+  positions,
+  type Cliente,
+  type InsertCliente,
+} from '@shared/schema';
 import { eq, ilike, asc, isNull, count, and } from 'drizzle-orm';
 
 export class ClientStorage {
@@ -8,7 +13,11 @@ export class ClientStorage {
     if (searchFilter) {
       conditions.push(ilike(clientes.empresa, `%${searchFilter}%`));
     }
-    return await db.select().from(clientes).where(and(...conditions)).orderBy(asc(clientes.empresa));
+    return await db
+      .select()
+      .from(clientes)
+      .where(and(...conditions))
+      .orderBy(asc(clientes.empresa));
   }
 
   async createCliente(data: InsertCliente): Promise<Cliente> {
@@ -34,7 +43,10 @@ export class ClientStorage {
 
     if (positionsCount[0].count > 0) {
       // If there are associated positions, perform a soft delete
-      await db.update(clientes).set({ deletedAt: new Date() }).where(eq(clientes.id, id));
+      await db
+        .update(clientes)
+        .set({ deletedAt: new Date() })
+        .where(eq(clientes.id, id));
     } else {
       // If no associated positions, perform a hard delete
       await db.delete(clientes).where(eq(clientes.id, id));

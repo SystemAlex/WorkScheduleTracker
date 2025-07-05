@@ -79,7 +79,7 @@ export default function Organigrama() {
       <div className="flex flex-1 overflow-hidden">
         <LayoutContent>
           <div className="grid grid-cols-1 md:grid-cols-3 p-2 gap-2">
-            <Card>
+            <Card className="border-b-4 border-b-primary">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Total Empleados
@@ -96,7 +96,7 @@ export default function Organigrama() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-b-4 border-b-primary">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Departamentos
@@ -113,7 +113,7 @@ export default function Organigrama() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-b-4 border-b-primary">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Puestos</CardTitle>
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -168,7 +168,7 @@ export default function Organigrama() {
                       return (
                         <Card
                           key={position.id}
-                          className="border-l-4 border-l-blue-500"
+                          className="border-l-4 border-l-primary"
                         >
                           <CardHeader className="pb-4">
                             <div className="flex items-center space-x-3">

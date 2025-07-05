@@ -2,6 +2,8 @@ import { type ClassValue, clsx } from 'clsx';
 import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { format } from 'date-fns'; // Import format from date-fns
+import type { Position, Cliente } from '@shared/schema'; // Import types for Position and Cliente
+import { getMonthName } from '@shared/utils'; // Import getMonthName from shared
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,23 +17,7 @@ export function formatTime(time: string): string {
   return time.slice(0, 5); // Remove seconds
 }
 
-export function getMonthName(month: number): string {
-  const months = [
-    'Enero',
-    'Febrero',
-    'Marzo',
-    'Abril',
-    'Mayo',
-    'Junio',
-    'Julio',
-    'Agosto',
-    'Septiembre',
-    'Octubre',
-    'Noviembre',
-    'Diciembre',
-  ];
-  return months[month];
-}
+// getMonthName has been moved to shared/utils.ts
 
 export function getDayName(dayOfWeek: number): string {
   const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -172,6 +158,103 @@ function useIsMobile() {
   return isMobile;
 }
 
-export function formatYearMonth(date: Date): string {
-  return format(date, 'yyyy-MM');
+// formatYearMonth has been moved to shared/utils.ts
+
+interface EmployeeHoursReport {
+  employeeId: number;
+  employeeName: string;
+  totalHours: number;
+  totalShifts: number;
+  shiftBreakdown: {
+    positionId: number;
+    name: string;
+    siglas: string;
+    color: string;
+    totalHoras: number;
+  }[];
+}
+
+export function exportToCsv(
+  report: EmployeeHoursReport[],
+  groupedPositionsByClient: Array<[number, Position[]]>,
+  clientes: Cliente[],
+  selectedMonth: number,
+  selectedYear: number,
+  totalReportHours: number,
+  totalReportShifts: number,
+) {
+  const monthName = getMonthName(selectedMonth - 1);
+  const fileName = `Reporte_Turnos_${monthName}_${selectedYear}.csv`;
+
+  let csvContent = '';
+
+  // First header row (Clients)
+  const clientHeader = ['Empleado', 'Total Horas', 'Total Turnos'];
+  groupedPositionsByClient.forEach(([clientId, clientPositions]) => {
+    const clientName =
+      clientes.find((c) => c.id === Number(clientId))?.empresa || 'Sin Cliente';
+    for (let i = 0; i < clientPositions.length; i++) {
+      clientHeader.push(i === 0 ? clientName : ''); // Only put client name once
+    }
+  });
+  csvContent += clientHeader.map((h) => `"${h}"`).join(',') + '\n';
+
+  // Second header row (Positions)
+  const positionHeader = ['Empleado', 'Total Horas', 'Total Turnos'];
+  groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+    clientPositions.forEach((pos) => {
+      positionHeader.push(pos.siglas);
+    });
+  });
+  csvContent += positionHeader.map((h) => `"${h}"`).join(',') + '\n';
+
+  // Data rows
+  report.forEach((employee) => {
+    const row = [
+      employee.employeeName,
+      employee.totalHours.toString(),
+      employee.totalShifts.toString(),
+    ];
+    groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+      clientPositions.forEach((pos) => {
+        const match = employee.shiftBreakdown.find(
+          (s) => s.positionId === pos.id,
+        );
+        row.push(
+          match && match.totalHoras > 0 ? match.totalHoras.toString() : '',
+        );
+      });
+    });
+    csvContent += row.map((c) => `"${c}"`).join(',') + '\n';
+  });
+
+  // Total row
+  const totalRow = [
+    'Total',
+    totalReportHours.toString(),
+    totalReportShifts.toString(),
+  ];
+  groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+    clientPositions.forEach((pos) => {
+      const totalPos = report.reduce((sum, e) => {
+        const match = e.shiftBreakdown.find((s) => s.positionId === pos.id);
+        return sum + (match ? match.totalHoras : 0);
+      }, 0);
+      totalRow.push(totalPos > 0 ? totalPos.toString() : '');
+    });
+  });
+  csvContent += totalRow.map((c) => `"${c}"`).join(',') + '\n';
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  if (link.download !== undefined) {
+    // feature detection
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }

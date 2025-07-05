@@ -14,7 +14,11 @@ import { LayoutContent } from '@/components/ui/layout';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { insertEmployeeSchema } from '@shared/schema';
-import type { Employee, InsertEmployee, ShiftWithDetails } from '@shared/schema';
+import type {
+  Employee,
+  InsertEmployee,
+  ShiftWithDetails,
+} from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { z } from 'zod';
@@ -55,11 +59,10 @@ export default function Employees() {
       return allEmployees;
     }
     const lowercasedSearchTerm = searchTerm.toLowerCase();
-    return allEmployees.filter(employee =>
-      employee.name.toLowerCase().includes(lowercasedSearchTerm)
+    return allEmployees.filter((employee) =>
+      employee.name.toLowerCase().includes(lowercasedSearchTerm),
     );
   }, [allEmployees, searchTerm]);
-
 
   const { data: allShifts = [], isLoading: shiftsLoading } = useQuery<
     ShiftWithDetails[]
@@ -196,7 +199,9 @@ export default function Employees() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-neutral-500 mt-2">Cargando empleados y turnos...</p>
+          <p className="text-sm text-neutral-500 mt-2">
+            Cargando empleados y turnos...
+          </p>
         </div>
       </div>
     );
@@ -211,13 +216,14 @@ export default function Employees() {
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center p-2">
+        <div className="sticky top-0 z-10 flex justify-between items-center p-2 bg-background">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
-              Total Empleados ({filteredEmployees.length})
+              Total <span className="hidden md:inline">Empleados</span> (
+              {filteredEmployees.length})
             </h3>
           </div>
-          <div className="w-full max-w-xs">
+          <div className="w-full max-w-56 md:max-w-xs">
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}
@@ -226,7 +232,7 @@ export default function Employees() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 p-2">
           {filteredEmployees.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <User className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
@@ -247,9 +253,12 @@ export default function Employees() {
                 .filter(
                   (shift) =>
                     shift.employeeId === employee.id &&
-                    new Date(shift.date) >= today
+                    new Date(shift.date) >= today,
                 )
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                .sort(
+                  (a, b) =>
+                    new Date(a.date).getTime() - new Date(b.date).getTime(),
+                )
                 .slice(0, 5);
 
               return (

@@ -10,12 +10,9 @@ import type {
   Cliente,
   Position,
 } from '@shared/schema';
-import {
-  getDayName,
-  formatDate,
-  colorLightenDarken,
-  formatYearMonth,
-} from '@/lib/utils';
+import { getDayName, formatDate, colorLightenDarken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { formatYearMonth } from '@shared/utils'; // Corrected import path
 import {
   Accordion,
   AccordionItem,
@@ -253,7 +250,6 @@ export function EmployeeCalendarGrid({
                   isSelected ? 'ring-2 ring-green-600 ring-offset-0' : ''
                 }`}
                 onClick={() => onDateSelect?.(date)}
-                title="Seleccionar este día"
               >
                 <div className="font-bold text-[10px] leading-tight">
                   {dayAbbr}

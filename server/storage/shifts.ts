@@ -10,6 +10,7 @@ import { eq, and, gte, lte, ne } from 'drizzle-orm';
 import { addMonths, format, getDaysInMonth, subMonths } from 'date-fns';
 import { ReportStorage } from './reports';
 import { PositionStorage } from './positions';
+import { formatYearMonth } from '@shared/utils'; // Import formatYearMonth from shared
 
 export class ShiftStorage {
   private reportStorage: ReportStorage;
@@ -20,7 +21,10 @@ export class ShiftStorage {
     this.positionStorage = positionStorage;
   }
 
-  async getShifts(startDate?: string, endDate?: string): Promise<ShiftWithDetails[]> {
+  async getShifts(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<ShiftWithDetails[]> {
     const whereConditions = [];
     if (startDate) {
       whereConditions.push(gte(shifts.date, startDate));
@@ -279,11 +283,12 @@ export class ShiftStorage {
     const prevYear = previousMonthDate.getFullYear();
 
     // 1. Get total hours for each employee from the PREVIOUS month
-    const previousMonthEmployeeReports = await this.reportStorage.getEmployeeHoursReport(
-      undefined, // all employees
-      prevMonth,
-      prevYear,
-    );
+    const previousMonthEmployeeReports =
+      await this.reportStorage.getEmployeeHoursReport(
+        undefined, // all employees
+        prevMonth,
+        prevYear,
+      );
     const employeePreviousMonthHoursMap = new Map<number, number>();
     previousMonthEmployeeReports.forEach((report) => {
       employeePreviousMonthHoursMap.set(report.employeeId, report.totalHours);
@@ -311,7 +316,10 @@ export class ShiftStorage {
     });
 
     // 4. Get shifts from the previous month to use as a template
-    const previousMonthShifts = await this.getShiftsByMonth(prevMonth, prevYear);
+    const previousMonthShifts = await this.getShiftsByMonth(
+      prevMonth,
+      prevYear,
+    );
 
     const newShiftsToInsert: InsertShift[] = [];
     let insertedCount = 0;
@@ -341,7 +349,8 @@ export class ShiftStorage {
 
           const currentHours = employeeCurrentHoursMap.get(employeeId) || 0;
           // Get the target hours for this employee based on previous month's total, fallback to 160 if no previous data
-          const targetHoursForEmployee = employeePreviousMonthHoursMap.get(employeeId) || 160;
+          const targetHoursForEmployee =
+            employeePreviousMonthHoursMap.get(employeeId) || 160;
 
           // Check if adding this shift would exceed the monthly hour cap based on previous month's total
           if (currentHours + positionHours <= targetHoursForEmployee) {

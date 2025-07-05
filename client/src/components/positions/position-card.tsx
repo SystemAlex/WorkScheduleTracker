@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm';
 import type { Position, Cliente } from '@shared/schema';
+import { IconWrapper } from '../ui/iconwrapper';
 
 interface PositionCardProps {
   position: Position;
@@ -22,16 +23,13 @@ export function PositionCard({
   isDeleting,
 }: PositionCardProps) {
   return (
-    <Card>
+    <Card className="border-l-4" style={{ borderLeftColor: position.color }}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center border"
-              style={{ backgroundColor: position.color }}
-            >
-              <Briefcase className="w-5 h-5 text-white" />
-            </div>
+            <IconWrapper style={{ backgroundColor: position.color }}>
+              <Briefcase className="text-white" />
+            </IconWrapper>
             <div>
               <CardTitle className="text-lg">{position.name}</CardTitle>
               <div className="mt-1 flex items-center gap-2">
@@ -71,17 +69,15 @@ export function PositionCard({
             </div>
           )}
           {position.description && (
-            <p className="text-sm text-neutral-600">
-              {position.description}
-            </p>
+            <p className="text-sm text-neutral-600">{position.description}</p>
           )}
-          <div className="flex items-center space-x-2 text-sm text-neutral-600">
+          <Badge className="space-x-2 text-sm bg-neutral-200 text-foreground">
             <span>Cliente:</span>
             <span className="font-semibold">
               {clientes.find((c) => c.id === position.clienteId)?.empresa ||
                 '-'}
             </span>
-          </div>
+          </Badge>
         </div>
       </CardContent>
     </Card>

@@ -179,7 +179,7 @@ export function DropDown({
                 key={opt.value}
                 value={opt.value}
                 className={cn(
-                  activeIndex === idx ? 'bg-blue-500 text-white' : '',
+                  activeIndex === idx ? 'bg-primary text-white' : '',
                 )}
                 onSelect={(currentValue) => {
                   const match = options.find((o) => o.value === currentValue);

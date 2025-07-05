@@ -49,10 +49,12 @@ export default function Positions() {
       return allPositions;
     }
     const lowercasedSearchTerm = searchTerm.toLowerCase();
-    return allPositions.filter(position =>
-      position.name.toLowerCase().includes(lowercasedSearchTerm) ||
-      position.siglas.toLowerCase().includes(lowercasedSearchTerm) ||
-      (position.department && position.department.toLowerCase().includes(lowercasedSearchTerm))
+    return allPositions.filter(
+      (position) =>
+        position.name.toLowerCase().includes(lowercasedSearchTerm) ||
+        position.siglas.toLowerCase().includes(lowercasedSearchTerm) ||
+        (position.department &&
+          position.department.toLowerCase().includes(lowercasedSearchTerm)),
     );
   }, [allPositions, searchTerm]);
 
@@ -199,13 +201,14 @@ export default function Positions() {
       />
 
       <LayoutContent>
-        <div className="flex justify-between items-center p-2">
+        <div className="sticky top-0 z-10 flex justify-between items-center p-2 bg-background">
           <div>
             <h3 className="text-lg font-semibold text-neutral-900">
-              Total Puestos ({filteredPositions.length})
+              Total <span className="hidden md:inline">Puestos</span> (
+              {filteredPositions.length})
             </h3>
           </div>
-          <div className="w-full max-w-xs">
+          <div className="w-full max-w-56 md:max-w-xs">
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}
@@ -214,7 +217,7 @@ export default function Positions() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 p-2">
           {filteredPositions.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <Briefcase className="w-12 h-12 text-neutral-400 mx-auto mb-4" />

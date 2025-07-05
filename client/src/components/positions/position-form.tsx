@@ -183,10 +183,7 @@ export function PositionForm({
                 </FormControl>
                 <SelectContent>
                   {clientes.map((cliente) => (
-                    <SelectItem
-                      key={cliente.id}
-                      value={cliente.id.toString()}
-                    >
+                    <SelectItem key={cliente.id} value={cliente.id.toString()}>
                       {cliente.empresa}
                     </SelectItem>
                   ))}

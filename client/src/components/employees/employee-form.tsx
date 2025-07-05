@@ -49,10 +49,7 @@ export function EmployeeForm({
             <FormItem>
               <FormLabel>Nombre completo</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="Ingresa el nombre completo"
-                  {...field}
-                />
+                <Input placeholder="Ingresa el nombre completo" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
