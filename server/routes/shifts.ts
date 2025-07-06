@@ -57,6 +57,7 @@ shiftsRouter.get('/', async (req, res) => {
 
     res.json(shiftsData);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Failed to fetch shifts' });
   }
 });
@@ -83,6 +84,7 @@ shiftsRouter.get('/date/:date', async (req, res) => {
     const shifts = await storage.getShiftsByDate(date);
     res.json(shifts);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Failed to fetch shifts for date' });
   }
 });
@@ -157,6 +159,7 @@ shiftsRouter.delete('/:id', async (req, res) => {
     await storage.deleteShift(id);
     res.status(204).send();
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Failed to delete shift' });
   }
 });
@@ -222,6 +225,7 @@ shiftsRouter.put('/:id', async (req, res) => {
     const updated = await storage.updateShift(id, validatedData);
     res.json(updated);
   } catch (error) {
+    console.error(error);
     res.status(400).json({ message: 'Invalid data' });
   }
 });

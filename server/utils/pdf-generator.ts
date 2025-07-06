@@ -1,6 +1,10 @@
 import PDFDocument from 'pdfkit';
 import { Buffer } from 'buffer';
-import { getMonthName } from '@shared/utils';
+import {
+  EmployeeHoursReport,
+  getMonthName,
+  ShiftBreakdownItem,
+} from '@shared/utils';
 import type { Cliente, Position } from '@shared/schema';
 
 // Define colors from tailwind.config.ts for server-side use
@@ -16,22 +20,6 @@ const NEUTRAL_COLORS = {
   '800': '#262626',
   '900': '#1F1F1F',
 };
-
-interface ShiftBreakdownItem {
-  positionId: number;
-  name: string;
-  siglas: string;
-  color: string;
-  totalHoras: number;
-}
-
-interface EmployeeHoursReport {
-  employeeId: number;
-  employeeName: string;
-  totalHours: number;
-  totalShifts: number;
-  shiftBreakdown: ShiftBreakdownItem[];
-}
 
 export class PdfGenerator {
   async generatePdfReport(
@@ -74,8 +62,7 @@ export class PdfGenerator {
     // Table headers
     const mainHeaders = ['Empleado', 'Total Horas', 'Total Turnos'];
     const positionSiglasHeaders = groupedPositionsByClient.flatMap(
-      ([_clientId, clientPositions]) =>
-        clientPositions.map((pos) => pos.siglas),
+      ([, clientPositions]) => clientPositions.map((pos) => pos.siglas),
     );
 
     // Calculate column widths dynamically based on content or a more balanced approach
@@ -184,7 +171,7 @@ export class PdfGenerator {
 
     positionSiglasHeaders.forEach((sigla, i) => {
       const pos = groupedPositionsByClient.flatMap(
-        ([_clientId, clientPositions]) => clientPositions,
+        ([, clientPositions]) => clientPositions,
       )[i];
       doc
         .rect(currentX, currentY, positionColWidth, rowHeight)
@@ -209,7 +196,7 @@ export class PdfGenerator {
         employee.totalHours.toString(),
         employee.totalShifts.toString(),
       ];
-      groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+      groupedPositionsByClient.forEach(([, clientPositions]) => {
         clientPositions.forEach((pos) => {
           const match = employee.shiftBreakdown.find(
             (s: ShiftBreakdownItem) => s.positionId === pos.id,
@@ -239,7 +226,7 @@ export class PdfGenerator {
         // Apply specific fill for position cells with values
         if (isPositionCell && cellText !== '') {
           const pos = groupedPositionsByClient.flatMap(
-            ([_clientId, clientPositions]) => clientPositions,
+            ([, clientPositions]) => clientPositions,
           )[i - 3];
           if (pos) {
             doc
@@ -257,7 +244,7 @@ export class PdfGenerator {
           doc.font('Helvetica-Bold').fontSize(9);
         } else if (isPositionCell && cellText !== '') {
           const pos = groupedPositionsByClient.flatMap(
-            ([_clientId, clientPositions]) => clientPositions,
+            ([, clientPositions]) => clientPositions,
           )[i - 3];
           if (pos) {
             doc.fillColor(pos.color); // Position specific color
@@ -283,14 +270,17 @@ export class PdfGenerator {
       totalReportHours.toString(),
       totalReportShifts.toString(),
     ];
-    groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+    groupedPositionsByClient.forEach(([, clientPositions]) => {
       clientPositions.forEach((pos) => {
-        const totalPos = report.reduce((sum: number, e: any) => {
-          const match = e.shiftBreakdown.find(
-            (s: ShiftBreakdownItem) => s.positionId === pos.id,
-          );
-          return sum + (match ? match.totalHoras : 0);
-        }, 0);
+        const totalPos = report.reduce(
+          (sum: number, e: EmployeeHoursReport) => {
+            const match = e.shiftBreakdown.find(
+              (s: ShiftBreakdownItem) => s.positionId === pos.id,
+            );
+            return sum + (match ? match.totalHoras : 0);
+          },
+          0,
+        );
         totalRowCells.push(totalPos > 0 ? totalPos.toString() : '');
       });
     });
@@ -298,7 +288,6 @@ export class PdfGenerator {
     totalRowCells.forEach((cellText, i) => {
       const colW = colWidths[i] || positionColWidth;
       const isTotalLabel = i === 0;
-      const isTotalHoursOrShifts = i === 1 || i === 2;
       const isPositionTotalCell = i >= 3;
 
       doc
@@ -309,7 +298,7 @@ export class PdfGenerator {
       // Apply specific fill for position total cells with values
       if (isPositionTotalCell && cellText !== '') {
         const pos = groupedPositionsByClient.flatMap(
-          ([_clientId, clientPositions]) => clientPositions,
+          ([, clientPositions]) => clientPositions,
         )[i - 3];
         if (pos) {
           doc

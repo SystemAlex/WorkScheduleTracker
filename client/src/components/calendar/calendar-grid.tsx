@@ -21,11 +21,6 @@ export function CalendarGrid({
     currentDate.getMonth(),
   );
 
-  const getShiftsForDate = (date: Date) => {
-    const dateStr = formatDate(date);
-    return shifts.filter((shift) => shift.date === dateStr);
-  };
-
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   return (

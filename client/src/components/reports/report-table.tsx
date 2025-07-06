@@ -3,22 +3,7 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3 } from 'lucide-react';
 import type { Cliente, Position } from '@shared/schema';
-
-interface ShiftBreakdownItem {
-  positionId: number;
-  name: string;
-  siglas: string;
-  color: string;
-  totalHoras: number;
-}
-
-interface EmployeeHoursReport {
-  employeeId: number;
-  employeeName: string;
-  totalHours: number;
-  totalShifts: number;
-  shiftBreakdown: ShiftBreakdownItem[];
-}
+import { EmployeeHoursReport } from '@shared/utils';
 
 interface ReportTableProps {
   report: EmployeeHoursReport[];
@@ -93,31 +78,30 @@ export function ReportTable({
                   </tr>
                   <tr className="border-b bg-neutral-100">
                     {/* Position Siglas Header */}
-                    {groupedPositionsByClient.flatMap(
-                      ([clienteId, clientPositions]) =>
-                        clientPositions.map((pos: Position) => (
-                          <Tooltip.Root key={pos.id}>
-                            <Tooltip.Trigger asChild>
-                              <th
-                                className="text-center font-medium text-neutral-700 p-2 border-l border-neutral-300"
-                                style={{
-                                  backgroundColor: pos.color + '20',
-                                  color: pos.color,
-                                }}
-                              >
-                                {pos.siglas}
-                              </th>
-                            </Tooltip.Trigger>
-                            <Tooltip.Portal>
-                              <Tooltip.Content
-                                className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md"
-                                sideOffset={5}
-                              >
-                                {pos.name}
-                              </Tooltip.Content>
-                            </Tooltip.Portal>
-                          </Tooltip.Root>
-                        )),
+                    {groupedPositionsByClient.flatMap(([, clientPositions]) =>
+                      clientPositions.map((pos: Position) => (
+                        <Tooltip.Root key={pos.id}>
+                          <Tooltip.Trigger asChild>
+                            <th
+                              className="text-center font-medium text-neutral-700 p-2 border-l border-neutral-300"
+                              style={{
+                                backgroundColor: pos.color + '20',
+                                color: pos.color,
+                              }}
+                            >
+                              {pos.siglas}
+                            </th>
+                          </Tooltip.Trigger>
+                          <Tooltip.Portal>
+                            <Tooltip.Content
+                              className="rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md"
+                              sideOffset={5}
+                            >
+                              {pos.name}
+                            </Tooltip.Content>
+                          </Tooltip.Portal>
+                        </Tooltip.Root>
+                      )),
                     )}
                   </tr>
                 </thead>
@@ -135,38 +119,37 @@ export function ReportTable({
                       </td>
                       <td className="text-center">{employee.totalShifts}</td>
                       {/* Employee Shift Breakdown by Grouped Positions */}
-                      {groupedPositionsByClient.flatMap(
-                        ([clienteId, clientPositions]) =>
-                          clientPositions.map((pos: Position) => {
-                            const match = employee.shiftBreakdown.find(
-                              (s) => s.positionId === pos.id,
-                            );
-                            return (
-                              <td
-                                key={pos.id}
-                                className="text-center p-1 border-l border-neutral-200"
-                                style={{
-                                  backgroundColor: pos.color + '20',
-                                  color: pos.color,
-                                }}
-                              >
-                                {match ? (
-                                  <span
-                                    className="inline-block w-full text-center items-center rounded-md border-2 transition-colors text-foreground p-1"
-                                    style={{
-                                      backgroundColor: match.color + '20',
-                                      color: match.color,
-                                      borderColor: match.color,
-                                    }}
-                                  >
-                                    {match.totalHoras}
-                                  </span>
-                                ) : (
-                                  '—'
-                                )}
-                              </td>
-                            );
-                          }),
+                      {groupedPositionsByClient.flatMap(([, clientPositions]) =>
+                        clientPositions.map((pos: Position) => {
+                          const match = employee.shiftBreakdown.find(
+                            (s) => s.positionId === pos.id,
+                          );
+                          return (
+                            <td
+                              key={pos.id}
+                              className="text-center p-1 border-l border-neutral-200"
+                              style={{
+                                backgroundColor: pos.color + '20',
+                                color: pos.color,
+                              }}
+                            >
+                              {match ? (
+                                <span
+                                  className="inline-block w-full text-center items-center rounded-md border-2 transition-colors text-foreground p-1"
+                                  style={{
+                                    backgroundColor: match.color + '20',
+                                    color: match.color,
+                                    borderColor: match.color,
+                                  }}
+                                >
+                                  {match.totalHoras}
+                                </span>
+                              ) : (
+                                '—'
+                              )}
+                            </td>
+                          );
+                        }),
                       )}
                     </tr>
                   ))}
@@ -175,29 +158,27 @@ export function ReportTable({
                     <td className="text-right p-2 whitespace-nowrap">Total</td>
                     <td className="text-center">{totalHours}</td>
                     <td className="text-center">{totalShifts}</td>
-                    {groupedPositionsByClient.flatMap(
-                      ([clienteId, clientPositions]) =>
-                        clientPositions.map((pos: Position) => {
-                          const totalPos = report.reduce((sum, e) => {
-                            const match = e.shiftBreakdown.find(
-                              (s) => s.positionId === pos.id,
-                            );
-                            return sum + (match ? match.totalHoras : 0);
-                          }, 0);
-                          return (
-                            <td
-                              key={pos.id}
-                              className="text-center border-l border-neutral-200"
-                              style={{
-                                backgroundColor:
-                                  positionMap[pos.id].color + '20',
-                                color: positionMap[pos.id].color,
-                              }}
-                            >
-                              {totalPos}
-                            </td>
+                    {groupedPositionsByClient.flatMap(([, clientPositions]) =>
+                      clientPositions.map((pos: Position) => {
+                        const totalPos = report.reduce((sum, e) => {
+                          const match = e.shiftBreakdown.find(
+                            (s) => s.positionId === pos.id,
                           );
-                        }),
+                          return sum + (match ? match.totalHoras : 0);
+                        }, 0);
+                        return (
+                          <td
+                            key={pos.id}
+                            className="text-center border-l border-neutral-200"
+                            style={{
+                              backgroundColor: positionMap[pos.id].color + '20',
+                              color: positionMap[pos.id].color,
+                            }}
+                          >
+                            {totalPos}
+                          </td>
+                        );
+                      }),
                     )}
                   </tr>
                 </tbody>

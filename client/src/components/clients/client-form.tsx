@@ -12,10 +12,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { insertClienteSchema } from '@shared/schema';
-import type { Cliente, InsertCliente } from '@shared/schema';
+import type { Cliente } from '@shared/schema';
 
-const formSchema = insertClienteSchema;
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof insertClienteSchema>;
 
 interface ClientFormProps {
   onSubmit: (data: FormValues) => void;

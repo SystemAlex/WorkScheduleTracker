@@ -19,10 +19,9 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { insertEmployeeSchema } from '@shared/schema';
-import type { Employee, InsertEmployee } from '@shared/schema';
+import type { Employee } from '@shared/schema';
 
-const formSchema = insertEmployeeSchema;
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof insertEmployeeSchema>;
 
 interface EmployeeFormProps {
   onSubmit: (data: FormValues) => void;

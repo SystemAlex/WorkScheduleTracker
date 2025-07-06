@@ -18,6 +18,8 @@ export default defineConfig([
       'node_modules',
       'dist',
       '.vs',
+      '.vscode',
+      'package-lock.json',
     ],
   },
   {
@@ -56,5 +58,14 @@ export default defineConfig([
     plugins: { css },
     language: 'css/css',
     extends: ['css/recommended'],
+    rules: {
+      'css/no-invalid-at-rules': 'off',
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'react/prop-types': 'off',
+    },
   },
 ]);

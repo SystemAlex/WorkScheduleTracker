@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import { Buffer } from 'buffer';
-import { getMonthName } from '@shared/utils';
+import { EmployeeHoursReport, getMonthName } from '@shared/utils';
 import type { Cliente, Position } from '@shared/schema';
 
 // Define colors from tailwind.config.ts for server-side use
@@ -16,22 +16,6 @@ const NEUTRAL_COLORS = {
   '800': '#262626',
   '900': '#1F1F1F',
 };
-
-interface ShiftBreakdownItem {
-  positionId: number;
-  name: string;
-  siglas: string;
-  color: string;
-  totalHoras: number;
-}
-
-interface EmployeeHoursReport {
-  employeeId: number;
-  employeeName: string;
-  totalHours: number;
-  totalShifts: number;
-  shiftBreakdown: ShiftBreakdownItem[];
-}
 
 // Helper function to convert HEX color to ARGB with optional alpha
 function hexToArgb(hex: string, alpha: number = 1): string {
@@ -115,7 +99,7 @@ export class ExcelGenerator {
 
     // Apply styles to header rows
     [headerRow1, headerRow2].forEach((row) => {
-      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      row.eachCell({ includeEmpty: true }, (cell) => {
         cell.fill = {
           type: 'pattern',
           pattern: 'solid',
@@ -161,7 +145,7 @@ export class ExcelGenerator {
 
     // Merge client header cells and apply wrapText and middle alignment
     let currentColumn = 4;
-    groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+    groupedPositionsByClient.forEach(([, clientPositions]) => {
       const startMergeCol = currentColumn;
       const endMergeCol = currentColumn + clientPositions.length - 1;
       if (clientPositions.length > 0) {
@@ -184,8 +168,8 @@ export class ExcelGenerator {
 
     // Apply specific styles to position header row (row 2) - NO COLORS
     currentColumn = 4;
-    groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
-      clientPositions.forEach((pos) => {
+    groupedPositionsByClient.forEach(([, clientPositions]) => {
+      clientPositions.forEach(() => {
         const cell = headerRow2.getCell(currentColumn);
         cell.fill = {
           type: 'pattern',
@@ -214,7 +198,7 @@ export class ExcelGenerator {
         employee.totalHours,
         employee.totalShifts,
       ];
-      groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+      groupedPositionsByClient.forEach(([, clientPositions]) => {
         clientPositions.forEach((pos) => {
           const match = employee.shiftBreakdown.find(
             (s: { positionId: number }) => s.positionId === pos.id,
@@ -282,7 +266,7 @@ export class ExcelGenerator {
 
     // Position totals (starting from Column D)
     let currentPositionColIndex = 4; // D is the 4th column
-    groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+    groupedPositionsByClient.forEach(([, clientPositions]) => {
       clientPositions.forEach(() => {
         const colLetter = worksheet.getColumn(currentPositionColIndex).letter;
         totalRowData.push({
@@ -340,7 +324,7 @@ export class ExcelGenerator {
 
     // Set width for position columns
     let colIdx = 4;
-    groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+    groupedPositionsByClient.forEach(([, clientPositions]) => {
       clientPositions.forEach(() => {
         worksheet.getColumn(colIdx).width = 8; // Fixed width for siglas/hours
         colIdx++;

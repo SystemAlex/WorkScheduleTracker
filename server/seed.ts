@@ -108,10 +108,7 @@ async function seed() {
 
   // Insertar puestos
   const puestosAInsertar = generarPuestos(clientesInsertados);
-  const puestos = await db
-    .insert(positions)
-    .values(puestosAInsertar)
-    .returning();
+  await db.insert(positions).values(puestosAInsertar).returning();
 
   // Insertar empleados
   await db.insert(employees).values([

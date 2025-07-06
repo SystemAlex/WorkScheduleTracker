@@ -10,7 +10,6 @@ import { eq, and, gte, lte, ne } from 'drizzle-orm';
 import { addMonths, format, getDaysInMonth, subMonths } from 'date-fns';
 import { ReportStorage } from './reports';
 import { PositionStorage } from './positions';
-import { formatYearMonth } from '@shared/utils'; // Import formatYearMonth from shared
 
 export class ShiftStorage {
   private reportStorage: ReportStorage;
@@ -48,7 +47,7 @@ export class ShiftStorage {
       .innerJoin(employees, eq(shifts.employeeId, employees.id))
       .innerJoin(positions, eq(shifts.positionId, positions.id))
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
-      .orderBy(shifts.date); // Order by date for upcoming shifts
+      .orderBy(shifts.date);
 
     return results.map((row) => ({
       id: row.id,
@@ -66,8 +65,7 @@ export class ShiftStorage {
     month: number,
     year: number,
   ): Promise<ShiftWithDetails[]> {
-    // Correctly get the number of days in the specified month
-    const daysInMonth = getDaysInMonth(new Date(year, month - 1, 1)); // month is 1-indexed, Date constructor expects 0-indexed
+    const daysInMonth = getDaysInMonth(new Date(year, month - 1, 1));
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
     const endDate = `${year}-${month.toString().padStart(2, '0')}-${daysInMonth.toString().padStart(2, '0')}`;
 
@@ -131,7 +129,6 @@ export class ShiftStorage {
   async createShift(insertShift: InsertShift): Promise<ShiftWithDetails> {
     const [shift] = await db.insert(shifts).values(insertShift).returning();
 
-    // Get the full shift with details
     const [result] = await db
       .select({
         id: shifts.id,
@@ -174,7 +171,6 @@ export class ShiftStorage {
       eq(shifts.date, date),
     ];
 
-    // Exclude current shift when updating
     if (excludeShiftId) {
       whereConditions.push(ne(shifts.id, excludeShiftId));
     }
@@ -238,13 +234,8 @@ export class ShiftStorage {
   }
 
   async updateShift(id: number, data: InsertShift): Promise<ShiftWithDetails> {
-    const [shift] = await db
-      .update(shifts)
-      .set(data)
-      .where(eq(shifts.id, id))
-      .returning();
+    await db.update(shifts).set(data).where(eq(shifts.id, id)).returning();
 
-    // Get the updated shift with details
     const [result] = await db
       .select({
         id: shifts.id,
@@ -282,10 +273,9 @@ export class ShiftStorage {
     const prevMonth = previousMonthDate.getMonth() + 1;
     const prevYear = previousMonthDate.getFullYear();
 
-    // 1. Get total hours for each employee from the PREVIOUS month
     const previousMonthEmployeeReports =
       await this.reportStorage.getEmployeeHoursReport(
-        undefined, // all employees
+        undefined,
         prevMonth,
         prevYear,
       );
@@ -294,7 +284,6 @@ export class ShiftStorage {
       employeePreviousMonthHoursMap.set(report.employeeId, report.totalHours);
     });
 
-    // 2. Get existing shifts for the current month to avoid duplicates
     const existingCurrentMonthShifts = await this.getShiftsByMonth(
       targetMonth,
       targetYear,
@@ -303,10 +292,9 @@ export class ShiftStorage {
       existingCurrentMonthShifts.map((s) => `${s.employeeId}-${s.date}`),
     );
 
-    // 3. Get current month's total hours for each employee (already existing in current month)
     const currentMonthEmployeeHours =
       await this.reportStorage.getEmployeeHoursReport(
-        undefined, // all employees
+        undefined,
         targetMonth,
         targetYear,
       );
@@ -315,7 +303,6 @@ export class ShiftStorage {
       employeeCurrentHoursMap.set(report.employeeId, report.totalHours);
     });
 
-    // 4. Get shifts from the previous month to use as a template
     const previousMonthShifts = await this.getShiftsByMonth(
       prevMonth,
       prevYear,
@@ -329,17 +316,14 @@ export class ShiftStorage {
       const newDate = addMonths(prevShiftDate, 1);
       const newDateFormatted = format(newDate, 'yyyy-MM-dd');
 
-      // Ensure the new date falls within the current month and year
       if (
         newDate.getMonth() + 1 === targetMonth &&
         newDate.getFullYear() === targetYear
       ) {
         const conflictKey = `${prevShift.employeeId}-${newDateFormatted}`;
 
-        // Check for existing shift for this employee on this date
         if (!existingShiftMap.has(conflictKey)) {
           const employeeId = prevShift.employeeId;
-          // Need to get the position details to get totalHoras
           const position = await this.positionStorage
             .getPositions()
             .then((pos) => pos.find((p) => p.id === prevShift.positionId));
@@ -348,11 +332,9 @@ export class ShiftStorage {
             : 0;
 
           const currentHours = employeeCurrentHoursMap.get(employeeId) || 0;
-          // Get the target hours for this employee based on previous month's total, fallback to 160 if no previous data
           const targetHoursForEmployee =
             employeePreviousMonthHoursMap.get(employeeId) || 160;
 
-          // Check if adding this shift would exceed the monthly hour cap based on previous month's total
           if (currentHours + positionHours <= targetHoursForEmployee) {
             newShiftsToInsert.push({
               employeeId: prevShift.employeeId,
@@ -360,7 +342,6 @@ export class ShiftStorage {
               date: newDateFormatted,
               notes: prevShift.notes,
             });
-            // Optimistically update the employee's hours map for subsequent checks in the same batch
             employeeCurrentHoursMap.set(
               employeeId,
               currentHours + positionHours,
@@ -374,12 +355,11 @@ export class ShiftStorage {
       }
     }
 
-    // Insert new shifts
     if (newShiftsToInsert.length > 0) {
       for (const shiftData of newShiftsToInsert) {
         try {
           await this.createShift(shiftData);
-          insertedCount++; // Increment for each successful insertion
+          insertedCount++;
         } catch (error) {
           console.warn(
             `Could not insert shift for employee ${shiftData.employeeId} on ${shiftData.date}:`,
@@ -389,6 +369,6 @@ export class ShiftStorage {
       }
     }
 
-    return { count: insertedCount }; // Return the actual count of inserted shifts
+    return { count: insertedCount };
   }
 }

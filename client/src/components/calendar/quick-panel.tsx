@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, Edit3, Trash2, User, Clock } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import type { ShiftWithDetails, Employee } from '@shared/schema';
-import { cn } from '@/lib/utils';
 
 interface QuickPanelProps {
   selectedDate?: Date;

@@ -5,7 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Sidebar } from '@/components/layout/sidebar';
-import { Layout, LayoutSidebar, LayoutMain } from '@/components/ui/layout';
+import { Layout, LayoutMain } from '@/components/ui/layout';
 import { createBaseLocationHook } from './lib/wouterBaseHook';
 
 // Pages

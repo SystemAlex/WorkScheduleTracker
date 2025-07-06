@@ -27,6 +27,7 @@ positionsRouter.get('/', async (req, res) => {
     const positions = await storage.getPositions(search as string);
     res.json(positions);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Failed to fetch positions' });
   }
 });
@@ -128,6 +129,7 @@ positionsRouter.delete('/:id', async (req, res) => {
     await storage.deletePosition(id);
     res.status(204).send();
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Failed to delete position' });
   }
 });

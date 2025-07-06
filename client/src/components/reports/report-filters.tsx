@@ -9,14 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
 import type { Employee } from '@shared/schema';
-import clsx from 'clsx';
 
 interface ReportFiltersProps {
   selectedMonth: number;

@@ -27,6 +27,7 @@ clientsRouter.get('/', async (req, res) => {
     const clientes = await storage.getClientes(search as string);
     res.json(clientes);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Failed to fetch clientes' });
   }
 });
@@ -128,6 +129,7 @@ clientsRouter.delete('/:id', async (req, res) => {
     await storage.deleteCliente(id);
     res.status(204).send();
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Failed to delete cliente' });
   }
 });

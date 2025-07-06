@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { format, getDaysInMonth, getDay } from 'date-fns';
+import { getDaysInMonth, getDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -11,7 +11,6 @@ import type {
   Position,
 } from '@shared/schema';
 import { getDayName, formatDate, colorLightenDarken } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 import { formatYearMonth } from '@shared/utils'; // Corrected import path
 import {
   Accordion,

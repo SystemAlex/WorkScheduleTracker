@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Edit3, Trash2, User, Mail, Phone, Briefcase } from 'lucide-react';
+import { Edit3, Trash2, User, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,6 @@ import { ConfirmDialog } from '@/components/ui/confirm';
 import type { Employee, ShiftWithDetails } from '@shared/schema';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { colorLightenDarken } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { IconWrapper } from '../ui/iconwrapper';
 

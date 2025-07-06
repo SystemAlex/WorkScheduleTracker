@@ -2,11 +2,9 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/layout/header';
-import { CalendarGrid } from '@/components/calendar/calendar-grid';
 import { EmployeeCalendarGrid } from '@/components/calendar/employee-calendar-grid';
-import { QuickPanel } from '@/components/calendar/quick-panel';
 import { ShiftModal } from '@/components/calendar/shift-modal';
-import { LayoutContent, LayoutPanel } from '@/components/ui/layout';
+import { LayoutContent } from '@/components/ui/layout';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import type {
@@ -14,11 +12,10 @@ import type {
   Employee,
   Position,
   Cliente,
-  InsertShift, // Import InsertShift type
+  InsertShift,
 } from '@shared/schema';
 import { base } from '@/lib/paths';
-import { subMonths } from 'date-fns'; // Import subMonths
-import { formatYearMonth } from '@shared/utils'; // Import formatYearMonth from shared
+import { subMonths } from 'date-fns';
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -30,10 +27,9 @@ export default function Calendar() {
   const [editingShift, setEditingShift] = useState<ShiftWithDetails>();
   const [viewMode, setViewMode] = useState<ViewMode>('month');
 
-  const { toast, dismiss } = useToast(); // Destructure toast and dismiss
+  const { toast, dismiss } = useToast();
   const queryClient = useQueryClient();
 
-  // Queries
   const { data: shifts = [], isLoading: shiftsLoading } = useQuery<
     ShiftWithDetails[]
   >({
@@ -61,7 +57,7 @@ export default function Calendar() {
         '/api/shifts',
         previousMonthDate.getMonth() + 1,
         previousMonthDate.getFullYear(),
-        'previousMonth', // Add a distinct key part for previous month shifts
+        'previousMonth',
       ],
       queryFn: async () => {
         const response = await fetch(
@@ -87,10 +83,8 @@ export default function Calendar() {
     queryKey: ['/api/clientes'],
   });
 
-  // Mutations
   const createShiftMutation = useMutation({
     mutationFn: async (data: InsertShift) => {
-      // Use InsertShift type
       const response = await apiRequest('POST', '/api/shifts', data);
 
       if (response.status === 409) {
@@ -116,19 +110,20 @@ export default function Calendar() {
         description: 'El turno ha sido asignado correctamente.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { message?: string };
       let description = 'No se pudo asignar el turno.';
       if (
-        error.message?.includes('conflict') ||
-        error.message?.includes('Conflicto')
+        err.message?.includes('conflict') ||
+        err.message?.includes('Conflicto')
       ) {
         description = 'Ya existe un turno para ese empleado en esa fecha.';
       } else if (
-        error.message?.includes('inválidos') ||
-        error.message?.includes('Invalid')
+        err.message?.includes('inválidos') ||
+        err.message?.includes('Invalid')
       ) {
         description = 'Los datos ingresados no son válidos.';
-      } else if (error.message?.includes('not found')) {
+      } else if (err.message?.includes('not found')) {
         description = 'El turno no existe.';
       }
       toast({
@@ -141,7 +136,6 @@ export default function Calendar() {
 
   const updateShiftMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertShift }) => {
-      // Use InsertShift type
       const response = await apiRequest('PUT', `/api/shifts/${id}`, data);
 
       if (response.status === 409) {
@@ -171,21 +165,22 @@ export default function Calendar() {
         description: 'El turno ha sido actualizado correctamente.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { message?: string };
       let description = 'No se pudo actualizar el turno.';
       if (
-        error.message?.includes('conflict') ||
-        error.message?.includes('Conflicto')
+        err.message?.includes('conflict') ||
+        err.message?.includes('Conflicto')
       ) {
         description = 'Ya existe un turno para ese empleado en esa fecha.';
       } else if (
-        error.message?.includes('inválidos') ||
-        error.message?.includes('Invalid')
+        err.message?.includes('inválidos') ||
+        err.message?.includes('Invalid')
       ) {
         description = 'Los datos ingresados no son válidos.';
       } else if (
-        error.message?.includes('not found') ||
-        error.message?.includes('no encontrado')
+        err.message?.includes('not found') ||
+        err.message?.includes('no encontrado')
       ) {
         description = 'El turno no existe.';
       }
@@ -225,11 +220,12 @@ export default function Calendar() {
       });
     },
 
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { message?: string };
       let description = 'No se pudo eliminar el turno.';
       if (
-        error.message?.includes('not found') ||
-        error.message?.includes('no encontrado')
+        err.message?.includes('not found') ||
+        err.message?.includes('no encontrado')
       ) {
         description = 'El turno no existe.';
       }
@@ -246,7 +242,7 @@ export default function Calendar() {
       const loadingToastId = toast({
         title: 'Generando turnos...',
         description: 'Esto puede tomar un momento.',
-        duration: Infinity, // Keep open until dismissed
+        duration: Infinity,
       });
 
       try {
@@ -260,31 +256,29 @@ export default function Calendar() {
           throw new Error(body.message || 'Error al generar turnos.');
         }
         const data = await response.json();
-        dismiss(loadingToastId.id); // Use dismiss from useToast hook
+        dismiss(loadingToastId.id);
         toast({
           title: 'Turnos generados',
           description: `Se generaron ${data.count} turnos para el mes actual.`,
         });
         return data;
-      } catch (error: any) {
-        dismiss(loadingToastId.id); // Use dismiss from useToast hook
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        dismiss(loadingToastId.id);
         toast({
           title: 'Error',
-          description: error.message || 'No se pudieron generar los turnos.',
+          description: err.message || 'No se pudieron generar los turnos.',
           variant: 'destructive',
         });
-        throw error; // Re-throw to let React Query handle it
+        throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
     },
-    onError: () => {
-      // Toast is handled within mutationFn
-    },
+    onError: () => {},
   });
 
-  // Event handlers
   const handlePreviousMonth = () => {
     const newDate = new Date(currentDate);
 
@@ -321,11 +315,6 @@ export default function Calendar() {
     setSelectedEmployee(employee);
   };
 
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-    setCurrentDate(date);
-  };
-
   const handleEmployeeAddShift = (date: Date, employee: Employee) => {
     setSelectedDate(date);
     setSelectedEmployee(employee);
@@ -350,7 +339,6 @@ export default function Calendar() {
   };
 
   const handleShiftSubmit = (data: InsertShift) => {
-    // Define handleShiftSubmit
     if (editingShift) {
       updateShiftMutation.mutate({ id: editingShift.id, data });
     } else {
@@ -359,14 +347,12 @@ export default function Calendar() {
   };
 
   const handleGenerateShifts = () => {
-    // Pass the current month and year to the mutation
     generateShiftsMutation.mutate({
       month: currentDate.getMonth() + 1,
       year: currentDate.getFullYear(),
     });
   };
 
-  // Determine if the generate shifts button should be disabled
   const disableGenerateShifts =
     shifts.length > 0 || generateShiftsMutation.isPending;
 
@@ -396,8 +382,8 @@ export default function Calendar() {
         onPreviousMonth={handlePreviousMonth}
         onNextMonth={handleNextMonth}
         onAddShift={handleAddShift}
-        onGenerateShifts={handleGenerateShifts} // Pass the new handler
-        disableGenerateShifts={disableGenerateShifts} // Pass the disable state
+        onGenerateShifts={handleGenerateShifts}
+        disableGenerateShifts={disableGenerateShifts}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
@@ -407,7 +393,7 @@ export default function Calendar() {
           <EmployeeCalendarGrid
             currentDate={currentDate}
             shifts={shifts}
-            previousMonthShifts={previousMonthShifts} // Pass previous month shifts
+            previousMonthShifts={previousMonthShifts}
             employees={employees}
             positions={positions}
             clientes={clientes}

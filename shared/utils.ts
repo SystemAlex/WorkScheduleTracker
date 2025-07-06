@@ -1,5 +1,21 @@
 import { format } from 'date-fns';
 
+export interface ShiftBreakdownItem {
+  positionId: number;
+  name: string;
+  siglas: string;
+  color: string;
+  totalHoras: number;
+}
+
+export interface EmployeeHoursReport {
+  employeeId: number;
+  employeeName: string;
+  totalHours: number;
+  totalShifts: number;
+  shiftBreakdown: ShiftBreakdownItem[];
+}
+
 export function getMonthName(month: number): string {
   const months = [
     'Enero',

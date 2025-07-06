@@ -1,9 +1,8 @@
 import { type ClassValue, clsx } from 'clsx';
 import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
-import { format } from 'date-fns'; // Import format from date-fns
 import type { Position, Cliente } from '@shared/schema'; // Import types for Position and Cliente
-import { getMonthName } from '@shared/utils'; // Import getMonthName from shared
+import { EmployeeHoursReport, getMonthName } from '@shared/utils'; // Import getMonthName from shared
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -55,7 +54,6 @@ export function getDayDisplay(date: Date): string {
 
 export function generateCalendarDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
   const startDate = new Date(firstDay);
   startDate.setDate(startDate.getDate() - firstDay.getDay());
 
@@ -142,7 +140,7 @@ export function hslToHex(hsl: string): string {
 }
 
 // Hook para detectar si la pantalla es menor a md (768px)
-function useIsMobile() {
+export function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
 
   React.useEffect(() => {
@@ -156,22 +154,6 @@ function useIsMobile() {
   }, []);
 
   return isMobile;
-}
-
-// formatYearMonth has been moved to shared/utils.ts
-
-interface EmployeeHoursReport {
-  employeeId: number;
-  employeeName: string;
-  totalHours: number;
-  totalShifts: number;
-  shiftBreakdown: {
-    positionId: number;
-    name: string;
-    siglas: string;
-    color: string;
-    totalHoras: number;
-  }[];
 }
 
 export function exportToCsv(
@@ -201,7 +183,7 @@ export function exportToCsv(
 
   // Second header row (Positions)
   const positionHeader = ['Empleado', 'Total Horas', 'Total Turnos'];
-  groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+  groupedPositionsByClient.forEach(([, clientPositions]) => {
     clientPositions.forEach((pos) => {
       positionHeader.push(pos.siglas);
     });
@@ -215,7 +197,7 @@ export function exportToCsv(
       employee.totalHours.toString(),
       employee.totalShifts.toString(),
     ];
-    groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+    groupedPositionsByClient.forEach(([, clientPositions]) => {
       clientPositions.forEach((pos) => {
         const match = employee.shiftBreakdown.find(
           (s) => s.positionId === pos.id,
@@ -234,7 +216,7 @@ export function exportToCsv(
     totalReportHours.toString(),
     totalReportShifts.toString(),
   ];
-  groupedPositionsByClient.forEach(([_clientId, clientPositions]) => {
+  groupedPositionsByClient.forEach(([, clientPositions]) => {
     clientPositions.forEach((pos) => {
       const totalPos = report.reduce((sum, e) => {
         const match = e.shiftBreakdown.find((s) => s.positionId === pos.id);

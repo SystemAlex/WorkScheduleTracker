@@ -5,12 +5,10 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { MoreHorizontal, Copy } from 'lucide-react'; // Import Copy icon

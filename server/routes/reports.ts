@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { storage } from '../storage';
-import { z } from 'zod';
-import { getMonthName } from '@shared/utils'; // Import getMonthName from shared
-import type { Position, Cliente } from '@shared/schema'; // Import types for Position and Cliente
+import {
+  EmployeeHoursReport,
+  getMonthName,
+  ShiftBreakdownItem,
+} from '@shared/utils'; // Import getMonthName from shared
+import type { Position } from '@shared/schema'; // Import types for Position and Cliente
 
 const reportsRouter = Router();
 
@@ -39,6 +42,7 @@ reportsRouter.get('/employee-hours', async (req, res) => {
     );
     res.json(report);
   } catch (error) {
+    console.error(error);
     res
       .status(500)
       .json({ message: 'Failed to generate employee hours report' });
@@ -100,9 +104,9 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
 
     // Re-create groupedPositionsByClient logic from frontend for consistency
     const activePositionIds = new Set<number>();
-    reportData.forEach((employeeReport: any) => {
+    reportData.forEach((employeeReport: EmployeeHoursReport) => {
       // Explicitly type employeeReport as any
-      employeeReport.shiftBreakdown.forEach((item: any) => {
+      employeeReport.shiftBreakdown.forEach((item: ShiftBreakdownItem) => {
         // Explicitly type item as any
         activePositionIds.add(item.positionId);
       });
@@ -135,11 +139,11 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
         ]);
 
     const totalReportHours = reportData.reduce(
-      (sum: number, emp: any) => sum + emp.totalHours,
+      (sum: number, emp: EmployeeHoursReport) => sum + emp.totalHours,
       0,
     );
     const totalReportShifts = reportData.reduce(
-      (sum: number, emp: any) => sum + emp.totalShifts,
+      (sum: number, emp: EmployeeHoursReport) => sum + emp.totalShifts,
       0,
     );
 
@@ -224,9 +228,9 @@ reportsRouter.get('/employee-hours/pdf', async (req, res) => {
 
     // Re-create groupedPositionsByClient logic from frontend for consistency
     const activePositionIds = new Set<number>();
-    reportData.forEach((employeeReport: any) => {
+    reportData.forEach((employeeReport: EmployeeHoursReport) => {
       // Explicitly type employeeReport as any
-      employeeReport.shiftBreakdown.forEach((item: any) => {
+      employeeReport.shiftBreakdown.forEach((item: ShiftBreakdownItem) => {
         // Explicitly type item as any
         activePositionIds.add(item.positionId);
       });
@@ -259,11 +263,11 @@ reportsRouter.get('/employee-hours/pdf', async (req, res) => {
         ]);
 
     const totalReportHours = reportData.reduce(
-      (sum: number, emp: any) => sum + emp.totalHours,
+      (sum: number, emp: EmployeeHoursReport) => sum + emp.totalHours,
       0,
     );
     const totalReportShifts = reportData.reduce(
-      (sum: number, emp: any) => sum + emp.totalShifts,
+      (sum: number, emp: EmployeeHoursReport) => sum + emp.totalShifts,
       0,
     );
 

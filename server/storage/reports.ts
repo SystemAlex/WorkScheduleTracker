@@ -9,22 +9,7 @@ import {
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { ExcelGenerator } from '../utils/excel-generator'; // Import new ExcelGenerator
 import { PdfGenerator } from '../utils/pdf-generator'; // Import new PdfGenerator
-
-interface ShiftBreakdownItem {
-  positionId: number;
-  name: string;
-  siglas: string;
-  color: string;
-  totalHoras: number;
-}
-
-interface EmployeeHoursReport {
-  employeeId: number;
-  employeeName: string;
-  totalHours: number;
-  totalShifts: number;
-  shiftBreakdown: ShiftBreakdownItem[];
-}
+import { EmployeeHoursReport, ShiftBreakdownItem } from '@shared/utils';
 
 export class ReportStorage {
   private excelGenerator: ExcelGenerator;

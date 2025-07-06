@@ -7,7 +7,6 @@ import { ReportStorage } from './storage/reports';
 import type {
   Employee,
   Position,
-  Shift,
   Cliente,
   InsertEmployee,
   InsertPosition,
@@ -15,6 +14,7 @@ import type {
   InsertCliente,
   ShiftWithDetails,
 } from '@shared/schema';
+import { EmployeeHoursReport } from '@shared/utils';
 
 export interface IStorage {
   // Employees
@@ -53,9 +53,9 @@ export interface IStorage {
     employeeId?: number,
     month?: number,
     year?: number,
-  ): Promise<any[]>;
+  ): Promise<EmployeeHoursReport[]>;
   generateExcelReport( // Added to IStorage
-    report: any[],
+    report: EmployeeHoursReport[],
     groupedPositionsByClient: Array<[number, Position[]]>,
     clientes: Cliente[],
     selectedMonth: number,
@@ -64,7 +64,7 @@ export interface IStorage {
     totalReportShifts: number,
   ): Promise<Buffer>;
   generatePdfReport( // Added to IStorage
-    report: any[],
+    report: EmployeeHoursReport[],
     groupedPositionsByClient: Array<[number, Position[]]>,
     clientes: Cliente[],
     selectedMonth: number,
@@ -176,7 +176,7 @@ class CombinedStorage implements IStorage {
   }
   generateExcelReport(
     // Delegated
-    report: any[],
+    report: EmployeeHoursReport[],
     groupedPositionsByClient: Array<[number, Position[]]>,
     clientes: Cliente[],
     selectedMonth: number,
@@ -196,7 +196,7 @@ class CombinedStorage implements IStorage {
   }
   generatePdfReport(
     // Delegated
-    report: any[],
+    report: EmployeeHoursReport[],
     groupedPositionsByClient: Array<[number, Position[]]>,
     clientes: Cliente[],
     selectedMonth: number,

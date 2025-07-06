@@ -129,6 +129,7 @@ employeesRouter.delete('/:id', async (req, res) => {
     await storage.deleteEmployee(id);
     res.status(204).send();
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Failed to delete employee' });
   }
 });

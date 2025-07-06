@@ -82,8 +82,12 @@ html {
 
 @layer components {
   .calendar-day {
-    @apply bg-white hover:bg-neutral-50 transition-colors cursor-pointer relative;
+    @apply bg-white transition-colors cursor-pointer relative;
     min-height: 8rem;
+  }
+
+  .calendar-day:hover {
+    @apply bg-neutral-50;
   }
 
   .calendar-day.selected {
@@ -103,7 +107,11 @@ html {
   }
 
   .sidebar-link:not(.active) {
-    @apply text-neutral-600 hover:bg-neutral-100;
+    @apply text-neutral-600;
+  }
+
+  .sidebar-link:not(.active):hover {
+    @apply bg-neutral-100;
   }
 }
 

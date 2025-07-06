@@ -155,10 +155,7 @@ async function seed() {
     },
   ];
 
-  const puestos = await db
-    .insert(positions)
-    .values(puestosAInsertar)
-    .returning();
+  await db.insert(positions).values(puestosAInsertar).returning();
 
   // 3. Insertar empleados
   await db.insert(employees).values([

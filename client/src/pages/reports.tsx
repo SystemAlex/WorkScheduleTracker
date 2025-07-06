@@ -4,28 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/layout/header';
 import { LayoutContent } from '@/components/ui/layout';
 import type { Employee, Position, Cliente } from '@shared/schema';
-import { getMonthName } from '@shared/utils';
+import { EmployeeHoursReport, getMonthName } from '@shared/utils';
 import { exportToCsv } from '@/lib/utils';
 import { base } from '@/lib/paths';
 import { ReportFilters } from '@/components/reports/report-filters';
 import { ReportSummaryCards } from '@/components/reports/report-summary-cards';
 import { ReportTable } from '@/components/reports/report-table';
-
-interface ShiftBreakdownItem {
-  positionId: number;
-  name: string;
-  siglas: string;
-  color: string;
-  totalHoras: number;
-}
-
-interface EmployeeHoursReport {
-  employeeId: number;
-  employeeName: string;
-  totalHours: number;
-  totalShifts: number;
-  shiftBreakdown: ShiftBreakdownItem[];
-}
 
 export default function Reports() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);

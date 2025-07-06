@@ -20,10 +20,9 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { insertPositionSchema } from '@shared/schema';
-import type { Cliente, Position, InsertPosition } from '@shared/schema';
+import type { Cliente, Position } from '@shared/schema';
 
-const formSchema = insertPositionSchema;
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof insertPositionSchema>;
 
 interface PositionFormProps {
   onSubmit: (data: FormValues) => void;

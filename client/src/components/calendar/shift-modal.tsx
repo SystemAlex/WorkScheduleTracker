@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import { FieldErrors, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -31,7 +31,6 @@ import { ConfirmDialog } from '../ui/confirm';
 import { insertShiftSchema } from '@shared/schema';
 import type { Employee, Position, ShiftWithDetails } from '@shared/schema';
 import { formatDate } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 
 const formSchema = insertShiftSchema.extend({
   employeeId: z.number().min(1, 'El empleado es requerido'),
@@ -127,7 +126,7 @@ export function ShiftModal({
     form.reset();
   };
 
-  const handleInvalid = (errors: any) => {
+  const handleInvalid = (errors: FieldErrors<FormValues>) => {
     setTimeout(() => {
       if (errors.employeeId && employeeTriggerRef.current) {
         employeeTriggerRef.current.focus();
