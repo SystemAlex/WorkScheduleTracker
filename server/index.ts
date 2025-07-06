@@ -1,4 +1,4 @@
-import express, { type Request, Response } from 'express';
+import express, { NextFunction, type Request, Response } from 'express';
 import { registerRoutes } from './routes';
 import { setupVite, serveStatic, log } from './vite';
 import swaggerUi from 'swagger-ui-express';
@@ -70,7 +70,7 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: unknown, _req: Request, res: Response) => {
+  app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     const e = err as { status?: number; statusCode?: number; message?: string };
     const status = e.status ?? e.statusCode ?? 500;
     const message = e.message ?? 'Internal Server Error';
