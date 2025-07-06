@@ -38,17 +38,17 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --comment "Deploy desde GitHub Actions" \
             --parameters commands='
-              export HOME=/home/systemalex &&
-              git config --global --add safe.directory /home/systemalex/WorkScheduleTracker &&
-              cd /home/systemalex/WorkScheduleTracker &&
-              git fetch --all &&
-              git reset --hard origin/main &&
-              npm prune &&
-              npm install --omit=dev &&
-              npm audit fix || true &&
-              npm run build &&
-              sudo systemctl restart scheduletracker.service &&
-              sudo systemctl status scheduletracker.service --no-pager
+                export HOME=/home/systemalex &&
+                git config --global --add safe.directory /home/systemalex/WorkScheduleTracker &&
+                cd /home/systemalex/WorkScheduleTracker &&
+                git fetch --all &&
+                git reset --hard origin/main &&
+                npm install --omit=dev &&
+                npm prune --omit=dev  &&
+                npm audit fix || true &&
+                npm run build &&
+                sudo systemctl restart scheduletracker.service &&
+                sudo systemctl status scheduletracker.service --no-pager
             ' \
             --region us-east-1 \
             --output text
