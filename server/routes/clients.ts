@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { insertClienteSchema } from '@shared/schema';
-import { z } from 'zod';
+import { validate } from '../middleware/validate'; // Import the new middleware
 
 const clientsRouter = Router();
 
@@ -50,17 +50,14 @@ clientsRouter.get('/', async (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-clientsRouter.post('/', async (req, res) => {
+clientsRouter.post('/', validate(insertClienteSchema), async (req, res) => {
   try {
-    const validatedData = insertClienteSchema.parse(req.body);
-    const cliente = await storage.createCliente(validatedData);
+    // req.body is already validated by the middleware
+    const cliente = await storage.createCliente(req.body);
     res.status(201).json(cliente);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ message: 'Invalid data', errors: error.errors });
-    } else {
-      res.status(500).json({ message: 'Failed to create cliente' });
-    }
+    console.error(error);
+    res.status(500).json({ message: 'Failed to create cliente' });
   }
 });
 
@@ -90,18 +87,15 @@ clientsRouter.post('/', async (req, res) => {
  *       500:
  *         description: Error interno
  */
-clientsRouter.put('/:id', async (req, res) => {
+clientsRouter.put('/:id', validate(insertClienteSchema), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const validatedData = insertClienteSchema.parse(req.body);
-    const cliente = await storage.updateCliente(id, validatedData);
+    // req.body is already validated by the middleware
+    const cliente = await storage.updateCliente(id, req.body);
     res.json(cliente);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ message: 'Invalid data', errors: error.errors });
-    } else {
-      res.status(500).json({ message: 'Failed to update cliente' });
-    }
+    console.error(error);
+    res.status(500).json({ message: 'Failed to update cliente' });
   }
 });
 

@@ -6,7 +6,7 @@ import {
   type InsertShift,
   type ShiftWithDetails,
 } from '@shared/schema';
-import { eq, and, gte, lte, ne } from 'drizzle-orm';
+import { eq, and, gte, lte, ne, isNull } from 'drizzle-orm';
 import { addMonths, format, getDaysInMonth, subMonths } from 'date-fns';
 import { ReportStorage } from './reports';
 import { PositionStorage } from './positions';
@@ -24,7 +24,10 @@ export class ShiftStorage {
     startDate?: string,
     endDate?: string,
   ): Promise<ShiftWithDetails[]> {
-    const whereConditions = [];
+    const whereConditions = [
+      eq(employees.status, 'active'),
+      isNull(positions.deletedAt),
+    ];
     if (startDate) {
       whereConditions.push(gte(shifts.date, startDate));
     }
@@ -46,7 +49,7 @@ export class ShiftStorage {
       .from(shifts)
       .innerJoin(employees, eq(shifts.employeeId, employees.id))
       .innerJoin(positions, eq(shifts.positionId, positions.id))
-      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .where(and(...whereConditions))
       .orderBy(shifts.date);
 
     return results.map((row) => ({
@@ -83,7 +86,14 @@ export class ShiftStorage {
       .from(shifts)
       .innerJoin(employees, eq(shifts.employeeId, employees.id))
       .innerJoin(positions, eq(shifts.positionId, positions.id))
-      .where(and(gte(shifts.date, startDate), lte(shifts.date, endDate)));
+      .where(
+        and(
+          gte(shifts.date, startDate),
+          lte(shifts.date, endDate),
+          eq(employees.status, 'active'),
+          isNull(positions.deletedAt),
+        ),
+      );
 
     return results.map((row) => ({
       id: row.id,
@@ -112,7 +122,13 @@ export class ShiftStorage {
       .from(shifts)
       .innerJoin(employees, eq(shifts.employeeId, employees.id))
       .innerJoin(positions, eq(shifts.positionId, positions.id))
-      .where(eq(shifts.date, date));
+      .where(
+        and(
+          eq(shifts.date, date),
+          eq(employees.status, 'active'),
+          isNull(positions.deletedAt),
+        ),
+      );
 
     return results.map((row) => ({
       id: row.id,
@@ -169,6 +185,8 @@ export class ShiftStorage {
     const whereConditions = [
       eq(shifts.employeeId, employeeId),
       eq(shifts.date, date),
+      eq(employees.status, 'active'), // Ensure employee is active
+      isNull(positions.deletedAt), // Ensure position is not soft-deleted
     ];
 
     if (excludeShiftId) {
@@ -189,7 +207,7 @@ export class ShiftStorage {
       .from(shifts)
       .leftJoin(employees, eq(shifts.employeeId, employees.id))
       .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+      .where(and(...whereConditions));
 
     return results.map((row) => ({
       id: row.id,
@@ -218,7 +236,13 @@ export class ShiftStorage {
       .from(shifts)
       .leftJoin(employees, eq(shifts.employeeId, employees.id))
       .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .where(eq(shifts.id, id));
+      .where(
+        and(
+          eq(shifts.id, id),
+          eq(employees.status, 'active'),
+          isNull(positions.deletedAt),
+        ),
+      );
     return result
       ? {
           id: result.id,
@@ -309,7 +333,7 @@ export class ShiftStorage {
     );
 
     const newShiftsToInsert: InsertShift[] = [];
-    let insertedCount = 0;
+    // let insertedCount = 0; // No longer needed as a separate counter
 
     for (const prevShift of previousMonthShifts) {
       const prevShiftDate = new Date(prevShift.date);
@@ -342,6 +366,7 @@ export class ShiftStorage {
               date: newDateFormatted,
               notes: prevShift.notes,
             });
+            // Update current hours map for subsequent checks within the same batch
             employeeCurrentHoursMap.set(
               employeeId,
               currentHours + positionHours,
@@ -355,17 +380,16 @@ export class ShiftStorage {
       }
     }
 
+    let insertedCount = 0;
     if (newShiftsToInsert.length > 0) {
-      for (const shiftData of newShiftsToInsert) {
-        try {
-          await this.createShift(shiftData);
-          insertedCount++;
-        } catch (error) {
-          console.warn(
-            `Could not insert shift for employee ${shiftData.employeeId} on ${shiftData.date}:`,
-            error,
-          );
-        }
+      try {
+        const insertedShifts = await db
+          .insert(shifts)
+          .values(newShiftsToInsert)
+          .returning();
+        insertedCount = insertedShifts.length;
+      } catch (error) {
+        console.warn(`Could not insert batch of shifts:`, error);
       }
     }
 

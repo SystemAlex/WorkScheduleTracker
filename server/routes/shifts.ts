@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { storage } from '../storage';
 import { insertShiftSchema } from '@shared/schema';
 import { z } from 'zod';
+import { validate } from '../middleware/validate'; // Import the new middleware
 
 const shiftsRouter = Router();
 
@@ -109,9 +110,10 @@ shiftsRouter.get('/date/:date', async (req, res) => {
  *       409:
  *         description: Conflicto de turno
  */
-shiftsRouter.post('/', async (req, res) => {
+shiftsRouter.post('/', validate(insertShiftSchema), async (req, res) => {
   try {
-    const validatedData = insertShiftSchema.parse(req.body);
+    // req.body is already validated by the middleware
+    const validatedData = req.body;
 
     // Check for conflicts
     const conflicts = await storage.checkShiftConflicts(
@@ -129,11 +131,8 @@ shiftsRouter.post('/', async (req, res) => {
     const shift = await storage.createShift(validatedData);
     res.status(201).json(shift);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ message: 'Invalid data', errors: error.errors });
-    } else {
-      res.status(500).json({ message: 'Failed to create shift' });
-    }
+    console.error(error);
+    res.status(500).json({ message: 'Failed to create shift' });
   }
 });
 
@@ -190,10 +189,11 @@ shiftsRouter.delete('/:id', async (req, res) => {
  *       409:
  *         description: Conflicto de turno
  */
-shiftsRouter.put('/:id', async (req, res) => {
+shiftsRouter.put('/:id', validate(insertShiftSchema), async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const validatedData = insertShiftSchema.parse(req.body);
+    // req.body is already validated by the middleware
+    const validatedData = req.body;
 
     // Obtén el turno actual
     const currentShift = await storage.getShiftById(id);
@@ -226,7 +226,7 @@ shiftsRouter.put('/:id', async (req, res) => {
     res.json(updated);
   } catch (error) {
     console.error(error);
-    res.status(400).json({ message: 'Invalid data' });
+    res.status(500).json({ message: 'Failed to update shift' });
   }
 });
 
@@ -270,21 +270,20 @@ const generateShiftsSchema = z.object({
  *       500:
  *         description: Error interno del servidor
  */
-shiftsRouter.post('/generate-from-previous-month', async (req, res) => {
-  try {
-    const { month, year } = generateShiftsSchema.parse(req.body);
-    const result = await storage.generateShiftsFromPreviousMonth(month, year); // Pass month and year
-    res.status(200).json(result);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res
-        .status(400)
-        .json({ message: 'Invalid input data', errors: error.errors });
-    } else {
+shiftsRouter.post(
+  '/generate-from-previous-month',
+  validate(generateShiftsSchema),
+  async (req, res) => {
+    try {
+      // req.body is already validated by the middleware
+      const { month, year } = req.body;
+      const result = await storage.generateShiftsFromPreviousMonth(month, year); // Pass month and year
+      res.status(200).json(result);
+    } catch (error) {
       console.error('Error generating shifts from previous month:', error);
       res.status(500).json({ message: 'Failed to generate shifts' });
     }
-  }
-});
+  },
+);
 
 export default shiftsRouter;

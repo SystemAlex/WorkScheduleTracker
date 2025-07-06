@@ -4,7 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/layout/header';
 import { LayoutContent } from '@/components/ui/layout';
 import type { Employee, Position, Cliente } from '@shared/schema';
-import { EmployeeHoursReport, getMonthName } from '@shared/utils';
+import {
+  EmployeeHoursReport,
+  getMonthName,
+  getProcessedReportPositions,
+} from '@shared/utils';
 import { exportToCsv } from '@/lib/utils';
 import { base } from '@/lib/paths';
 import { ReportFilters } from '@/components/reports/report-filters';
@@ -74,46 +78,10 @@ export default function Reports() {
   const totalHours = report.reduce((sum, emp) => sum + emp.totalHours, 0);
   const totalShifts = report.reduce((sum, emp) => sum + emp.totalShifts, 0);
 
-  // Determine which positions had shifts in the current report
-  const activePositionIds = React.useMemo(() => {
-    const ids = new Set<number>();
-    report.forEach((employeeReport) => {
-      employeeReport.shiftBreakdown.forEach((item) => {
-        ids.add(item.positionId);
-      });
-    });
-    return Array.from(ids);
-  }, [report]);
-
-  // Filter positions to only include those with activity in the report
-  const activePositions = React.useMemo(() => {
-    return positions.filter((pos) => activePositionIds.includes(pos.id));
-  }, [positions, activePositionIds]);
-
-  // Group active positions by client for the table header
-  const groupedPositionsByClient: Array<[number, Position[]]> =
-    React.useMemo(() => {
-      const groups: Record<number, Position[]> = {};
-      activePositions.forEach((pos) => {
-        if (!groups[pos.clienteId]) {
-          groups[pos.clienteId] = [];
-        }
-        groups[pos.clienteId].push(pos);
-      });
-      // Sort clients by name, and positions within each client by name
-      return Object.entries(groups)
-        .sort(([clientIdA], [clientIdB]) => {
-          const clientA =
-            clientes.find((c) => c.id === Number(clientIdA))?.empresa || '';
-          const clientB =
-            clientes.find((c) => c.id === Number(clientIdB))?.empresa || '';
-          return clientA.localeCompare(clientB);
-        })
-        .map(([clientId, posArray]) => [
-          Number(clientId),
-          posArray.sort((a, b) => a.name.localeCompare(b.name)),
-        ]);
-    }, [activePositions, clientes]);
+  // Use the new shared function
+  const { groupedPositionsByClient } = React.useMemo(() => {
+    return getProcessedReportPositions(report, positions, clientes);
+  }, [report, positions, clientes]);
 
   // Create a flat map of all positions for easy lookup by ID (used in table body)
   const positionMap: Record<number, Position> = React.useMemo(() => {

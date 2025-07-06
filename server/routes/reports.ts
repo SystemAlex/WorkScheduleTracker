@@ -3,9 +3,8 @@ import { storage } from '../storage';
 import {
   EmployeeHoursReport,
   getMonthName,
-  ShiftBreakdownItem,
-} from '@shared/utils'; // Import getMonthName from shared
-import type { Position } from '@shared/schema'; // Import types for Position and Cliente
+  getProcessedReportPositions,
+} from '@shared/utils';
 
 const reportsRouter = Router();
 
@@ -102,41 +101,12 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
     const allPositions = await storage.getPositions();
     const allClientes = await storage.getClientes();
 
-    // Re-create groupedPositionsByClient logic from frontend for consistency
-    const activePositionIds = new Set<number>();
-    reportData.forEach((employeeReport: EmployeeHoursReport) => {
-      // Explicitly type employeeReport as any
-      employeeReport.shiftBreakdown.forEach((item: ShiftBreakdownItem) => {
-        // Explicitly type item as any
-        activePositionIds.add(item.positionId);
-      });
-    });
-    const activePositions = allPositions.filter((pos) =>
-      activePositionIds.has(pos.id),
+    // Use the new shared function
+    const { groupedPositionsByClient } = getProcessedReportPositions(
+      reportData,
+      allPositions,
+      allClientes,
     );
-
-    const groupedPositionsByClient: Array<[number, Position[]]> =
-      Object.entries(
-        activePositions.reduce(
-          (acc, pos) => {
-            if (!acc[pos.clienteId]) acc[pos.clienteId] = [];
-            acc[pos.clienteId].push(pos);
-            return acc;
-          },
-          {} as Record<number, Position[]>,
-        ),
-      )
-        .sort(([clientIdA], [clientIdB]) => {
-          const clientA =
-            allClientes.find((c) => c.id === Number(clientIdA))?.empresa || '';
-          const clientB =
-            allClientes.find((c) => c.id === Number(clientIdB))?.empresa || '';
-          return clientA.localeCompare(clientB);
-        })
-        .map(([clientId, posArray]) => [
-          Number(clientId),
-          posArray.sort((a, b) => a.name.localeCompare(b.name)),
-        ]);
 
     const totalReportHours = reportData.reduce(
       (sum: number, emp: EmployeeHoursReport) => sum + emp.totalHours,
@@ -226,41 +196,12 @@ reportsRouter.get('/employee-hours/pdf', async (req, res) => {
     const allPositions = await storage.getPositions();
     const allClientes = await storage.getClientes();
 
-    // Re-create groupedPositionsByClient logic from frontend for consistency
-    const activePositionIds = new Set<number>();
-    reportData.forEach((employeeReport: EmployeeHoursReport) => {
-      // Explicitly type employeeReport as any
-      employeeReport.shiftBreakdown.forEach((item: ShiftBreakdownItem) => {
-        // Explicitly type item as any
-        activePositionIds.add(item.positionId);
-      });
-    });
-    const activePositions = allPositions.filter((pos) =>
-      activePositionIds.has(pos.id),
+    // Use the new shared function
+    const { groupedPositionsByClient } = getProcessedReportPositions(
+      reportData,
+      allPositions,
+      allClientes,
     );
-
-    const groupedPositionsByClient: Array<[number, Position[]]> =
-      Object.entries(
-        activePositions.reduce(
-          (acc, pos) => {
-            if (!acc[pos.clienteId]) acc[pos.clienteId] = [];
-            acc[pos.clienteId].push(pos);
-            return acc;
-          },
-          {} as Record<number, Position[]>,
-        ),
-      )
-        .sort(([clientIdA], [clientIdB]) => {
-          const clientA =
-            allClientes.find((c) => c.id === Number(clientIdA))?.empresa || '';
-          const clientB =
-            allClientes.find((c) => c.id === Number(clientIdB))?.empresa || '';
-          return clientA.localeCompare(clientB);
-        })
-        .map(([clientId, posArray]) => [
-          Number(clientId),
-          posArray.sort((a, b) => a.name.localeCompare(b.name)),
-        ]);
 
     const totalReportHours = reportData.reduce(
       (sum: number, emp: EmployeeHoursReport) => sum + emp.totalHours,

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { insertPositionSchema } from '@shared/schema';
-import { z } from 'zod';
+import { validate } from '../middleware/validate'; // Import the new middleware
 
 const positionsRouter = Router();
 
@@ -50,17 +50,14 @@ positionsRouter.get('/', async (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-positionsRouter.post('/', async (req, res) => {
+positionsRouter.post('/', validate(insertPositionSchema), async (req, res) => {
   try {
-    const validatedData = insertPositionSchema.parse(req.body);
-    const position = await storage.createPosition(validatedData);
+    // req.body is already validated by the middleware
+    const position = await storage.createPosition(req.body);
     res.status(201).json(position);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ message: 'Invalid data', errors: error.errors });
-    } else {
-      res.status(500).json({ message: 'Failed to create position' });
-    }
+    console.error(error);
+    res.status(500).json({ message: 'Failed to create position' });
   }
 });
 
@@ -90,20 +87,21 @@ positionsRouter.post('/', async (req, res) => {
  *       500:
  *         description: Error interno
  */
-positionsRouter.put('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const validatedData = insertPositionSchema.parse(req.body);
-    const position = await storage.updatePosition(id, validatedData);
-    res.json(position);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ message: 'Invalid data', errors: error.errors });
-    } else {
+positionsRouter.put(
+  '/:id',
+  validate(insertPositionSchema),
+  async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      // req.body is already validated by the middleware
+      const position = await storage.updatePosition(id, req.body);
+      res.json(position);
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ message: 'Failed to update position' });
     }
-  }
-});
+  },
+);
 
 /**
  * @openapi

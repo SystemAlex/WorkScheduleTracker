@@ -1,5 +1,4 @@
 import { type ClassValue, clsx } from 'clsx';
-import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import type { Position, Cliente } from '@shared/schema'; // Import types for Position and Cliente
 import { EmployeeHoursReport, getMonthName } from '@shared/utils'; // Import getMonthName from shared
@@ -137,23 +136,6 @@ export function hslToHex(hsl: string): string {
   };
 
   return `#${f(0)}${f(8)}${f(4)}`;
-}
-
-// Hook para detectar si la pantalla es menor a md (768px)
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-
-  React.useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    const handleChange = () => setIsMobile(mediaQuery.matches);
-
-    handleChange(); // Estado inicial
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  return isMobile;
 }
 
 export function exportToCsv(

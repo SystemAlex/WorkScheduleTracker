@@ -1,8 +1,11 @@
+import 'dotenv/config'; // Importa dotenv para cargar variables de entorno desde .env
 import express, { NextFunction, type Request, Response } from 'express';
 import { registerRoutes } from './routes';
-import { setupVite, serveStatic, log } from './vite';
+import { setupVite, serveStatic } from './vite';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
+import logger from './utils/logger';
+import './config/env'; // Import the env configuration to ensure validation runs at startup
 
 const app = express();
 app.use(express.json());
@@ -60,7 +63,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + '…';
       }
 
-      log(logLine);
+      logger.info(logLine); // Use new logger
     }
   });
 
@@ -70,13 +73,27 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    const e = err as { status?: number; statusCode?: number; message?: string };
+    const e = err as {
+      status?: number;
+      statusCode?: number;
+      message?: string;
+      stack?: string;
+    };
     const status = e.status ?? e.statusCode ?? 500;
     const message = e.message ?? 'Internal Server Error';
+
+    logger.error(`Error: ${message}`, {
+      stack: e.stack,
+      status,
+      path: _req.path,
+      method: _req.method,
+    }); // Use new logger for errors
+
     res.status(status).json({ message });
-    throw err;
   });
+  /* eslint-enable */
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -98,7 +115,7 @@ app.use((req, res, next) => {
       reusePort: true,
     },
     () => {
-      log(`serving on port ${port}`);
+      logger.info(`serving on port ${port}`); // Use new logger
     },
   );
 })();

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { insertEmployeeSchema } from '@shared/schema';
-import { z } from 'zod';
+import { validate } from '../middleware/validate'; // Import the new middleware
 
 const employeesRouter = Router();
 
@@ -50,17 +50,14 @@ employeesRouter.get('/', async (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-employeesRouter.post('/', async (req, res) => {
+employeesRouter.post('/', validate(insertEmployeeSchema), async (req, res) => {
   try {
-    const validatedData = insertEmployeeSchema.parse(req.body);
-    const employee = await storage.createEmployee(validatedData);
+    // req.body is already validated by the middleware
+    const employee = await storage.createEmployee(req.body);
     res.status(201).json(employee);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ message: 'Invalid data', errors: error.errors });
-    } else {
-      res.status(500).json({ message: 'Failed to create employee' });
-    }
+    console.error(error);
+    res.status(500).json({ message: 'Failed to create employee' });
   }
 });
 
@@ -90,20 +87,21 @@ employeesRouter.post('/', async (req, res) => {
  *       500:
  *         description: Error interno
  */
-employeesRouter.put('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const validatedData = insertEmployeeSchema.parse(req.body);
-    const employee = await storage.updateEmployee(id, validatedData);
-    res.json(employee);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ message: 'Invalid data', errors: error.errors });
-    } else {
+employeesRouter.put(
+  '/:id',
+  validate(insertEmployeeSchema),
+  async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      // req.body is already validated by the middleware
+      const employee = await storage.updateEmployee(id, req.body);
+      res.json(employee);
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ message: 'Failed to update employee' });
     }
-  }
-});
+  },
+);
 
 /**
  * @openapi

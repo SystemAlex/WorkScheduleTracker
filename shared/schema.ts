@@ -7,59 +7,101 @@ import {
   date,
   varchar,
   decimal,
+  index, // Import 'index' here
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm'; // Removed 'one' from here
+import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
-export const employees = pgTable('employees', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email'),
-  phone: text('phone'),
-  status: text('status').notNull().default('active'), // active, inactive
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+export const employees = pgTable(
+  'employees',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    email: text('email'),
+    phone: text('phone'),
+    status: text('status').notNull().default('active'), // active, inactive
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => {
+    return {
+      employeeNameIdx: index('employee_name_idx').on(table.name),
+    };
+  },
+);
 
-export const positions = pgTable('positions', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull().unique(),
-  description: text('description'),
-  department: text('department'),
-  siglas: text('siglas').notNull(), // Siglas para mostrar en el calendario
-  color: varchar('color', { length: 7 }).notNull(), // HEX
-  totalHoras: decimal('total_horas', { precision: 4, scale: 1 }).notNull(), // Puedes usar decimal si tu ORM lo soporta
-  clienteId: integer('cliente_id')
-    .notNull()
-    .references(() => clientes.id),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at'), // New column for soft delete
-});
+export const positions = pgTable(
+  'positions',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull().unique(),
+    description: text('description'),
+    department: text('department'),
+    siglas: text('siglas').notNull(), // Siglas para mostrar en el calendario
+    color: varchar('color', { length: 7 }).notNull(), // HEX
+    totalHoras: decimal('total_horas', { precision: 4, scale: 1 }).notNull(), // Puedes usar decimal si tu ORM lo soporta
+    clienteId: integer('cliente_id')
+      .notNull()
+      .references(() => clientes.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'), // New column for soft delete
+  },
+  (table) => {
+    return {
+      positionClienteIdIdx: index('position_cliente_id_idx').on(
+        table.clienteId,
+      ),
+      positionNameIdx: index('position_name_idx').on(table.name),
+    };
+  },
+);
 
-export const shifts = pgTable('shifts', {
-  id: serial('id').primaryKey(),
-  employeeId: integer('employee_id')
-    .notNull()
-    .references(() => employees.id),
-  positionId: integer('position_id')
-    .notNull()
-    .references(() => positions.id),
-  date: date('date').notNull(),
-  notes: text('notes'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+export const shifts = pgTable(
+  'shifts',
+  {
+    id: serial('id').primaryKey(),
+    employeeId: integer('employee_id')
+      .notNull()
+      .references(() => employees.id),
+    positionId: integer('position_id')
+      .notNull()
+      .references(() => positions.id),
+    date: date('date').notNull(),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => {
+    return {
+      shiftEmployeeIdIdx: index('shift_employee_id_idx').on(table.employeeId),
+      shiftPositionIdIdx: index('shift_position_id_idx').on(table.positionId),
+      shiftDateIdx: index('shift_date_idx').on(table.date),
+      shiftEmployeeDateIdx: index('shift_employee_date_idx').on(
+        table.employeeId,
+        table.date,
+      ),
+    };
+  },
+);
 
-export const clientes = pgTable('clientes', {
-  id: serial('id').primaryKey(),
-  empresa: varchar('empresa', { length: 100 }).notNull(),
-  direccion: varchar('direccion', { length: 150 }),
-  localidad: varchar('localidad', { length: 100 }),
-  nombreContacto: varchar('nombre_contacto', { length: 100 }),
-  telefono: varchar('telefono', { length: 30 }),
-  email: varchar('email', { length: 100 }),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  deletedAt: timestamp('deleted_at'), // New column for soft delete
-});
+export const clientes = pgTable(
+  'clientes',
+  {
+    id: serial('id').primaryKey(),
+    empresa: varchar('empresa', { length: 100 }).notNull(),
+    direccion: varchar('direccion', { length: 150 }),
+    localidad: varchar('localidad', { length: 100 }),
+    nombreContacto: varchar('nombre_contacto', { length: 100 }),
+    telefono: varchar('telefono', { length: 30 }),
+    email: varchar('email', { length: 100 }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    deletedAt: timestamp('deleted_at'), // New column for soft delete
+  },
+  (table) => {
+    return {
+      clienteEmpresaIdx: index('cliente_empresa_idx').on(table.empresa),
+    };
+  },
+);
 
 // Relations
 export const employeesRelations = relations(employees, ({ many }) => ({
@@ -67,7 +109,6 @@ export const employeesRelations = relations(employees, ({ many }) => ({
 }));
 
 export const positionsRelations = relations(positions, ({ many, one }) => ({
-  // 'one' is available here
   shifts: many(shifts),
   clientes: one(clientes, {
     fields: [positions.clienteId],
@@ -76,7 +117,6 @@ export const positionsRelations = relations(positions, ({ many, one }) => ({
 }));
 
 export const shiftsRelations = relations(shifts, ({ one }) => ({
-  // 'one' is available here
   employee: one(employees, {
     fields: [shifts.employeeId],
     references: [employees.id],

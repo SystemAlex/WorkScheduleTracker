@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Switch, Route, useLocation, Router } from 'wouter';
+import { Switch, Route, Router } from 'wouter';
 import { queryClient } from './lib/queryClient';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Layout, LayoutMain } from '@/components/ui/layout';
-import { createBaseLocationHook } from './lib/wouterBaseHook';
+import { base } from './lib/paths';
 
 // Pages
 import Calendar from '@/pages/calendar';
@@ -16,7 +16,6 @@ import Positions from '@/pages/positions';
 import Reports from '@/pages/reports';
 import NotFound from '@/pages/not-found';
 import Clientes from '@/pages/clientes';
-import { base } from './lib/paths';
 
 function MyRouter() {
   return (
@@ -33,16 +32,10 @@ function MyRouter() {
 }
 
 function App() {
-  const [rawLocation, navigate] = useLocation();
-
-  const customHook = React.useMemo(() => {
-    return () => createBaseLocationHook(base(''), rawLocation, navigate);
-  }, [rawLocation, navigate, base('')]);
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Router hook={customHook}>
+        <Router base={base('')}>
           <Layout>
             <Sidebar />
             <LayoutMain id="main-content" tabIndex={-1}>
