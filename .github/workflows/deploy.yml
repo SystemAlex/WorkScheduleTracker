@@ -44,7 +44,7 @@ jobs:
                 git fetch --all &&
                 git reset --hard origin/main &&
                 npm install --omit=dev &&
-                npm prune --omit=dev  &&
+                npm prune --omit=dev &&
                 npm run build &&
                 sudo systemctl restart scheduletracker.service &&
                 sudo systemctl status scheduletracker.service --no-pager
