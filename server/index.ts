@@ -5,15 +5,12 @@ import { setupVite, serveStatic } from './vite';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
 import logger from './utils/logger';
-import { env } from './config/env'; // Importamos env para NODE_ENV
-import { CustomError } from './errors';
+import './config/env';
+import { CustomError } from './errors'; // Import CustomError
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Determinamos el prefijo de la API: vacío en desarrollo, '/vipsrl' en producción
-const apiPrefix = env.NODE_ENV === 'production' ? '/vipsrl' : '';
 
 // Configuración de Swagger
 const swaggerDefinition = {
@@ -25,7 +22,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: `${apiPrefix}/api`, // Usamos el prefijo dinámico para la URL base de Swagger
+      url: 'http://localhost:5000',
     },
   ],
 };
@@ -42,8 +39,7 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
-// Montamos la UI de Swagger bajo la ruta de API con el prefijo
-app.use(`${apiPrefix}/api/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -58,8 +54,7 @@ app.use((req, res, next) => {
 
   res.on('finish', () => {
     const duration = Date.now() - start;
-    // Registramos las solicitudes de API, considerando el prefijo completo
-    if (path.startsWith(`${apiPrefix}/api`)) {
+    if (path.startsWith('/api')) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
@@ -77,8 +72,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Pasamos el apiPrefix a registerRoutes
-  const server = await registerRoutes(app, apiPrefix);
+  const server = await registerRoutes(app);
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

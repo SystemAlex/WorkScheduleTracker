@@ -6,14 +6,13 @@ import shiftsRouter from './routes/shifts';
 import clientsRouter from './routes/clients';
 import reportsRouter from './routes/reports';
 
-// Agregamos el parámetro apiPrefix
-export async function registerRoutes(app: Express, apiPrefix: string): Promise<Server> {
-  // Montamos cada router de API bajo el prefijo dinámico
-  app.use(`${apiPrefix}/api/employees`, employeesRouter);
-  app.use(`${apiPrefix}/api/positions`, positionsRouter);
-  app.use(`${apiPrefix}/api/shifts`, shiftsRouter);
-  app.use(`${apiPrefix}/api/clientes`, clientsRouter);
-  app.use(`${apiPrefix}/api/reports`, reportsRouter);
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Use modular routers
+  app.use('/api/employees', employeesRouter);
+  app.use('/api/positions', positionsRouter);
+  app.use('/api/shifts', shiftsRouter);
+  app.use('/api/clientes', clientsRouter);
+  app.use('/api/reports', reportsRouter);
 
   const httpServer = createServer(app);
   return httpServer;

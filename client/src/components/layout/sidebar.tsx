@@ -19,8 +19,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { base } from '@/lib/paths';
-import { useIsMobile } from '@/hooks/use-mobile';
+// No necesitamos 'base' de '@/lib/paths' aquí para los href de Link,
+// ya que wouter lo maneja automáticamente con la base configurada en el Router.
+// import { base } from '@/lib/paths'; // Eliminado
 
 interface SidebarLinkProps {
   href: string;
@@ -41,7 +42,7 @@ function SidebarLink({
 }: SidebarLinkProps) {
   const linkContent = (
     <Link
-      href={href}
+      href={href} // El href ya es relativo a la base del Router
       onClick={onClick}
       className={cn(
         'flex justify-start items-center space-x-0 space-y-0 p-2 rounded-lg transition-colors text-sm font-medium',
@@ -82,41 +83,44 @@ function SidebarLink({
 export function Sidebar() {
   const [location] = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const isMobile = useIsMobile();
+  // const isMobile = useIsMobile(); // No se usa en el código proporcionado, se puede eliminar si no se usa en otro lugar
 
   const navigation = [
     {
-      href: base('/'),
+      href: '/', // Ruta relativa a la base del Router
       icon: <Calendar className="w-[23px] h-[23px]" />,
       label: 'Calendario',
     },
     {
-      href: base('/employees'),
+      href: '/employees', // Ruta relativa a la base del Router
       icon: <Users className="w-[23px] h-[23px]" />,
       label: 'Empleados',
     },
     {
-      href: base('/positions'),
+      href: '/positions', // Ruta relativa a la base del Router
       icon: <Briefcase className="w-[23px] h-[23px]" />,
       label: 'Puestos',
     },
     {
-      href: base('/clientes'),
+      href: '/clientes', // Ruta relativa a la base del Router
       icon: <Building className="w-[23px] h-[23px]" />,
       label: 'Clientes',
     },
     {
-      href: base('/reports'),
+      href: '/reports', // Ruta relativa a la base del Router
       icon: <BarChart3 className="w-[23px] h-[23px]" />,
       label: 'Reportes',
     },
     {
-      href: base('/organigrama'),
+      href: '/organigrama', // Ruta relativa a la base del Router
       icon: <Map className="w-[23px] h-[23px]" />,
       label: 'Organigrama',
     },
   ];
 
+  // La comparación debe ser directa, ya que `location` ya es la ruta relativa a la base.
+  // Si `location` es `/`, el primer elemento de navegación es activo.
+  // Si `location` es `/employees`, el segundo elemento de navegación es activo.
   const activeItem = navigation.find((item) => item.href === location);
 
   const handleNavigate = () => {
@@ -165,15 +169,15 @@ export function Sidebar() {
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
             'p-1 h-[32px] w-[32px]',
-            isMobile && isCollapsed && 'bg-primary text-primary-foreground',
+            // isMobile && isCollapsed && 'bg-primary text-primary-foreground', // Comentado si useIsMobile no se usa
           )}
         >
           {isCollapsed ? (
-            isMobile && activeItem?.icon ? (
-              activeItem.icon
-            ) : (
+            // isMobile && activeItem?.icon ? ( // Comentado si useIsMobile no se usa
+            //   activeItem.icon
+            // ) : (
               <ChevronRight className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
-            )
+            // )
           ) : (
             <ChevronLeft className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
           )}
@@ -192,7 +196,7 @@ export function Sidebar() {
             key={item.href}
             href={item.href}
             icon={item.icon}
-            isActive={base(location) === item.href}
+            isActive={location === item.href} // Comparación directa
             isCollapsed={isCollapsed}
             onClick={handleNavigate}
           >
