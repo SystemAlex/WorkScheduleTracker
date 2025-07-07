@@ -22,9 +22,9 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1 # Cambiá esto si tu instancia está en otra región
+          aws-region: us-east-1
 
-      - name: Deploy remoto a EC2
+      - name: Deploy remoto a EC2 usando pnpm
         run: |
           echo "🔐 Conectando a EC2 con Session Manager"
           INSTANCE_ID=$(aws ec2 describe-instances \
@@ -36,16 +36,17 @@ jobs:
           aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --comment "Deploy desde GitHub Actions" \
+            --comment "Deploy desde GitHub Actions con pnpm" \
             --parameters commands='
                 export HOME=/home/systemalex &&
                 git config --global --add safe.directory /home/systemalex/WorkScheduleTracker &&
                 cd /home/systemalex/WorkScheduleTracker &&
                 git fetch --all &&
                 git reset --hard origin/main &&
-                npm install --omit=dev &&
-                npm prune --omit=dev &&
-                npm run build &&
+                curl -fsSL https://get.pnpm.io/install.sh | bash &&
+                export PATH="$HOME/.local/share/pnpm:$PATH" &&
+                pnpm install &&
+                pnpm run build &&
                 sudo systemctl restart scheduletracker.service &&
                 sudo systemctl status scheduletracker.service --no-pager
             ' \
