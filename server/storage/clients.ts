@@ -25,31 +25,33 @@ export class ClientStorage {
     return cliente;
   }
 
-  async updateCliente(id: number, data: InsertCliente): Promise<Cliente> {
+  async updateCliente(id: number, data: InsertCliente): Promise<Cliente | null> {
     const [cliente] = await db
       .update(clientes)
       .set(data)
       .where(eq(clientes.id, id))
       .returning();
-    return cliente;
+    return cliente || null; // Return null if no client was updated
   }
 
-  async deleteCliente(id: number): Promise<void> {
+  async deleteCliente(id: number): Promise<boolean> { // Change return type to boolean
     // Check if there are any positions associated with this client
     const positionsCount = await db
       .select({ count: count() })
       .from(positions)
       .where(eq(positions.clienteId, id));
 
+    let result;
     if (positionsCount[0].count > 0) {
       // If there are associated positions, perform a soft delete
-      await db
+      result = await db
         .update(clientes)
         .set({ deletedAt: new Date() })
         .where(eq(clientes.id, id));
     } else {
       // If no associated positions, perform a hard delete
-      await db.delete(clientes).where(eq(clientes.id, id));
+      result = await db.delete(clientes).where(eq(clientes.id, id));
     }
+    return (result.rowCount ?? 0) > 0; // Return true if a row was affected, false otherwise
   }
 }

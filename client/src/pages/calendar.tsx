@@ -86,20 +86,19 @@ export default function Calendar() {
   const createShiftMutation = useMutation({
     mutationFn: async (data: InsertShift) => {
       const response = await apiRequest('POST', '/api/shifts', data);
+      const responseBody = await response.json(); // Always parse JSON to get error details
 
-      if (response.status === 409) {
-        const body = await response.json();
-        throw new Error(body.message || 'Conflicto de turno');
-      }
-      if (response.status === 400) {
-        const body = await response.json();
-        throw new Error(body.message || 'Datos inválidos');
-      }
       if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.message || 'Error inesperado');
+        // Check for specific error codes from the backend
+        if (response.status === 409 && responseBody.code === 'CONFLICT') {
+          throw new Error(responseBody.message || 'Conflicto de turno');
+        }
+        if (response.status === 400) {
+          throw new Error(responseBody.message || 'Datos inválidos');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
       }
-      return response.json();
+      return responseBody;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
@@ -110,21 +109,14 @@ export default function Calendar() {
         description: 'El turno ha sido asignado correctamente.',
       });
     },
-    onError: (error: unknown) => {
-      const err = error as { message?: string };
+    onError: (error: Error) => {
       let description = 'No se pudo asignar el turno.';
-      if (
-        err.message?.includes('conflict') ||
-        err.message?.includes('Conflicto')
-      ) {
+      if (error.message.includes('Conflicto de turno')) {
         description = 'Ya existe un turno para ese empleado en esa fecha.';
-      } else if (
-        err.message?.includes('inválidos') ||
-        err.message?.includes('Invalid')
-      ) {
+      } else if (error.message.includes('Datos inválidos')) {
         description = 'Los datos ingresados no son válidos.';
-      } else if (err.message?.includes('not found')) {
-        description = 'El turno no existe.';
+      } else {
+        description = error.message; // Use the specific message from the backend
       }
       toast({
         title: 'Error',
@@ -137,24 +129,22 @@ export default function Calendar() {
   const updateShiftMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertShift }) => {
       const response = await apiRequest('PUT', `/api/shifts/${id}`, data);
+      const responseBody = await response.json(); // Always parse JSON to get error details
 
-      if (response.status === 409) {
-        const body = await response.json();
-        throw new Error(body.message || 'Conflicto de turno');
-      }
-      if (response.status === 400) {
-        const body = await response.json();
-        throw new Error(body.message || 'Datos inválidos');
-      }
-      if (response.status === 404) {
-        const body = await response.json();
-        throw new Error(body.message || 'Turno no encontrado');
-      }
       if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.message || 'Error inesperado');
+        // Check for specific error codes from the backend
+        if (response.status === 409 && responseBody.code === 'CONFLICT') {
+          throw new Error(responseBody.message || 'Conflicto de turno');
+        }
+        if (response.status === 400) {
+          throw new Error(responseBody.message || 'Datos inválidos');
+        }
+        if (response.status === 404 && responseBody.code === 'NOT_FOUND') {
+          throw new Error(responseBody.message || 'Turno no encontrado');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
       }
-      return response.json();
+      return responseBody;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
@@ -165,24 +155,16 @@ export default function Calendar() {
         description: 'El turno ha sido actualizado correctamente.',
       });
     },
-    onError: (error: unknown) => {
-      const err = error as { message?: string };
+    onError: (error: Error) => {
       let description = 'No se pudo actualizar el turno.';
-      if (
-        err.message?.includes('conflict') ||
-        err.message?.includes('Conflicto')
-      ) {
+      if (error.message.includes('Conflicto de turno')) {
         description = 'Ya existe un turno para ese empleado en esa fecha.';
-      } else if (
-        err.message?.includes('inválidos') ||
-        err.message?.includes('Invalid')
-      ) {
+      } else if (error.message.includes('Datos inválidos')) {
         description = 'Los datos ingresados no son válidos.';
-      } else if (
-        err.message?.includes('not found') ||
-        err.message?.includes('no encontrado')
-      ) {
-        description = 'El turno no existe.';
+      } else if (error.message.includes('Turno no encontrado')) {
+        description = 'El turno que intentas actualizar no existe.';
+      } else {
+        description = error.message; // Use the specific message from the backend
       }
       toast({
         title: 'Error',
@@ -195,13 +177,12 @@ export default function Calendar() {
   const deleteShiftMutation = useMutation({
     mutationFn: async (shiftId: number) => {
       const response = await apiRequest('DELETE', `/api/shifts/${shiftId}`);
-      if (response.status === 404) {
-        const body = await response.json();
-        throw new Error(body.message || 'Turno no encontrado');
-      }
       if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.message || 'Error inesperado');
+        const responseBody = await response.json();
+        if (response.status === 404 && responseBody.code === 'NOT_FOUND') {
+          throw new Error(responseBody.message || 'Turno no encontrado');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
       }
       return true;
     },
@@ -220,14 +201,12 @@ export default function Calendar() {
       });
     },
 
-    onError: (error: unknown) => {
-      const err = error as { message?: string };
+    onError: (error: Error) => {
       let description = 'No se pudo eliminar el turno.';
-      if (
-        err.message?.includes('not found') ||
-        err.message?.includes('no encontrado')
-      ) {
-        description = 'El turno no existe.';
+      if (error.message.includes('Turno no encontrado')) {
+        description = 'El turno que intentas eliminar no existe.';
+      } else {
+        description = error.message; // Use the specific message from the backend
       }
       toast({
         title: 'Error',
@@ -262,12 +241,15 @@ export default function Calendar() {
           description: `Se generaron ${data.count} turnos para el mes actual.`,
         });
         return data;
-      } catch (error: unknown) {
-        const err = error as { message?: string };
+      } catch (error: unknown) { // Changed from 'any' to 'unknown'
         dismiss(loadingToastId.id);
+        let errorMessage = 'No se pudieron generar los turnos.';
+        if (error instanceof Error) { // Type guard for Error
+          errorMessage = error.message;
+        }
         toast({
           title: 'Error',
-          description: err.message || 'No se pudieron generar los turnos.',
+          description: errorMessage,
           variant: 'destructive',
         });
         throw error;

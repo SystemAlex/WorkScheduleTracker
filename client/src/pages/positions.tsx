@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Header } from '@/components/layout/header';
 import { LayoutContent } from '@/components/ui/layout';
-import { useForm, FormProvider } from 'react-hook-form'; // Import FormProvider
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { insertPositionSchema } from '@shared/schema';
 import type { Position, InsertPosition, Cliente } from '@shared/schema';
@@ -19,9 +19,9 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SearchInput } from '@/components/common/search-input';
 import { base } from '@/lib/paths';
-import { PositionForm } from '@/components/positions/position-form'; // Import new form component
-import { PositionCard } from '@/components/positions/position-card'; // Import new card component
-import { z } from 'zod'; // Import z for formSchema type
+import { PositionForm } from '@/components/positions/position-form';
+import { PositionCard } from '@/components/positions/position-card';
+import { z } from 'zod';
 
 const formSchema = insertPositionSchema;
 type FormValues = z.infer<typeof formSchema>;
@@ -61,7 +61,14 @@ export default function Positions() {
   const createPositionMutation = useMutation({
     mutationFn: async (data: InsertPosition) => {
       const response = await apiRequest('POST', '/api/positions', data);
-      return response.json();
+      const responseBody = await response.json();
+      if (!response.ok) {
+        if (response.status === 409 && responseBody.code === 'CONFLICT') {
+          throw new Error(responseBody.message || 'Conflicto de puesto');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return responseBody;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/positions'] });
@@ -72,10 +79,16 @@ export default function Positions() {
         description: 'El puesto ha sido creado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = 'No se pudo crear el puesto.';
+      if (error.message.includes('Conflicto de puesto')) {
+        description = 'Ya existe un puesto con ese nombre.';
+      } else {
+        description = error.message;
+      }
       toast({
         title: 'Error',
-        description: 'No se pudo crear el puesto.',
+        description,
         variant: 'destructive',
       });
     },
@@ -84,7 +97,17 @@ export default function Positions() {
   const updatePositionMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertPosition }) => {
       const response = await apiRequest('PUT', `/api/positions/${id}`, data);
-      return response.json();
+      const responseBody = await response.json();
+      if (!response.ok) {
+        if (response.status === 409 && responseBody.code === 'CONFLICT') {
+          throw new Error(responseBody.message || 'Conflicto de puesto');
+        }
+        if (response.status === 404 && responseBody.code === 'NOT_FOUND') {
+          throw new Error(responseBody.message || 'Puesto no encontrado');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return responseBody;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/positions'] });
@@ -95,10 +118,18 @@ export default function Positions() {
         description: 'El puesto ha sido actualizado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = 'No se pudo actualizar el puesto.';
+      if (error.message.includes('Conflicto de puesto')) {
+        description = 'Ya existe un puesto con ese nombre.';
+      } else if (error.message.includes('Puesto no encontrado')) {
+        description = 'El puesto que intentas actualizar no existe.';
+      } else {
+        description = error.message;
+      }
       toast({
         title: 'Error',
-        description: 'No se pudo actualizar el puesto.',
+        description,
         variant: 'destructive',
       });
     },
@@ -106,7 +137,15 @@ export default function Positions() {
 
   const deletePositionMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/positions/${id}`);
+      const response = await apiRequest('DELETE', `/api/positions/${id}`);
+      if (!response.ok) {
+        const responseBody = await response.json();
+        if (response.status === 404 && responseBody.code === 'NOT_FOUND') {
+          throw new Error(responseBody.message || 'Puesto no encontrado');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/positions'] });
@@ -115,10 +154,16 @@ export default function Positions() {
         description: 'El puesto ha sido eliminado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = 'No se pudo eliminar el puesto.';
+      if (error.message.includes('Puesto no encontrado')) {
+        description = 'El puesto que intentas eliminar no existe.';
+      } else {
+        description = error.message;
+      }
       toast({
         title: 'Error',
-        description: 'No se pudo eliminar el puesto.',
+        description,
         variant: 'destructive',
       });
     },

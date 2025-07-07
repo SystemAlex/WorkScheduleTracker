@@ -10,6 +10,7 @@ import { eq, and, gte, lte, ne, isNull } from 'drizzle-orm';
 import { addMonths, format, getDaysInMonth, subMonths } from 'date-fns';
 import { ReportStorage } from './reports';
 import { PositionStorage } from './positions';
+import { ConflictError } from '../errors'; // Import ConflictError
 
 export class ShiftStorage {
   private reportStorage: ReportStorage;
@@ -143,38 +144,46 @@ export class ShiftStorage {
   }
 
   async createShift(insertShift: InsertShift): Promise<ShiftWithDetails> {
-    const [shift] = await db.insert(shifts).values(insertShift).returning();
+    try {
+      const [shift] = await db.insert(shifts).values(insertShift).returning();
 
-    const [result] = await db
-      .select({
-        id: shifts.id,
-        employeeId: shifts.employeeId,
-        positionId: shifts.positionId,
-        date: shifts.date,
-        notes: shifts.notes,
-        createdAt: shifts.createdAt,
-        employee: employees,
-        position: positions,
-      })
-      .from(shifts)
-      .leftJoin(employees, eq(shifts.employeeId, employees.id))
-      .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .where(eq(shifts.id, shift.id));
+      const [result] = await db
+        .select({
+          id: shifts.id,
+          employeeId: shifts.employeeId,
+          positionId: shifts.positionId,
+          date: shifts.date,
+          notes: shifts.notes,
+          createdAt: shifts.createdAt,
+          employee: employees,
+          position: positions,
+        })
+        .from(shifts)
+        .leftJoin(employees, eq(shifts.employeeId, employees.id))
+        .leftJoin(positions, eq(shifts.positionId, positions.id))
+        .where(eq(shifts.id, shift.id));
 
-    return {
-      id: result.id,
-      employeeId: result.employeeId,
-      positionId: result.positionId,
-      date: result.date,
-      notes: result.notes,
-      createdAt: result.createdAt,
-      employee: result.employee!,
-      position: result.position!,
-    };
+      return {
+        id: result.id,
+        employeeId: result.employeeId,
+        positionId: result.positionId,
+        date: result.date,
+        notes: result.notes,
+        createdAt: result.createdAt,
+        employee: result.employee!,
+        position: result.position!,
+      };
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') { // PostgreSQL unique violation error code
+        throw new ConflictError('A shift already exists for this employee on this date.');
+      }
+      throw error;
+    }
   }
 
-  async deleteShift(id: number): Promise<void> {
-    await db.delete(shifts).where(eq(shifts.id, id));
+  async deleteShift(id: number): Promise<boolean> { // Change return type to boolean
+    const result = await db.delete(shifts).where(eq(shifts.id, id));
+    return (result.rowCount ?? 0) > 0; // Return true if a row was affected, false otherwise
   }
 
   async checkShiftConflicts(
@@ -257,35 +266,46 @@ export class ShiftStorage {
       : undefined;
   }
 
-  async updateShift(id: number, data: InsertShift): Promise<ShiftWithDetails> {
-    await db.update(shifts).set(data).where(eq(shifts.id, id)).returning();
+  async updateShift(id: number, data: InsertShift): Promise<ShiftWithDetails | null> {
+    try {
+      const [shift] = await db.update(shifts).set(data).where(eq(shifts.id, id)).returning();
 
-    const [result] = await db
-      .select({
-        id: shifts.id,
-        employeeId: shifts.employeeId,
-        positionId: shifts.positionId,
-        date: shifts.date,
-        notes: shifts.notes,
-        createdAt: shifts.createdAt,
-        employee: employees,
-        position: positions,
-      })
-      .from(shifts)
-      .leftJoin(employees, eq(shifts.employeeId, employees.id))
-      .leftJoin(positions, eq(shifts.positionId, positions.id))
-      .where(eq(shifts.id, id));
+      if (!shift) {
+        return null; // No shift found to update
+      }
 
-    return {
-      id: result.id,
-      employeeId: result.employeeId,
-      positionId: result.positionId,
-      date: result.date,
-      notes: result.notes,
-      createdAt: result.createdAt,
-      employee: result.employee!,
-      position: result.position!,
-    };
+      const [result] = await db
+        .select({
+          id: shifts.id,
+          employeeId: shifts.employeeId,
+          positionId: shifts.positionId,
+          date: shifts.date,
+          notes: shifts.notes,
+          createdAt: shifts.createdAt,
+          employee: employees,
+          position: positions,
+        })
+        .from(shifts)
+        .leftJoin(employees, eq(shifts.employeeId, employees.id))
+        .leftJoin(positions, eq(shifts.positionId, positions.id))
+        .where(eq(shifts.id, id));
+
+      return {
+        id: result.id,
+        employeeId: result.employeeId,
+        positionId: result.positionId,
+        date: result.date,
+        notes: result.notes,
+        createdAt: result.createdAt,
+        employee: result.employee!,
+        position: result.position!,
+      };
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') { // PostgreSQL unique violation error code
+        throw new ConflictError('A shift already exists for this employee on this date.');
+      }
+      throw error;
+    }
   }
 
   async generateShiftsFromPreviousMonth(
@@ -388,8 +408,13 @@ export class ShiftStorage {
           .values(newShiftsToInsert)
           .returning();
         insertedCount = insertedShifts.length;
-      } catch (error) {
-        console.warn(`Could not insert batch of shifts:`, error);
+      } catch (error: unknown) {
+        // Catch unique constraint violation during batch insert
+        if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
+          console.warn(`Skipping batch insert due to unique constraint violation:`, error instanceof Error ? error.message : error);
+        } else {
+          console.warn(`Could not insert batch of shifts:`, error);
+        }
       }
     }
 

@@ -25,8 +25,8 @@ import { z } from 'zod';
 import { addMonths, format } from 'date-fns';
 import { base } from '@/lib/paths';
 import { SearchInput } from '@/components/common/search-input';
-import { EmployeeForm } from '@/components/employees/employee-form'; // Import new form component
-import { EmployeeCard } from '@/components/employees/employee-card'; // Import new card component
+import { EmployeeForm } from '@/components/employees/employee-form';
+import { EmployeeCard } from '@/components/employees/employee-card';
 
 const formSchema = insertEmployeeSchema;
 type FormValues = z.infer<typeof formSchema>;
@@ -40,9 +40,8 @@ export default function Employees() {
   const queryClient = useQueryClient();
 
   const today = new Date();
-  const threeMonthsLater = addMonths(today, 3); // Fetch shifts for next 3 months
+  const threeMonthsLater = addMonths(today, 3);
 
-  // Fetch all employees initially
   const { data: allEmployees = [], isLoading } = useQuery<Employee[]>({
     queryKey: ['/api/employees'],
     queryFn: async ({ queryKey }) => {
@@ -53,7 +52,6 @@ export default function Employees() {
     },
   });
 
-  // Filter employees on the frontend based on searchTerm
   const filteredEmployees = React.useMemo(() => {
     if (!searchTerm) {
       return allEmployees;
@@ -69,8 +67,8 @@ export default function Employees() {
   >({
     queryKey: [
       '/api/shifts',
-      format(today, 'yyyy-MM-dd'), // startDate
-      format(threeMonthsLater, 'yyyy-MM-dd'), // endDate
+      format(today, 'yyyy-MM-dd'),
+      format(threeMonthsLater, 'yyyy-MM-dd'),
     ],
     queryFn: async ({ queryKey }) => {
       const [path, startDate, endDate] = queryKey;
@@ -85,7 +83,11 @@ export default function Employees() {
   const createEmployeeMutation = useMutation({
     mutationFn: async (data: InsertEmployee) => {
       const response = await apiRequest('POST', '/api/employees', data);
-      return response.json();
+      const responseBody = await response.json();
+      if (!response.ok) {
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return responseBody;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
@@ -96,10 +98,10 @@ export default function Employees() {
         description: 'El empleado ha sido creado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
-        description: 'No se pudo crear el empleado.',
+        description: error.message || 'No se pudo crear el empleado.',
         variant: 'destructive',
       });
     },
@@ -108,7 +110,14 @@ export default function Employees() {
   const updateEmployeeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertEmployee }) => {
       const response = await apiRequest('PUT', `/api/employees/${id}`, data);
-      return response.json();
+      const responseBody = await response.json();
+      if (!response.ok) {
+        if (response.status === 404 && responseBody.code === 'NOT_FOUND') {
+          throw new Error(responseBody.message || 'Empleado no encontrado');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return responseBody;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
@@ -119,10 +128,16 @@ export default function Employees() {
         description: 'El empleado ha sido actualizado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = 'No se pudo actualizar el empleado.';
+      if (error.message.includes('Empleado no encontrado')) {
+        description = 'El empleado que intentas actualizar no existe.';
+      } else {
+        description = error.message;
+      }
       toast({
         title: 'Error',
-        description: 'No se pudo actualizar el empleado.',
+        description,
         variant: 'destructive',
       });
     },
@@ -130,7 +145,15 @@ export default function Employees() {
 
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/employees/${id}`);
+      const response = await apiRequest('DELETE', `/api/employees/${id}`);
+      if (!response.ok) {
+        const responseBody = await response.json();
+        if (response.status === 404 && responseBody.code === 'NOT_FOUND') {
+          throw new Error(responseBody.message || 'Empleado no encontrado');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
@@ -139,10 +162,16 @@ export default function Employees() {
         description: 'El empleado ha sido eliminado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = 'No se pudo eliminar el empleado.';
+      if (error.message.includes('Empleado no encontrado')) {
+        description = 'El empleado que intentas eliminar no existe.';
+      } else {
+        description = error.message;
+      }
       toast({
         title: 'Error',
-        description: 'No se pudo eliminar el empleado.',
+        description,
         variant: 'destructive',
       });
     },

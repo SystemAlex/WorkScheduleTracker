@@ -7,7 +7,8 @@ import {
   date,
   varchar,
   decimal,
-  index, // Import 'index' here
+  index,
+  unique, // Import 'unique' here
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
@@ -75,7 +76,8 @@ export const shifts = pgTable(
       shiftEmployeeIdIdx: index('shift_employee_id_idx').on(table.employeeId),
       shiftPositionIdIdx: index('shift_position_id_idx').on(table.positionId),
       shiftDateIdx: index('shift_date_idx').on(table.date),
-      shiftEmployeeDateIdx: index('shift_employee_date_idx').on(
+      // Add a unique constraint for employeeId and date
+      uniqueEmployeeDate: unique('unique_employee_date').on(
         table.employeeId,
         table.date,
       ),

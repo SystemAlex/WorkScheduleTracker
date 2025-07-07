@@ -21,28 +21,28 @@ export interface IStorage {
   getEmployees(nameFilter?: string): Promise<Employee[]>;
   getEmployee(id: number): Promise<Employee | undefined>;
   createEmployee(insertEmployee: InsertEmployee): Promise<Employee>;
-  updateEmployee(id: number, data: InsertEmployee): Promise<Employee>;
-  deleteEmployee(id: number): Promise<void>;
+  updateEmployee(id: number, data: InsertEmployee): Promise<Employee | null>; // Updated return type
+  deleteEmployee(id: number): Promise<boolean>; // Updated return type
 
   // Positions
   getPositions(nameFilter?: string): Promise<Position[]>;
   createPosition(insertPosition: InsertPosition): Promise<Position>;
-  updatePosition(id: number, data: InsertPosition): Promise<Position>; // Added
-  deletePosition(id: number): Promise<void>; // Added
+  updatePosition(id: number, data: InsertPosition): Promise<Position | null>; // Updated return type
+  deletePosition(id: number): Promise<boolean>; // Updated return type
 
   // Shifts
   getShifts(startDate?: string, endDate?: string): Promise<ShiftWithDetails[]>;
   getShiftsByMonth(month: number, year: number): Promise<ShiftWithDetails[]>;
   getShiftsByDate(date: string): Promise<ShiftWithDetails[]>;
   createShift(insertShift: InsertShift): Promise<ShiftWithDetails>;
-  deleteShift(id: number): Promise<void>;
+  deleteShift(id: number): Promise<boolean>; // Updated return type
   checkShiftConflicts(
     employeeId: number,
     date: string,
     excludeShiftId?: number,
   ): Promise<ShiftWithDetails[]>;
   getShiftById(id: number): Promise<ShiftWithDetails | undefined>;
-  updateShift(id: number, data: InsertShift): Promise<ShiftWithDetails>;
+  updateShift(id: number, data: InsertShift): Promise<ShiftWithDetails | null>; // Updated return type
   generateShiftsFromPreviousMonth(
     month: number,
     year: number,
@@ -54,7 +54,7 @@ export interface IStorage {
     month?: number,
     year?: number,
   ): Promise<EmployeeHoursReport[]>;
-  generateExcelReport( // Added to IStorage
+  generateExcelReport(
     report: EmployeeHoursReport[],
     groupedPositionsByClient: Array<[number, Position[]]>,
     clientes: Cliente[],
@@ -63,7 +63,7 @@ export interface IStorage {
     totalReportHours: number,
     totalReportShifts: number,
   ): Promise<Buffer>;
-  generatePdfReport( // Added to IStorage
+  generatePdfReport(
     report: EmployeeHoursReport[],
     groupedPositionsByClient: Array<[number, Position[]]>,
     clientes: Cliente[],
@@ -76,8 +76,8 @@ export interface IStorage {
   // Clientes
   getClientes(searchFilter?: string): Promise<Cliente[]>;
   createCliente(data: InsertCliente): Promise<Cliente>;
-  updateCliente(id: number, data: InsertCliente): Promise<Cliente>;
-  deleteCliente(id: number): Promise<void>;
+  updateCliente(id: number, data: InsertCliente): Promise<Cliente | null>; // Updated return type
+  deleteCliente(id: number): Promise<boolean>; // Updated return type
 }
 
 class CombinedStorage implements IStorage {
@@ -85,14 +85,13 @@ class CombinedStorage implements IStorage {
   private positionStorage: PositionStorage;
   private shiftStorage: ShiftStorage;
   private clientStorage: ClientStorage;
-  private reportStorage: ReportStorage; // Now directly instantiates ReportStorage
+  private reportStorage: ReportStorage;
 
   constructor() {
     this.employeeStorage = new EmployeeStorage();
     this.positionStorage = new PositionStorage();
     this.clientStorage = new ClientStorage();
-    this.reportStorage = new ReportStorage(); // ReportStorage now handles its own generators
-    // ShiftStorage depends on ReportStorage and PositionStorage
+    this.reportStorage = new ReportStorage();
     this.shiftStorage = new ShiftStorage(
       this.reportStorage,
       this.positionStorage,
@@ -125,11 +124,9 @@ class CombinedStorage implements IStorage {
     return this.positionStorage.createPosition(insertPosition);
   }
   updatePosition(id: number, data: InsertPosition) {
-    // Delegated
     return this.positionStorage.updatePosition(id, data);
   }
   deletePosition(id: number) {
-    // Delegated
     return this.positionStorage.deletePosition(id);
   }
 
@@ -175,7 +172,6 @@ class CombinedStorage implements IStorage {
     return this.reportStorage.getEmployeeHoursReport(employeeId, month, year);
   }
   generateExcelReport(
-    // Delegated
     report: EmployeeHoursReport[],
     groupedPositionsByClient: Array<[number, Position[]]>,
     clientes: Cliente[],
@@ -195,7 +191,6 @@ class CombinedStorage implements IStorage {
     );
   }
   generatePdfReport(
-    // Delegated
     report: EmployeeHoursReport[],
     groupedPositionsByClient: Array<[number, Position[]]>,
     clientes: Cliente[],

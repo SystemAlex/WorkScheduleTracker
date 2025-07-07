@@ -19,9 +19,9 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SearchInput } from '@/components/common/search-input';
 import { base } from '@/lib/paths';
-import { ClientForm } from '@/components/clients/client-form'; // Import new form component
-import { ClientCard } from '@/components/clients/client-card'; // Import new card component
-import { z } from 'zod'; // Import z for formSchema type
+import { ClientForm } from '@/components/clients/client-form';
+import { ClientCard } from '@/components/clients/client-card';
+import { z } from 'zod';
 
 const formSchema = insertClienteSchema;
 type FormValues = z.infer<typeof formSchema>;
@@ -34,7 +34,6 @@ export default function Clientes() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch all clients
   const { data: allClientes = [], isLoading: clientsLoading } = useQuery<
     Cliente[]
   >({
@@ -47,7 +46,6 @@ export default function Clientes() {
     },
   });
 
-  // Fetch all positions
   const { data: allPositions = [], isLoading: positionsLoading } = useQuery<
     Position[]
   >({
@@ -60,7 +58,6 @@ export default function Clientes() {
     },
   });
 
-  // Filter clients on the frontend based on searchTerm
   const filteredClientes = React.useMemo(() => {
     if (!searchTerm) {
       return allClientes;
@@ -79,7 +76,11 @@ export default function Clientes() {
   const createClienteMutation = useMutation({
     mutationFn: async (data: InsertCliente) => {
       const response = await apiRequest('POST', '/api/clientes', data);
-      return response.json();
+      const responseBody = await response.json();
+      if (!response.ok) {
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return responseBody;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/clientes'] });
@@ -90,10 +91,10 @@ export default function Clientes() {
         description: 'El cliente ha sido creado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
-        description: 'No se pudo crear el cliente.',
+        description: error.message || 'No se pudo crear el cliente.',
         variant: 'destructive',
       });
     },
@@ -102,7 +103,14 @@ export default function Clientes() {
   const updateClienteMutation = useMutation({
     mutationFn: async ({ id, ...data }: InsertCliente & { id: number }) => {
       const response = await apiRequest('PUT', `/api/clientes/${id}`, data);
-      return response.json();
+      const responseBody = await response.json();
+      if (!response.ok) {
+        if (response.status === 404 && responseBody.code === 'NOT_FOUND') {
+          throw new Error(responseBody.message || 'Cliente no encontrado');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return responseBody;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/clientes'] });
@@ -113,10 +121,16 @@ export default function Clientes() {
         description: 'El cliente ha sido actualizado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = 'No se pudo actualizar el cliente.';
+      if (error.message.includes('Cliente no encontrado')) {
+        description = 'El cliente que intentas actualizar no existe.';
+      } else {
+        description = error.message;
+      }
       toast({
         title: 'Error',
-        description: 'No se pudo actualizar el cliente.',
+        description,
         variant: 'destructive',
       });
     },
@@ -124,7 +138,15 @@ export default function Clientes() {
 
   const deleteClienteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/clientes/${id}`);
+      const response = await apiRequest('DELETE', `/api/clientes/${id}`);
+      if (!response.ok) {
+        const responseBody = await response.json();
+        if (response.status === 404 && responseBody.code === 'NOT_FOUND') {
+          throw new Error(responseBody.message || 'Cliente no encontrado');
+        }
+        throw new Error(responseBody.message || 'Error inesperado');
+      }
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/clientes'] });
@@ -133,10 +155,16 @@ export default function Clientes() {
         description: 'El cliente ha sido eliminado correctamente.',
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      let description = 'No se pudo eliminar el cliente.';
+      if (error.message.includes('Cliente no encontrado')) {
+        description = 'El cliente que intentas eliminar no existe.';
+      } else {
+        description = error.message;
+      }
       toast({
         title: 'Error',
-        description: 'No se pudo eliminar el cliente.',
+        description,
         variant: 'destructive',
       });
     },

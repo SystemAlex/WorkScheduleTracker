@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { storage } from '../storage';
 import { insertShiftSchema } from '@shared/schema';
 import { z } from 'zod';
-import { validate } from '../middleware/validate'; // Import the new middleware
+import { validate } from '../middleware/validate';
+import { ConflictError, NotFoundError } from '../errors'; // Import custom errors
 
 const shiftsRouter = Router();
 
@@ -35,7 +36,7 @@ const shiftsRouter = Router();
  *       200:
  *         description: Lista de turnos
  */
-shiftsRouter.get('/', async (req, res) => {
+shiftsRouter.get('/', async (req, res, next) => {
   try {
     const { month, year, startDate, endDate } = req.query;
     let shiftsData;
@@ -46,20 +47,17 @@ shiftsRouter.get('/', async (req, res) => {
         parseInt(year as string),
       );
     } else if (startDate || endDate) {
-      // If startDate or endDate are provided, use the more flexible getShifts
       shiftsData = await storage.getShifts(
         startDate as string,
         endDate as string,
       );
     } else {
-      // Default to fetching all shifts if no specific filters
       shiftsData = await storage.getShifts();
     }
 
     res.json(shiftsData);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to fetch shifts' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -79,14 +77,13 @@ shiftsRouter.get('/', async (req, res) => {
  *       200:
  *         description: Lista de turnos para la fecha
  */
-shiftsRouter.get('/date/:date', async (req, res) => {
+shiftsRouter.get('/date/:date', async (req, res, next) => {
   try {
     const { date } = req.params;
     const shifts = await storage.getShiftsByDate(date);
     res.json(shifts);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to fetch shifts for date' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -110,29 +107,21 @@ shiftsRouter.get('/date/:date', async (req, res) => {
  *       409:
  *         description: Conflicto de turno
  */
-shiftsRouter.post('/', validate(insertShiftSchema), async (req, res) => {
+shiftsRouter.post('/', validate(insertShiftSchema), async (req, res, next) => {
   try {
-    // req.body is already validated by the middleware
     const validatedData = req.body;
 
-    // Check for conflicts
-    const conflicts = await storage.checkShiftConflicts(
-      validatedData.employeeId,
-      validatedData.date,
-    );
-
-    if (conflicts.length > 0) {
-      return res.status(409).json({
-        message: 'Shift conflict detected',
-        conflicts,
-      });
-    }
-
+    // The unique constraint in the DB schema will now handle direct conflicts.
+    // The explicit checkShiftConflicts is still useful for providing details
+    // about *which* existing shift caused the conflict, if needed for frontend UX.
+    // For now, we'll rely on the DB constraint for the 409.
     const shift = await storage.createShift(validatedData);
     res.status(201).json(shift);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to create shift' });
+    if (error instanceof ConflictError) {
+      return res.status(error.statusCode).json({ message: error.message, code: error.code, conflicts: error.details });
+    }
+    next(error); // Pass other errors to global error handler
   }
 });
 
@@ -151,15 +140,19 @@ shiftsRouter.post('/', validate(insertShiftSchema), async (req, res) => {
  *     responses:
  *       204:
  *         description: Turno eliminado
+ *       404:
+ *         description: Turno no encontrado
  */
-shiftsRouter.delete('/:id', async (req, res) => {
+shiftsRouter.delete('/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    await storage.deleteShift(id);
+    const deleted = await storage.deleteShift(id);
+    if (!deleted) {
+      throw new NotFoundError('Shift not found');
+    }
     res.status(204).send();
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to delete shift' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -186,47 +179,30 @@ shiftsRouter.delete('/:id', async (req, res) => {
  *         description: Turno actualizado
  *       400:
  *         description: Datos inválidos
+ *       404:
+ *         description: Turno no encontrado
  *       409:
  *         description: Conflicto de turno
  */
-shiftsRouter.put('/:id', validate(insertShiftSchema), async (req, res) => {
+shiftsRouter.put('/:id', validate(insertShiftSchema), async (req, res, next) => {
   try {
     const id = Number(req.params.id);
-    // req.body is already validated by the middleware
     const validatedData = req.body;
 
-    // Obtén el turno actual
-    const currentShift = await storage.getShiftById(id);
-
-    if (!currentShift) {
-      return res.status(404).json({ message: 'Shift not found' });
-    }
-
-    // Si se intenta cambiar empleado o fecha, verifica conflicto
-    const changingEmployeeOrDate =
-      validatedData.employeeId !== currentShift.employeeId ||
-      validatedData.date !== currentShift.date;
-
-    if (changingEmployeeOrDate) {
-      const conflicts = await storage.checkShiftConflicts(
-        validatedData.employeeId,
-        validatedData.date,
-        id, // excluye el turno actual
-      );
-
-      if (conflicts.length > 0) {
-        return res.status(409).json({
-          message: 'Shift conflict detected',
-          conflicts,
-        });
-      }
-    }
-
+    // The unique constraint in the DB schema will now handle direct conflicts.
+    // The explicit checkShiftConflicts is still useful for providing details
+    // about *which* existing shift caused the conflict, if needed for frontend UX.
+    // For now, we'll rely on the DB constraint for the 409.
     const updated = await storage.updateShift(id, validatedData);
+    if (!updated) {
+      throw new NotFoundError('Shift not found');
+    }
     res.json(updated);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to update shift' });
+    if (error instanceof ConflictError) {
+      return res.status(error.statusCode).json({ message: error.message, code: error.code, conflicts: error.details });
+    }
+    next(error); // Pass other errors to global error handler
   }
 });
 
@@ -273,15 +249,13 @@ const generateShiftsSchema = z.object({
 shiftsRouter.post(
   '/generate-from-previous-month',
   validate(generateShiftsSchema),
-  async (req, res) => {
+  async (req, res, next) => {
     try {
-      // req.body is already validated by the middleware
       const { month, year } = req.body;
-      const result = await storage.generateShiftsFromPreviousMonth(month, year); // Pass month and year
+      const result = await storage.generateShiftsFromPreviousMonth(month, year);
       res.status(200).json(result);
     } catch (error) {
-      console.error('Error generating shifts from previous month:', error);
-      res.status(500).json({ message: 'Failed to generate shifts' });
+      next(error); // Pass error to global error handler
     }
   },
 );

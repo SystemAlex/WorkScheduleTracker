@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { insertPositionSchema } from '@shared/schema';
-import { validate } from '../middleware/validate'; // Import the new middleware
+import { validate } from '../middleware/validate';
+import { ConflictError, NotFoundError } from '../errors'; // Import custom errors
 
 const positionsRouter = Router();
 
@@ -21,14 +22,13 @@ const positionsRouter = Router();
  *       200:
  *         description: Lista de puestos
  */
-positionsRouter.get('/', async (req, res) => {
+positionsRouter.get('/', async (req, res, next) => {
   try {
     const { search } = req.query;
     const positions = await storage.getPositions(search as string);
     res.json(positions);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to fetch positions' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -49,15 +49,18 @@ positionsRouter.get('/', async (req, res) => {
  *         description: Puesto creado
  *       400:
  *         description: Datos inválidos
+ *       409:
+ *         description: Conflicto (nombre de puesto ya existe)
  */
-positionsRouter.post('/', validate(insertPositionSchema), async (req, res) => {
+positionsRouter.post('/', validate(insertPositionSchema), async (req, res, next) => {
   try {
-    // req.body is already validated by the middleware
     const position = await storage.createPosition(req.body);
     res.status(201).json(position);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to create position' });
+    if (error instanceof ConflictError) {
+      return res.status(error.statusCode).json({ message: error.message, code: error.code });
+    }
+    next(error); // Pass other errors to global error handler
   }
 });
 
@@ -84,21 +87,29 @@ positionsRouter.post('/', validate(insertPositionSchema), async (req, res) => {
  *         description: Puesto actualizado
  *       400:
  *         description: Datos inválidos
+ *       404:
+ *         description: Puesto no encontrado
+ *       409:
+ *         description: Conflicto (nombre de puesto ya existe)
  *       500:
  *         description: Error interno
  */
 positionsRouter.put(
   '/:id',
   validate(insertPositionSchema),
-  async (req, res) => {
+  async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
-      // req.body is already validated by the middleware
       const position = await storage.updatePosition(id, req.body);
+      if (!position) {
+        throw new NotFoundError('Position not found');
+      }
       res.json(position);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Failed to update position' });
+      if (error instanceof ConflictError) {
+        return res.status(error.statusCode).json({ message: error.message, code: error.code });
+      }
+      next(error); // Pass other errors to global error handler
     }
   },
 );
@@ -118,17 +129,21 @@ positionsRouter.put(
  *     responses:
  *       204:
  *         description: Puesto eliminado
+ *       404:
+ *         description: Puesto no encontrado
  *       500:
  *         description: Error interno
  */
-positionsRouter.delete('/:id', async (req, res) => {
+positionsRouter.delete('/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    await storage.deletePosition(id);
+    const deleted = await storage.deletePosition(id);
+    if (!deleted) {
+      throw new NotFoundError('Position not found');
+    }
     res.status(204).send();
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to delete position' });
+    next(error); // Pass error to global error handler
   }
 });
 

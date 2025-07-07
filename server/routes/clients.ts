@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { insertClienteSchema } from '@shared/schema';
-import { validate } from '../middleware/validate'; // Import the new middleware
+import { validate } from '../middleware/validate';
+import { NotFoundError } from '../errors'; // Import NotFoundError
 
 const clientsRouter = Router();
 
@@ -21,14 +22,13 @@ const clientsRouter = Router();
  *       200:
  *         description: Lista de clientes
  */
-clientsRouter.get('/', async (req, res) => {
+clientsRouter.get('/', async (req, res, next) => {
   try {
     const { search } = req.query;
     const clientes = await storage.getClientes(search as string);
     res.json(clientes);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to fetch clientes' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -50,14 +50,12 @@ clientsRouter.get('/', async (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-clientsRouter.post('/', validate(insertClienteSchema), async (req, res) => {
+clientsRouter.post('/', validate(insertClienteSchema), async (req, res, next) => {
   try {
-    // req.body is already validated by the middleware
     const cliente = await storage.createCliente(req.body);
     res.status(201).json(cliente);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to create cliente' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -84,18 +82,21 @@ clientsRouter.post('/', validate(insertClienteSchema), async (req, res) => {
  *         description: Cliente actualizado
  *       400:
  *         description: Datos inválidos
+ *       404:
+ *         description: Cliente no encontrado
  *       500:
  *         description: Error interno
  */
-clientsRouter.put('/:id', validate(insertClienteSchema), async (req, res) => {
+clientsRouter.put('/:id', validate(insertClienteSchema), async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    // req.body is already validated by the middleware
     const cliente = await storage.updateCliente(id, req.body);
+    if (!cliente) {
+      throw new NotFoundError('Cliente not found');
+    }
     res.json(cliente);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to update cliente' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -114,17 +115,21 @@ clientsRouter.put('/:id', validate(insertClienteSchema), async (req, res) => {
  *     responses:
  *       204:
  *         description: Cliente eliminado
+ *       404:
+ *         description: Cliente no encontrado
  *       500:
  *         description: Error interno
  */
-clientsRouter.delete('/:id', async (req, res) => {
+clientsRouter.delete('/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    await storage.deleteCliente(id);
+    const deleted = await storage.deleteCliente(id);
+    if (!deleted) {
+      throw new NotFoundError('Cliente not found');
+    }
     res.status(204).send();
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to delete cliente' });
+    next(error); // Pass error to global error handler
   }
 });
 

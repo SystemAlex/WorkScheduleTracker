@@ -1,11 +1,12 @@
-import 'dotenv/config'; // Importa dotenv para cargar variables de entorno desde .env
+import 'dotenv/config';
 import express, { NextFunction, type Request, Response } from 'express';
 import { registerRoutes } from './routes';
 import { setupVite, serveStatic } from './vite';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
 import logger from './utils/logger';
-import './config/env'; // Import the env configuration to ensure validation runs at startup
+import './config/env';
+import { CustomError } from './errors'; // Import CustomError
 
 const app = express();
 app.use(express.json());
@@ -34,7 +35,7 @@ const swaggerOptions = {
     './server/routes/shifts.ts',
     './server/routes/clients.ts',
     './server/routes/reports.ts',
-  ], // Actualiza las rutas para incluir los nuevos archivos modulares
+  ],
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
@@ -63,7 +64,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + '…';
       }
 
-      logger.info(logLine); // Use new logger
+      logger.info(logLine);
     }
   });
 
@@ -75,38 +76,37 @@ app.use((req, res, next) => {
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    const e = err as {
+    const e = err as CustomError | {
       status?: number;
       statusCode?: number;
       message?: string;
       stack?: string;
     };
-    const status = e.status ?? e.statusCode ?? 500;
+
+    const status = (e instanceof CustomError) ? e.statusCode : (e.status ?? e.statusCode ?? 500);
     const message = e.message ?? 'Internal Server Error';
+    const code = (e instanceof CustomError) ? e.code : undefined;
+    const details = (e instanceof CustomError) ? e.details : undefined;
 
     logger.error(`Error: ${message}`, {
       stack: e.stack,
       status,
       path: _req.path,
       method: _req.method,
-    }); // Use new logger for errors
+      code,
+      details,
+    });
 
-    res.status(status).json({ message });
+    res.status(status).json({ message, code, details });
   });
   /* eslint-enable */
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get('env') === 'development') {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
   const port = 5000;
   server.listen(
     {
@@ -115,7 +115,7 @@ app.use((req, res, next) => {
       reusePort: true,
     },
     () => {
-      logger.info(`serving on port ${port}`); // Use new logger
+      logger.info(`serving on port ${port}`);
     },
   );
 })();

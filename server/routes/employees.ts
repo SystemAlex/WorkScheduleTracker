@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { insertEmployeeSchema } from '@shared/schema';
-import { validate } from '../middleware/validate'; // Import the new middleware
+import { validate } from '../middleware/validate';
+import { NotFoundError } from '../errors'; // Import NotFoundError
 
 const employeesRouter = Router();
 
@@ -21,14 +22,13 @@ const employeesRouter = Router();
  *       200:
  *         description: Lista de empleados
  */
-employeesRouter.get('/', async (req, res) => {
+employeesRouter.get('/', async (req, res, next) => {
   try {
     const { search } = req.query;
     const employees = await storage.getEmployees(search as string);
     res.json(employees);
   } catch (error) {
-    console.error('Error fetching employees:', error);
-    res.status(500).json({ message: 'Failed to fetch employees' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -50,14 +50,12 @@ employeesRouter.get('/', async (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-employeesRouter.post('/', validate(insertEmployeeSchema), async (req, res) => {
+employeesRouter.post('/', validate(insertEmployeeSchema), async (req, res, next) => {
   try {
-    // req.body is already validated by the middleware
     const employee = await storage.createEmployee(req.body);
     res.status(201).json(employee);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to create employee' });
+    next(error); // Pass error to global error handler
   }
 });
 
@@ -84,21 +82,24 @@ employeesRouter.post('/', validate(insertEmployeeSchema), async (req, res) => {
  *         description: Empleado actualizado
  *       400:
  *         description: Datos inválidos
+ *       404:
+ *         description: Empleado no encontrado
  *       500:
  *         description: Error interno
  */
 employeesRouter.put(
   '/:id',
   validate(insertEmployeeSchema),
-  async (req, res) => {
+  async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
-      // req.body is already validated by the middleware
       const employee = await storage.updateEmployee(id, req.body);
+      if (!employee) {
+        throw new NotFoundError('Employee not found');
+      }
       res.json(employee);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Failed to update employee' });
+      next(error); // Pass error to global error handler
     }
   },
 );
@@ -118,17 +119,21 @@ employeesRouter.put(
  *     responses:
  *       204:
  *         description: Empleado eliminado
+ *       404:
+ *         description: Empleado no encontrado
  *       500:
  *         description: Error interno
  */
-employeesRouter.delete('/:id', async (req, res) => {
+employeesRouter.delete('/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    await storage.deleteEmployee(id);
+    const deleted = await storage.deleteEmployee(id);
+    if (!deleted) {
+      throw new NotFoundError('Employee not found');
+    }
     res.status(204).send();
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to delete employee' });
+    next(error); // Pass error to global error handler
   }
 });
 
