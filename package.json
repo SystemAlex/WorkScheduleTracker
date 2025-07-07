@@ -130,5 +130,15 @@
     "typescript": "5.6.3",
     "typescript-eslint": "^8.34.1",
     "vite": "^6.3.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@tailwindcss/oxide",
+      "esbuild",
+      "@scarf/scarf"
+    ],
+    "overrides": {
+      "esbuild@<=0.24.2": ">=0.25.0"
+    }
   }
 }
