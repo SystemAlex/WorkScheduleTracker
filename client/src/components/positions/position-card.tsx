@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Briefcase, Building, Edit3, Trash2 } from 'lucide-react';
+import { Briefcase, Building, Edit3, Trash2, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -64,16 +64,16 @@ export function PositionCard({
         <div className="space-y-3">
           {position.department && (
             <div className="flex items-center space-x-2 text-sm text-neutral-600">
-              <Building className="w-4 h-4" />
+              <LayoutGrid className="w-4 h-4" />
               <span>{position.department}</span>
             </div>
           )}
           {position.description && (
             <p className="text-sm text-neutral-600">{position.description}</p>
           )}
-          <Badge className="space-x-2 text-sm bg-neutral-200 text-foreground">
+          <Badge className="space-x-2 text-sm bg-neutral-200 text-foreground font-normal w-full">
             <span>Cliente:</span>
-            <span className="font-semibold">
+            <span className="font-semibold truncate">
               {clientes.find((c) => c.id === position.clienteId)?.empresa ||
                 '-'}
             </span>

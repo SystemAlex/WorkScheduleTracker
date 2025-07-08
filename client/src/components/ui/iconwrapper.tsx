@@ -4,7 +4,7 @@ import React, {
   ReactElement,
   CSSProperties,
 } from 'react';
-import { clsx } from 'clsx';
+import { cn } from '@/lib/utils';
 
 type IconWrapperProps = {
   children: ReactElement<{ className?: string }>;
@@ -26,13 +26,13 @@ export const IconWrapper = ({
     ? cloneElement(children, {
         className: hasSizeClass(originalClass)
           ? originalClass
-          : clsx('w-5 h-5', originalClass),
+          : cn('w-5 h-5', originalClass),
       })
     : children;
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'w-10 h-10 min-w-10 max-w-10 min-h-10 max-h-10 rounded-full flex items-center justify-center bg-neutral-300',
         className,
       )}

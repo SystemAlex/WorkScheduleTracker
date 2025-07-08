@@ -45,19 +45,19 @@ export function ReportTable({
                 <thead>
                   <tr className="border-b bg-neutral-100">
                     <th
-                      className="text-center font-medium text-neutral-700 whitespace-nowrap"
+                      className="text-center font-medium text-neutral-700 p-2 whitespace-nowrap"
                       rowSpan={2}
                     >
                       Empleado
                     </th>
                     <th
-                      className="text-center font-medium text-neutral-700"
+                      className="text-center font-medium text-neutral-700 p-2"
                       rowSpan={2}
                     >
                       Total Horas
                     </th>
                     <th
-                      className="text-center font-medium text-neutral-700"
+                      className="text-center font-medium text-neutral-700 p-2"
                       rowSpan={2}
                     >
                       Total Turnos

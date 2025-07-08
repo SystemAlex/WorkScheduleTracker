@@ -37,11 +37,10 @@ export function ReportFilters({
   onExport,
 }: ReportFiltersProps) {
   return (
-    /* <Card className=""> */
     <Card className="mb-4 border-b-4 border-b-primary">
       <CardHeader className="flex-row items-center justify-between">
         <CardTitle className="text-xl md:text-2xl">
-          Filtros de Reporte
+          Filtros
         </CardTitle>
         <Button onClick={() => onExport('xlsx')}>
           <Download className="w-4 h-4 mr-2" />

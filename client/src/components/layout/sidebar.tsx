@@ -89,7 +89,7 @@ export function Sidebar() {
     {
       href: '/', // Ruta relativa a la base del Router
       icon: <Calendar className="w-[23px] h-[23px]" />,
-      label: 'Calendario',
+      label: 'Organigrama',
     },
     {
       href: '/employees', // Ruta relativa a la base del Router
@@ -112,9 +112,9 @@ export function Sidebar() {
       label: 'Reportes',
     },
     {
-      href: '/organigrama', // Ruta relativa a la base del Router
+      href: '/estructura', // Ruta relativa a la base del Router
       icon: <Map className="w-[23px] h-[23px]" />,
-      label: 'Organigrama',
+      label: 'Estructura',
     },
   ];
 

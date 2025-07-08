@@ -10,7 +10,7 @@ import { base } from './lib/paths';
 
 // Pages
 import Calendar from '@/pages/calendar';
-import Organigrama from '@/pages/organigrama';
+import Estructura from '@/pages/estructura';
 import Employees from '@/pages/employees';
 import Positions from '@/pages/positions';
 import Reports from '@/pages/reports';
@@ -21,7 +21,7 @@ function MyRouter() {
   return (
     <Switch>
       <Route path="/" component={Calendar} />
-      <Route path="/organigrama" component={Organigrama} />
+      <Route path="/estructura" component={Estructura} />
       <Route path="/employees" component={Employees} />
       <Route path="/positions" component={Positions} />
       <Route path="/reports" component={Reports} />

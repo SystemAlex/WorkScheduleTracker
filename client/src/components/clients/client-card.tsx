@@ -109,7 +109,7 @@ export function ClientCard({
                       borderColor: position.color,
                     }}
                   >
-                    <Briefcase className="w-3 h-3 mr-1" />
+                    <Briefcase className="w-3 h-3 min-w-3 min-h-3 mr-1" />
                     {position.name} ({position.siglas})
                   </Badge>
                 ))}

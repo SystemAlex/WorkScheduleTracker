@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Edit3, Trash2, User, Mail, Phone } from 'lucide-react';
+import { Edit3, Trash2, User, Mail, Phone, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -95,6 +95,7 @@ export function EmployeeCard({
                           borderColor: shift.position.color,
                         }}
                       >
+                        <Briefcase className="w-3 h-3 min-w-3 min-h-3" />
                         <span className="">
                           {format(new Date(shift.date), 'eeee', {
                             locale: es,

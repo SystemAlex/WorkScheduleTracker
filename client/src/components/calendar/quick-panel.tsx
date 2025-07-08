@@ -162,14 +162,14 @@ export function QuickPanel({
                             size="sm"
                             onClick={() => onEditShift?.(shift)}
                           >
-                            <Edit3 className="w-3 h-3" />
+                            <Edit3 className="w-3 h-3 min-w-3 min-h-3" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onDeleteShift?.(shift.id)}
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3 h-3 min-w-3 min-h-3" />
                           </Button>
                         </div>
                       </div>

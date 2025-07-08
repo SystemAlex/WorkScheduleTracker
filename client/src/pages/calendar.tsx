@@ -348,7 +348,7 @@ export default function Calendar() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="text-sm text-neutral-500 mt-2">
-            Cargando calendario...
+            Cargando organigrama...
           </p>
         </div>
       </div>
@@ -358,7 +358,7 @@ export default function Calendar() {
   return (
     <>
       <Header
-        title="Calendario de Turnos"
+        title="Organigrama"
         subtitle="Gestiona los horarios y asignaciones de tu equipo"
         currentDate={currentDate}
         onPreviousMonth={handlePreviousMonth}
