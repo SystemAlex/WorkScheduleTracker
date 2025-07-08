@@ -27,17 +27,22 @@ const reportsRouter = Router();
  *         name: employeeId
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: clientId
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
  *         description: Reporte generado
  */
 reportsRouter.get('/employee-hours', async (req, res) => {
   try {
-    const { month, year, employeeId } = req.query;
+    const { month, year, employeeId, clientId } = req.query; // Obtener clientId
     const report = await storage.getEmployeeHoursReport(
       employeeId ? parseInt(employeeId as string) : undefined,
       month ? parseInt(month as string) : undefined,
       year ? parseInt(year as string) : undefined,
+      clientId ? parseInt(clientId as string) : undefined, // Pasar clientId
     );
     res.json(report);
   } catch (error) {
@@ -69,6 +74,10 @@ reportsRouter.get('/employee-hours', async (req, res) => {
  *         name: employeeId
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: clientId
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
  *         description: Archivo XLSX generado
@@ -82,12 +91,15 @@ reportsRouter.get('/employee-hours', async (req, res) => {
  */
 reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
   try {
-    const { month, year, employeeId } = req.query;
+    const { month, year, employeeId, clientId } = req.query; // Obtener clientId
 
     const parsedMonth = parseInt(month as string);
     const parsedYear = parseInt(year as string);
     const parsedEmployeeId = employeeId
       ? parseInt(employeeId as string)
+      : undefined;
+    const parsedClientId = clientId // Parsear clientId
+      ? parseInt(clientId as string)
       : undefined;
 
     // Fetch report data
@@ -95,6 +107,7 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
       parsedEmployeeId,
       parsedMonth,
       parsedYear,
+      parsedClientId, // Pasar clientId
     );
 
     // Get all positions and clients for header generation
@@ -164,6 +177,10 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
  *         name: employeeId
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: clientId
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
  *         description: Archivo PDF generado
@@ -177,12 +194,15 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
  */
 reportsRouter.get('/employee-hours/pdf', async (req, res) => {
   try {
-    const { month, year, employeeId } = req.query;
+    const { month, year, employeeId, clientId } = req.query; // Obtener clientId
 
     const parsedMonth = parseInt(month as string);
     const parsedYear = parseInt(year as string);
     const parsedEmployeeId = employeeId
       ? parseInt(employeeId as string)
+      : undefined;
+    const parsedClientId = clientId // Parsear clientId
+      ? parseInt(clientId as string)
       : undefined;
 
     // Fetch report data
@@ -190,6 +210,7 @@ reportsRouter.get('/employee-hours/pdf', async (req, res) => {
       parsedEmployeeId,
       parsedMonth,
       parsedYear,
+      parsedClientId, // Pasar clientId
     );
 
     // Get all positions and clients for header generation

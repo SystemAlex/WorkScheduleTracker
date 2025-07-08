@@ -121,7 +121,7 @@ export function Sidebar() {
   // La comparación debe ser directa, ya que `location` ya es la ruta relativa a la base.
   // Si `location` es `/`, el primer elemento de navegación es activo.
   // Si `location` es `/employees`, el segundo elemento de navegación es activo.
-  const activeItem = navigation.find((item) => item.href === location);
+  // const activeItem = navigation.find((item) => item.href === location);
 
   const handleNavigate = () => {
     setIsCollapsed(true);

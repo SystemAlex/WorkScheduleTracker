@@ -24,6 +24,7 @@ export class ReportStorage {
     employeeId?: number,
     month?: number,
     year?: number,
+    clientId?: number, // Nuevo parámetro
   ): Promise<EmployeeHoursReport[]> {
     const whereConditions = [];
 
@@ -37,6 +38,10 @@ export class ReportStorage {
       whereConditions.push(
         and(gte(shifts.date, startDate), lte(shifts.date, endDate)),
       );
+    }
+
+    if (clientId) { // Nueva condición para filtrar por cliente
+      whereConditions.push(eq(positions.clienteId, clientId));
     }
 
     const shiftData = await db

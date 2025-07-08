@@ -19,6 +19,7 @@ export default function Reports() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedEmployee, setSelectedEmployee] = useState<number>();
+  const [selectedClient, setSelectedClient] = useState<number>(); // Nuevo estado para el filtro de cliente
 
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ['/api/employees'],
@@ -38,6 +39,7 @@ export default function Reports() {
       selectedMonth,
       selectedYear,
       selectedEmployee,
+      selectedClient, // Incluir en la clave de la consulta
     ],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -47,6 +49,9 @@ export default function Reports() {
 
       if (selectedEmployee) {
         params.append('employeeId', selectedEmployee.toString());
+      }
+      if (selectedClient) { // Añadir parámetro de cliente
+        params.append('clientId', selectedClient.toString());
       }
 
       const response = await fetch(
@@ -78,10 +83,14 @@ export default function Reports() {
   const totalHours = report.reduce((sum, emp) => sum + emp.totalHours, 0);
   const totalShifts = report.reduce((sum, emp) => sum + emp.totalShifts, 0);
 
-  // Use the new shared function
-  const { groupedPositionsByClient } = React.useMemo(() => {
+  // Use the new shared function to get grouped positions and active position IDs
+  const { groupedPositionsByClient, activePositionIds } = React.useMemo(() => {
     return getProcessedReportPositions(report, positions, clientes);
   }, [report, positions, clientes]);
+
+  // Calculate total clients and total positions for the month
+  const totalClientsInMonth = groupedPositionsByClient.length;
+  const totalPositionsInMonth = activePositionIds.size;
 
   // Create a flat map of all positions for easy lookup by ID (used in table body)
   const positionMap: Record<number, Position> = React.useMemo(() => {
@@ -101,6 +110,9 @@ export default function Reports() {
     });
     if (selectedEmployee) {
       params.append('employeeId', selectedEmployee.toString());
+    }
+    if (selectedClient) { // Añadir parámetro de cliente para la exportación
+      params.append('clientId', selectedClient.toString());
     }
 
     let url = '';
@@ -177,9 +189,12 @@ export default function Reports() {
           setSelectedYear={setSelectedYear}
           selectedEmployee={selectedEmployee}
           setSelectedEmployee={setSelectedEmployee}
+          selectedClient={selectedClient} // Pasar el nuevo estado
+          setSelectedClient={setSelectedClient} // Pasar el setter
           employees={employees}
           months={months}
           years={years}
+          clientes={clientes} // Pasar la lista de clientes
           onExport={handleExport}
         />
 
@@ -189,6 +204,8 @@ export default function Reports() {
           reportLength={report.length}
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}
+          totalClientsInMonth={totalClientsInMonth}
+          totalPositionsInMonth={totalPositionsInMonth}
         />
 
         <ReportTable

@@ -53,6 +53,7 @@ export interface IStorage {
     employeeId?: number,
     month?: number,
     year?: number,
+    clientId?: number, // <--- ¡Aquí está la corrección!
   ): Promise<EmployeeHoursReport[]>;
   generateExcelReport(
     report: EmployeeHoursReport[],
@@ -168,8 +169,8 @@ class CombinedStorage implements IStorage {
   }
 
   // Reports
-  getEmployeeHoursReport(employeeId?: number, month?: number, year?: number) {
-    return this.reportStorage.getEmployeeHoursReport(employeeId, month, year);
+  getEmployeeHoursReport(employeeId?: number, month?: number, year?: number, clientId?: number) {
+    return this.reportStorage.getEmployeeHoursReport(employeeId, month, year, clientId);
   }
   generateExcelReport(
     report: EmployeeHoursReport[],

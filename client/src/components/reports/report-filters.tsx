@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Download, Sheet } from 'lucide-react';
+import { Download, Sheet, FilterX, Filter } from 'lucide-react'; // Importar FilterX
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import type { Employee } from '@shared/schema';
+import type { Employee, Cliente } from '@shared/schema';
 
 interface ReportFiltersProps {
   selectedMonth: number;
@@ -18,9 +18,12 @@ interface ReportFiltersProps {
   setSelectedYear: (year: number) => void;
   selectedEmployee: number | undefined;
   setSelectedEmployee: (employeeId: number | undefined) => void;
+  selectedClient: number | undefined;
+  setSelectedClient: (clientId: number | undefined) => void;
   employees: Employee[];
   months: { value: number; label: string }[];
   years: { value: number; label: string }[];
+  clientes: Cliente[];
   onExport: (formatType: 'csv' | 'xlsx' | 'pdf') => void;
 }
 
@@ -31,25 +34,48 @@ export function ReportFilters({
   setSelectedYear,
   selectedEmployee,
   setSelectedEmployee,
+  selectedClient,
+  setSelectedClient,
   employees,
   months,
   years,
+  clientes,
   onExport,
 }: ReportFiltersProps) {
+  // Determinar si hay filtros activos (excluyendo mes y año que siempre tienen un valor)
+  const hasActiveFilters = selectedEmployee !== undefined || selectedClient !== undefined;
+
+  const handleClearFilters = () => {
+    setSelectedEmployee(undefined);
+    setSelectedClient(undefined);
+    // Opcionalmente, puedes resetear mes y año a la fecha actual si lo deseas
+    setSelectedMonth(new Date().getMonth() + 1);
+    setSelectedYear(new Date().getFullYear());
+  };
+
   return (
     <Card className="mb-4 border-b-4 border-b-primary">
-      <CardHeader className="flex-row items-center justify-between">
-        <CardTitle className="text-xl md:text-2xl">
+      <CardHeader className="flex-col md:flex-row items-center justify-between">
+        <CardTitle className="flex flex-row items-center justify-start text-xl md:text-2xl w-full">
+          <Filter className="w-5 h-5 min-w-5 nin-h-5 mr-2 text-muted-foreground" />
           Filtros
         </CardTitle>
-        <Button onClick={() => onExport('xlsx')}>
-          <Download className="w-4 h-4 mr-2" />
-          Exportar a Excel
-          <Sheet className="w-4 h-4 ml-2 hidden md:block" />
-        </Button>
+        <div className="flex items-center space-x-2">
+          {hasActiveFilters && (
+            <Button onClick={handleClearFilters} variant="outline">
+              <FilterX className="w-4 h-4 min-w-4 nin-h-4 mr-2" />
+              Borrar Filtros
+            </Button>
+          )}
+          <Button onClick={() => onExport('xlsx')}>
+            <Download className="w-4 h-4 min-w-4 nin-h-4 mr-2" />
+            Exportar a Excel
+            <Sheet className="w-4 h-4 min-w-4 nin-h-4 ml-2 hidden md:block" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Mes
@@ -98,11 +124,14 @@ export function ReportFilters({
             </label>
             <Select
               value={selectedEmployee?.toString() || 'all'}
-              onValueChange={(value) =>
+              onValueChange={(value) => {
+                const parsedValue = parseInt(value);
                 setSelectedEmployee(
-                  value === 'all' ? undefined : parseInt(value),
-                )
-              }
+                  value === 'all' || isNaN(parsedValue)
+                    ? undefined
+                    : parsedValue,
+                );
+              }}
             >
               <SelectTrigger>
                 <SelectValue>
@@ -122,27 +151,38 @@ export function ReportFilters({
             </Select>
           </div>
 
-          {/* <div className="flex items-end">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  <Download className="w-4 h-4 mr-2" />
-                  Exportar
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onExport('csv')}>
-                  Exportar a CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onExport('xlsx')}>
-                  Exportar a XLSX
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onExport('pdf')}>
-                  Exportar a PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div> */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Cliente (opcional)
+            </label>
+            <Select
+              value={selectedClient?.toString() || 'all'}
+              onValueChange={(value) => {
+                const parsedValue = parseInt(value);
+                setSelectedClient(
+                  value === 'all' || isNaN(parsedValue)
+                    ? undefined
+                    : parsedValue,
+                );
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue>
+                  {selectedClient
+                    ? clientes.find((c) => c.id === selectedClient)?.empresa
+                    : 'Todos los clientes'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los clientes</SelectItem>
+                {clientes.map((cliente) => (
+                  <SelectItem key={cliente.id} value={cliente.id.toString()}>
+                    {cliente.empresa}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardContent>
     </Card>
