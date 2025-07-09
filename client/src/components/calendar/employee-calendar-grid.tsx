@@ -246,7 +246,7 @@ export function EmployeeCalendarGrid({
               <div
                 key={date.toISOString()}
                 className={`min-h-[40px] text-center p-1 border text-xs font-medium rounded-md cursor-pointer transition-colors ${dayColor} ${
-                  isSelected ? 'ring-2 ring-green-600 ring-offset-0' : ''
+                  isSelected ? 'ring-2 ring-success ring-offset-0' : ''
                 }`}
                 onClick={() => onDateSelect?.(date)}
               >
@@ -287,7 +287,11 @@ export function EmployeeCalendarGrid({
                       employeesForThisClient.map((employee) => (
                         <div
                           key={employee.id}
-                          className={`grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 items-center`}
+                          className={`grid grid-cols-[200px_repeat(var(--days),minmax(40px,1fr))] gap-1 items-center ${
+                            selectedEmployee?.id === employee.id
+                              ? 'rounded-md ring-4 ring-success ring-offset-0'
+                              : ''
+                          }`}
                           style={
                             {
                               '--days': daysToShow.length,
@@ -296,11 +300,7 @@ export function EmployeeCalendarGrid({
                         >
                           {/* Employee name */}
                           <div
-                            className={`min-h-[40px] font-medium text-sm p-2 cursor-pointer truncate bg-neutral-50 rounded-md ${
-                              selectedEmployee?.id === employee.id
-                                ? 'ring-2 ring-green-600 ring-offset-0'
-                                : ''
-                            }`}
+                            className={`min-h-[40px] font-medium text-sm p-2 cursor-pointer truncate bg-neutral-50 rounded-md`}
                             onClick={() => onEmployeeSelect?.(employee)}
                           >
                             {employee.name}
@@ -334,10 +334,8 @@ export function EmployeeCalendarGrid({
                                   ${dayColor}
                                   ${
                                     isSelected
-                                      ? 'ring-2 ring-green-600 ring-offset-0'
-                                      : selectedEmployee?.id === employee.id
-                                        ? 'ring-2 ring-green-600 ring-offset-0'
-                                        : 'hover:opacity-80'
+                                      ? 'ring-2 ring-success ring-offset-0'
+                                      : 'hover:opacity-80'
                                   }
                                 `}
                                 onClick={() => handleCellClick(date, employee)}

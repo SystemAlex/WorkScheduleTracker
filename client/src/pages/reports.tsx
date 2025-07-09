@@ -50,7 +50,8 @@ export default function Reports() {
       if (selectedEmployee) {
         params.append('employeeId', selectedEmployee.toString());
       }
-      if (selectedClient) { // Añadir parámetro de cliente
+      if (selectedClient) {
+        // Añadir parámetro de cliente
         params.append('clientId', selectedClient.toString());
       }
 
@@ -111,7 +112,8 @@ export default function Reports() {
     if (selectedEmployee) {
       params.append('employeeId', selectedEmployee.toString());
     }
-    if (selectedClient) { // Añadir parámetro de cliente para la exportación
+    if (selectedClient) {
+      // Añadir parámetro de cliente para la exportación
       params.append('clientId', selectedClient.toString());
     }
 
@@ -165,12 +167,23 @@ export default function Reports() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-neutral-500 mt-2">Generando reporte...</p>
-        </div>
-      </div>
+      <>
+        <Header
+          title="Reportes"
+          subtitle="Analiza las horas trabajadas y estadísticas del equipo"
+        />
+
+        <LayoutContent>
+          <div className="flex-1 flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-sm text-neutral-500 mt-2">
+                Generando reporte...
+              </p>
+            </div>
+          </div>
+        </LayoutContent>
+      </>
     );
   }
 

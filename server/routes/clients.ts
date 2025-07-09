@@ -50,14 +50,18 @@ clientsRouter.get('/', async (req, res, next) => {
  *       400:
  *         description: Datos inválidos
  */
-clientsRouter.post('/', validate(insertClienteSchema), async (req, res, next) => {
-  try {
-    const cliente = await storage.createCliente(req.body);
-    res.status(201).json(cliente);
-  } catch (error) {
-    next(error); // Pass error to global error handler
-  }
-});
+clientsRouter.post(
+  '/',
+  validate(insertClienteSchema),
+  async (req, res, next) => {
+    try {
+      const cliente = await storage.createCliente(req.body);
+      res.status(201).json(cliente);
+    } catch (error) {
+      next(error); // Pass error to global error handler
+    }
+  },
+);
 
 /**
  * @openapi
@@ -87,18 +91,22 @@ clientsRouter.post('/', validate(insertClienteSchema), async (req, res, next) =>
  *       500:
  *         description: Error interno
  */
-clientsRouter.put('/:id', validate(insertClienteSchema), async (req, res, next) => {
-  try {
-    const id = parseInt(req.params.id);
-    const cliente = await storage.updateCliente(id, req.body);
-    if (!cliente) {
-      throw new NotFoundError('Cliente not found');
+clientsRouter.put(
+  '/:id',
+  validate(insertClienteSchema),
+  async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const cliente = await storage.updateCliente(id, req.body);
+      if (!cliente) {
+        throw new NotFoundError('Cliente not found');
+      }
+      res.json(cliente);
+    } catch (error) {
+      next(error); // Pass error to global error handler
     }
-    res.json(cliente);
-  } catch (error) {
-    next(error); // Pass error to global error handler
-  }
-});
+  },
+);
 
 /**
  * @openapi

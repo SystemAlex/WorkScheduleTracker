@@ -169,8 +169,18 @@ class CombinedStorage implements IStorage {
   }
 
   // Reports
-  getEmployeeHoursReport(employeeId?: number, month?: number, year?: number, clientId?: number) {
-    return this.reportStorage.getEmployeeHoursReport(employeeId, month, year, clientId);
+  getEmployeeHoursReport(
+    employeeId?: number,
+    month?: number,
+    year?: number,
+    clientId?: number,
+  ) {
+    return this.reportStorage.getEmployeeHoursReport(
+      employeeId,
+      month,
+      year,
+      clientId,
+    );
   }
   generateExcelReport(
     report: EmployeeHoursReport[],

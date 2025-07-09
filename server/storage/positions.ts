@@ -29,14 +29,23 @@ export class PositionStorage {
         .returning();
       return position;
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') { // PostgreSQL unique violation error code
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === '23505'
+      ) {
+        // PostgreSQL unique violation error code
         throw new ConflictError('A position with this name already exists.');
       }
       throw error;
     }
   }
 
-  async updatePosition(id: number, data: InsertPosition): Promise<Position | null> {
+  async updatePosition(
+    id: number,
+    data: InsertPosition,
+  ): Promise<Position | null> {
     try {
       const [position] = await db
         .update(positions)
@@ -45,14 +54,21 @@ export class PositionStorage {
         .returning();
       return position || null; // Return null if no position was updated
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') { // PostgreSQL unique violation error code
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === '23505'
+      ) {
+        // PostgreSQL unique violation error code
         throw new ConflictError('A position with this name already exists.');
       }
       throw error;
     }
   }
 
-  async deletePosition(id: number): Promise<boolean> { // Change return type to boolean
+  async deletePosition(id: number): Promise<boolean> {
+    // Change return type to boolean
     // Check if there are any shifts associated with this position
     const shiftsCount = await db
       .select({ count: count() })

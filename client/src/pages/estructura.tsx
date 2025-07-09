@@ -192,14 +192,23 @@ export default function Estructura() {
 
   if (employeesLoading || positionsLoading || shiftsLoading || clientsLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-neutral-500 mt-2">
-            Cargando estructura...
-          </p>
-        </div>
-      </div>
+      <>
+        <Header
+          title="Estructura"
+          subtitle="Visualiza la estructura organizacional de tu equipo"
+        />
+
+        <LayoutContent>
+          <div className="flex-1 flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-sm text-neutral-500 mt-2">
+                Cargando estructura...
+              </p>
+            </div>
+          </div>
+        </LayoutContent>
+      </>
     );
   }
 
@@ -425,9 +434,9 @@ export default function Estructura() {
                                                     key={employee.id}
                                                     className="flex items-center space-x-2 p-2 bg-neutral-50 rounded-lg"
                                                   >
-                                                    <div className="w-6 h-6 bg-neutral-300 rounded-full flex items-center justify-center">
-                                                      <User className="w-3 h-3 text-neutral-600" />
-                                                    </div>
+                                                    <IconWrapper>
+                                                      <User />
+                                                    </IconWrapper>
                                                     <div className="flex-1 min-w-0">
                                                       <p className="text-sm font-medium text-neutral-900 truncate">
                                                         {employee.name}

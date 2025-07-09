@@ -174,14 +174,23 @@ export class ShiftStorage {
         position: result.position!,
       };
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') { // PostgreSQL unique violation error code
-        throw new ConflictError('A shift already exists for this employee on this date.');
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === '23505'
+      ) {
+        // PostgreSQL unique violation error code
+        throw new ConflictError(
+          'A shift already exists for this employee on this date.',
+        );
       }
       throw error;
     }
   }
 
-  async deleteShift(id: number): Promise<boolean> { // Change return type to boolean
+  async deleteShift(id: number): Promise<boolean> {
+    // Change return type to boolean
     const result = await db.delete(shifts).where(eq(shifts.id, id));
     return (result.rowCount ?? 0) > 0; // Return true if a row was affected, false otherwise
   }
@@ -266,9 +275,16 @@ export class ShiftStorage {
       : undefined;
   }
 
-  async updateShift(id: number, data: InsertShift): Promise<ShiftWithDetails | null> {
+  async updateShift(
+    id: number,
+    data: InsertShift,
+  ): Promise<ShiftWithDetails | null> {
     try {
-      const [shift] = await db.update(shifts).set(data).where(eq(shifts.id, id)).returning();
+      const [shift] = await db
+        .update(shifts)
+        .set(data)
+        .where(eq(shifts.id, id))
+        .returning();
 
       if (!shift) {
         return null; // No shift found to update
@@ -301,8 +317,16 @@ export class ShiftStorage {
         position: result.position!,
       };
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') { // PostgreSQL unique violation error code
-        throw new ConflictError('A shift already exists for this employee on this date.');
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === '23505'
+      ) {
+        // PostgreSQL unique violation error code
+        throw new ConflictError(
+          'A shift already exists for this employee on this date.',
+        );
       }
       throw error;
     }
@@ -410,8 +434,16 @@ export class ShiftStorage {
         insertedCount = insertedShifts.length;
       } catch (error: unknown) {
         // Catch unique constraint violation during batch insert
-        if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
-          console.warn(`Skipping batch insert due to unique constraint violation:`, error instanceof Error ? error.message : error);
+        if (
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === '23505'
+        ) {
+          console.warn(
+            `Skipping batch insert due to unique constraint violation:`,
+            error instanceof Error ? error.message : error,
+          );
         } else {
           console.warn(`Could not insert batch of shifts:`, error);
         }

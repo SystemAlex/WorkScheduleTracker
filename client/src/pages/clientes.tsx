@@ -217,14 +217,23 @@ export default function Clientes() {
 
   if (clientsLoading || positionsLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-neutral-500 mt-2">
-            Cargando clientes y puestos...
-          </p>
-        </div>
-      </div>
+      <>
+        <Header
+          title="Gestión de Clientes"
+          subtitle="Administra los clientes de tu organización"
+        />
+
+        <LayoutContent>
+          <div className="flex-1 flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-sm text-neutral-500 mt-2">
+                Cargando clientes y puestos...
+              </p>
+            </div>
+          </div>
+        </LayoutContent>
+      </>
     );
   }
 

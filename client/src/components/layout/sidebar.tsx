@@ -176,9 +176,9 @@ export function Sidebar() {
             // isMobile && activeItem?.icon ? ( // Comentado si useIsMobile no se usa
             //   activeItem.icon
             // ) : (
-              <ChevronRight className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
-            // )
+            <ChevronRight className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
           ) : (
+            // )
             <ChevronLeft className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
           )}
         </Button>

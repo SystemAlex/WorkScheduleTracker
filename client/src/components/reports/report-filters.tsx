@@ -43,7 +43,8 @@ export function ReportFilters({
   onExport,
 }: ReportFiltersProps) {
   // Determinar si hay filtros activos (excluyendo mes y año que siempre tienen un valor)
-  const hasActiveFilters = selectedEmployee !== undefined || selectedClient !== undefined;
+  const hasActiveFilters =
+    selectedEmployee !== undefined || selectedClient !== undefined;
 
   const handleClearFilters = () => {
     setSelectedEmployee(undefined);

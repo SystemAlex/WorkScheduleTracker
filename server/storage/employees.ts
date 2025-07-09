@@ -31,7 +31,10 @@ export class EmployeeStorage {
     return employee;
   }
 
-  async updateEmployee(id: number, data: InsertEmployee): Promise<Employee | null> {
+  async updateEmployee(
+    id: number,
+    data: InsertEmployee,
+  ): Promise<Employee | null> {
     const [employee] = await db
       .update(employees)
       .set(data)
@@ -40,7 +43,8 @@ export class EmployeeStorage {
     return employee || null; // Return null if no employee was updated
   }
 
-  async deleteEmployee(id: number): Promise<boolean> { // Change return type to boolean
+  async deleteEmployee(id: number): Promise<boolean> {
+    // Change return type to boolean
     // Implement soft delete for employees by setting status to 'inactive'
     const result = await db
       .update(employees)

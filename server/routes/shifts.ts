@@ -119,7 +119,11 @@ shiftsRouter.post('/', validate(insertShiftSchema), async (req, res, next) => {
     res.status(201).json(shift);
   } catch (error) {
     if (error instanceof ConflictError) {
-      return res.status(error.statusCode).json({ message: error.message, code: error.code, conflicts: error.details });
+      return res.status(error.statusCode).json({
+        message: error.message,
+        code: error.code,
+        conflicts: error.details,
+      });
     }
     next(error); // Pass other errors to global error handler
   }
@@ -184,27 +188,35 @@ shiftsRouter.delete('/:id', async (req, res, next) => {
  *       409:
  *         description: Conflicto de turno
  */
-shiftsRouter.put('/:id', validate(insertShiftSchema), async (req, res, next) => {
-  try {
-    const id = Number(req.params.id);
-    const validatedData = req.body;
+shiftsRouter.put(
+  '/:id',
+  validate(insertShiftSchema),
+  async (req, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const validatedData = req.body;
 
-    // The unique constraint in the DB schema will now handle direct conflicts.
-    // The explicit checkShiftConflicts is still useful for providing details
-    // about *which* existing shift caused the conflict, if needed for frontend UX.
-    // For now, we'll rely on the DB constraint for the 409.
-    const updated = await storage.updateShift(id, validatedData);
-    if (!updated) {
-      throw new NotFoundError('Shift not found');
+      // The unique constraint in the DB schema will now handle direct conflicts.
+      // The explicit checkShiftConflicts is still useful for providing details
+      // about *which* existing shift caused the conflict, if needed for frontend UX.
+      // For now, we'll rely on the DB constraint for the 409.
+      const updated = await storage.updateShift(id, validatedData);
+      if (!updated) {
+        throw new NotFoundError('Shift not found');
+      }
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof ConflictError) {
+        return res.status(error.statusCode).json({
+          message: error.message,
+          code: error.code,
+          conflicts: error.details,
+        });
+      }
+      next(error); // Pass other errors to global error handler
     }
-    res.json(updated);
-  } catch (error) {
-    if (error instanceof ConflictError) {
-      return res.status(error.statusCode).json({ message: error.message, code: error.code, conflicts: error.details });
-    }
-    next(error); // Pass other errors to global error handler
-  }
-});
+  },
+);
 
 const generateShiftsSchema = z.object({
   month: z.number().int().min(1).max(12),

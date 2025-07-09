@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Briefcase, Edit3, Trash2, LayoutGrid } from 'lucide-react';
+import { Briefcase, Edit3, Trash2, LayoutGrid, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +49,7 @@ export function PositionCard({
             <ConfirmDialog
               trigger={
                 <Button variant="ghost" size="sm" disabled={isDeleting}>
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 min-w-4 min-h-4" />
                 </Button>
               }
               title="¿Eliminar puesto?"
@@ -71,9 +71,9 @@ export function PositionCard({
           {position.description && (
             <p className="text-sm text-neutral-600">{position.description}</p>
           )}
-          <Badge className="space-x-2 text-sm bg-neutral-200 text-foreground font-normal w-full">
-            <span>Cliente:</span>
-            <span className="font-semibold truncate">
+          <Badge className="space-x-2 text-sm bg-neutral-200 text-foreground font-semibold w-full">
+            <Building className="w-4 h-4 min-w-4 min-h-4" />
+            <span className="truncate py-1">
               {clientes.find((c) => c.id === position.clienteId)?.empresa ||
                 '-'}
             </span>

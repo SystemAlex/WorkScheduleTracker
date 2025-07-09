@@ -50,14 +50,18 @@ employeesRouter.get('/', async (req, res, next) => {
  *       400:
  *         description: Datos inválidos
  */
-employeesRouter.post('/', validate(insertEmployeeSchema), async (req, res, next) => {
-  try {
-    const employee = await storage.createEmployee(req.body);
-    res.status(201).json(employee);
-  } catch (error) {
-    next(error); // Pass error to global error handler
-  }
-});
+employeesRouter.post(
+  '/',
+  validate(insertEmployeeSchema),
+  async (req, res, next) => {
+    try {
+      const employee = await storage.createEmployee(req.body);
+      res.status(201).json(employee);
+    } catch (error) {
+      next(error); // Pass error to global error handler
+    }
+  },
+);
 
 /**
  * @openapi

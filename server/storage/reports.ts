@@ -40,7 +40,8 @@ export class ReportStorage {
       );
     }
 
-    if (clientId) { // Nueva condición para filtrar por cliente
+    if (clientId) {
+      // Nueva condición para filtrar por cliente
       whereConditions.push(eq(positions.clienteId, clientId));
     }
 

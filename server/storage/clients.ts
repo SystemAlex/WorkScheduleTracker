@@ -25,7 +25,10 @@ export class ClientStorage {
     return cliente;
   }
 
-  async updateCliente(id: number, data: InsertCliente): Promise<Cliente | null> {
+  async updateCliente(
+    id: number,
+    data: InsertCliente,
+  ): Promise<Cliente | null> {
     const [cliente] = await db
       .update(clientes)
       .set(data)
@@ -34,7 +37,8 @@ export class ClientStorage {
     return cliente || null; // Return null if no client was updated
   }
 
-  async deleteCliente(id: number): Promise<boolean> { // Change return type to boolean
+  async deleteCliente(id: number): Promise<boolean> {
+    // Change return type to boolean
     // Check if there are any positions associated with this client
     const positionsCount = await db
       .select({ count: count() })

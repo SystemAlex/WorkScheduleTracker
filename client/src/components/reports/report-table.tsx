@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3 } from 'lucide-react';
 import type { Cliente, Position } from '@shared/schema';
 import { EmployeeHoursReport } from '@shared/utils';
+import { colorLightenDarken } from '@/lib/utils';
 
 interface ReportTableProps {
   report: EmployeeHoursReport[];
@@ -85,7 +86,7 @@ export function ReportTable({
                             <th
                               className="text-center font-medium text-neutral-700 p-2 border-l border-neutral-300"
                               style={{
-                                backgroundColor: pos.color + '20',
+                                backgroundColor: pos.color + '30',
                                 color: pos.color,
                               }}
                             >
@@ -129,7 +130,7 @@ export function ReportTable({
                               key={pos.id}
                               className="text-center p-1 border-l border-neutral-200"
                               style={{
-                                backgroundColor: pos.color + '20',
+                                backgroundColor: pos.color + 10,
                                 color: pos.color,
                               }}
                             >
@@ -137,7 +138,7 @@ export function ReportTable({
                                 <span
                                   className="inline-block w-full text-center items-center rounded-md border-2 transition-colors text-foreground p-1"
                                   style={{
-                                    backgroundColor: match.color + '20',
+                                    backgroundColor: `${colorLightenDarken(match.color, 0.8)}`,
                                     color: match.color,
                                     borderColor: match.color,
                                   }}
@@ -171,7 +172,7 @@ export function ReportTable({
                             key={pos.id}
                             className="text-center border-l border-neutral-200"
                             style={{
-                              backgroundColor: positionMap[pos.id].color + '20',
+                              backgroundColor: positionMap[pos.id].color + '30',
                               color: positionMap[pos.id].color,
                             }}
                           >

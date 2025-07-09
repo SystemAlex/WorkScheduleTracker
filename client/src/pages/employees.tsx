@@ -225,14 +225,23 @@ export default function Employees() {
 
   if (isLoading || shiftsLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-neutral-500 mt-2">
-            Cargando empleados y turnos...
-          </p>
-        </div>
-      </div>
+      <>
+        <Header
+          title="Gestión de Empleados"
+          subtitle="Administra la información de tu equipo de trabajo"
+        />
+
+        <LayoutContent>
+          <div className="flex-1 flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-sm text-neutral-500 mt-2">
+                Cargando empleados y turnos...
+              </p>
+            </div>
+          </div>
+        </LayoutContent>
+      </>
     );
   }
 

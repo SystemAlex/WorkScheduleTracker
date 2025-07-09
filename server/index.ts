@@ -76,17 +76,22 @@ app.use((req, res, next) => {
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    const e = err as CustomError | {
-      status?: number;
-      statusCode?: number;
-      message?: string;
-      stack?: string;
-    };
+    const e = err as
+      | CustomError
+      | {
+          status?: number;
+          statusCode?: number;
+          message?: string;
+          stack?: string;
+        };
 
-    const status = (e instanceof CustomError) ? e.statusCode : (e.status ?? e.statusCode ?? 500);
+    const status =
+      e instanceof CustomError
+        ? e.statusCode
+        : (e.status ?? e.statusCode ?? 500);
     const message = e.message ?? 'Internal Server Error';
-    const code = (e instanceof CustomError) ? e.code : undefined;
-    const details = (e instanceof CustomError) ? e.details : undefined;
+    const code = e instanceof CustomError ? e.code : undefined;
+    const details = e instanceof CustomError ? e.details : undefined;
 
     logger.error(`Error: ${message}`, {
       stack: e.stack,

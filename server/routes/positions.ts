@@ -52,17 +52,23 @@ positionsRouter.get('/', async (req, res, next) => {
  *       409:
  *         description: Conflicto (nombre de puesto ya existe)
  */
-positionsRouter.post('/', validate(insertPositionSchema), async (req, res, next) => {
-  try {
-    const position = await storage.createPosition(req.body);
-    res.status(201).json(position);
-  } catch (error) {
-    if (error instanceof ConflictError) {
-      return res.status(error.statusCode).json({ message: error.message, code: error.code });
+positionsRouter.post(
+  '/',
+  validate(insertPositionSchema),
+  async (req, res, next) => {
+    try {
+      const position = await storage.createPosition(req.body);
+      res.status(201).json(position);
+    } catch (error) {
+      if (error instanceof ConflictError) {
+        return res
+          .status(error.statusCode)
+          .json({ message: error.message, code: error.code });
+      }
+      next(error); // Pass other errors to global error handler
     }
-    next(error); // Pass other errors to global error handler
-  }
-});
+  },
+);
 
 /**
  * @openapi
@@ -107,7 +113,9 @@ positionsRouter.put(
       res.json(position);
     } catch (error) {
       if (error instanceof ConflictError) {
-        return res.status(error.statusCode).json({ message: error.message, code: error.code });
+        return res
+          .status(error.statusCode)
+          .json({ message: error.message, code: error.code });
       }
       next(error); // Pass other errors to global error handler
     }

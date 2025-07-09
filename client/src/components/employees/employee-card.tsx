@@ -1,5 +1,13 @@
 import * as React from 'react';
-import { Edit3, Trash2, User, Mail, Phone, Briefcase } from 'lucide-react';
+import {
+  Edit3,
+  Trash2,
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+  Star,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +17,11 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { IconWrapper } from '../ui/iconwrapper';
+import {
+  colorLightenDarken,
+  getCssVarValue,
+  getRelativeDayLabel,
+} from '@/lib/utils';
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -36,6 +49,7 @@ export function EmployeeCard({
             <div>
               <CardTitle className="text-lg">{employee.name}</CardTitle>
               <Badge
+                className={employee.status === 'active' ? 'bg-success' : ''}
                 variant={employee.status === 'active' ? 'default' : 'secondary'}
               >
                 {employee.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -62,42 +76,57 @@ export function EmployeeCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {employee.email && (
-            <div className="flex items-center space-x-2 text-sm text-neutral-600">
-              <Mail className="w-4 h-4" />
-              <span>{employee.email}</span>
-            </div>
-          )}
-          {employee.phone && (
-            <div className="flex items-center space-x-2 text-sm text-neutral-600">
-              <Phone className="w-4 h-4" />
-              <span>{employee.phone}</span>
-            </div>
-          )}
+          <div className="flex items-center space-x-2 text-sm text-neutral-600">
+            <Mail className="w-4 h-4" />
+            {employee.email && <span>{employee.email}</span>}
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-neutral-600">
+            <Phone className="w-4 h-4" />
+            {employee.phone && <span>{employee.phone}</span>}
+          </div>
 
-          {/* Upcoming Shifts Section */}
-          <div className="mt-4">
-            <h4 className="text-sm font-semibold text-neutral-700 mb-2">
-              Próximos Turnos:
-            </h4>
+          <div className="mt-4 w-full overflow-hidden">
             {upcomingShifts.length > 0 ? (
-              <div className="space-y-2">
-                {upcomingShifts.map((shift) => (
-                  <Tooltip key={shift.id}>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        key={shift.id}
-                        variant="outline"
-                        className="text-sm rounded-full mr-2 space-x-1"
-                        style={{
-                          backgroundColor: `${shift.position.color}20`,
-                          color: shift.position.color,
-                          borderColor: shift.position.color,
-                        }}
-                      >
-                        <Briefcase className="w-3 h-3 min-w-3 min-h-3" />
+              <table>
+                <thead>
+                  <tr>
+                    <th colSpan={3}>
+                      <div className="flex items-center space-x-2 text-sm font-semibold text-neutral-600 text-left">
+                        <Briefcase className="w-4 h-4 min-w-4 min-h-4" />
+                        <span>Próximos Turnos:</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {upcomingShifts.map((shift) => (
+                    <tr
+                      key={shift.id}
+                      className="inline-flex items-center rounded-md border px-2.5 py-0.5 mb-1 w-full bg-neutral-200"
+                      style={
+                        getRelativeDayLabel(new Date(shift.date)) === 'HOY'
+                          ? {
+                              backgroundColor: `${colorLightenDarken(getCssVarValue('--success'), 0.8)}`,
+                              color: 'var(--success)',
+                              borderColor: 'var(--success)',
+                            }
+                          : {}
+                      }
+                    >
+                      <td>
+                        <h4 className="flex items-center text-sm font-semibold after:content-['-'] after:px-1">
+                          {getRelativeDayLabel(new Date(shift.date)) ===
+                          'HOY' ? (
+                            <Star className="inline w-4 min-w-4 max-w-4 h-4 min-h-4 max-h-4 mr-1" />
+                          ) : (
+                            <></>
+                          )}
+                          {getRelativeDayLabel(new Date(shift.date))}
+                        </h4>
+                      </td>
+                      <td className="text-sm space-x-1 after:content-['-'] after:px-1">
                         <span className="">
-                          {format(new Date(shift.date), 'eeee', {
+                          {format(new Date(shift.date), 'eee', {
                             locale: es,
                           }).toLocaleUpperCase()}
                         </span>
@@ -106,19 +135,41 @@ export function EmployeeCard({
                             locale: es,
                           }).toLocaleUpperCase()}
                         </span>
-                        <span> - {shift.position.siglas}</span>
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>{shift.position.name}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
+                      </td>
+                      <td className="p-0">
+                        <Tooltip key={shift.id}>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              key={shift.id}
+                              variant="outline"
+                              className="text-sm rounded-full"
+                              style={{
+                                backgroundColor: `${colorLightenDarken(shift.position.color, 0.8)}`,
+                                color: shift.position.color,
+                                borderColor: shift.position.color,
+                              }}
+                            >
+                              <span>{shift.position.siglas}</span>
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>{shift.position.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : (
-              <p className="text-xs text-neutral-500">
-                No hay turnos próximos asignados.
-              </p>
+              <>
+                <h4 className="text-sm font-semibold text-neutral-700 mb-2">
+                  Próximos Turnos:
+                </h4>
+                <p className="text-xs text-neutral-500">
+                  No hay turnos próximos asignados.
+                </p>
+              </>
             )}
           </div>
         </div>

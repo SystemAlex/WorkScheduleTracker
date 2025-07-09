@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm';
 import type { Cliente, Position } from '@shared/schema';
 import { IconWrapper } from '../ui/iconwrapper';
+import { colorLightenDarken } from '@/lib/utils';
 
 interface ClientCardProps {
   cliente: Cliente;
@@ -36,7 +37,7 @@ export function ClientCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <IconWrapper>
-              <Building className="text-white" />
+              <Building />
             </IconWrapper>
             <div>
               <CardTitle className="text-lg">{cliente.empresa}</CardTitle>
@@ -67,29 +68,21 @@ export function ClientCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {cliente.direccion && (
-            <div className="flex items-center space-x-2 text-sm text-neutral-600">
-              <span>{cliente.direccion}</span>
-            </div>
-          )}
-          {cliente.nombreContacto && (
-            <div className="flex items-center space-x-2 text-sm text-neutral-600">
-              <User className="w-4 h-4" />
-              <span>{cliente.nombreContacto}</span>
-            </div>
-          )}
-          {cliente.telefono && (
-            <div className="flex items-center space-x-2 text-sm text-neutral-600">
-              <Phone className="w-4 h-4" />
-              <span>{cliente.telefono}</span>
-            </div>
-          )}
-          {cliente.email && (
-            <div className="flex items-center space-x-2 text-sm text-neutral-600">
-              <Mail className="w-4 h-4" />
-              <span>{cliente.email}</span>
-            </div>
-          )}
+          <div className="flex items-center space-x-2 text-sm text-neutral-600">
+            {cliente.direccion && <span>{cliente.direccion}</span>}
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-neutral-600">
+            <User className="w-4 h-4" />
+            {cliente.nombreContacto && <span>{cliente.nombreContacto}</span>}
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-neutral-600">
+            <Phone className="w-4 h-4" />
+            {cliente.telefono && <span>{cliente.telefono}</span>}
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-neutral-600">
+            <Mail className="w-4 h-4" />
+            {cliente.email && <span>{cliente.email}</span>}
+          </div>
 
           {/* Positions Section */}
           <div className="mt-4">
@@ -97,20 +90,26 @@ export function ClientCard({
               Puestos Asignados:
             </h4>
             {clientPositions.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-1">
                 {clientPositions.map((position) => (
                   <Badge
                     key={position.id}
-                    variant="outline"
-                    className="text-sm rounded-full"
-                    style={{
-                      backgroundColor: `${position.color}20`,
-                      color: position.color,
-                      borderColor: position.color,
-                    }}
+                    className="space-x-2 text-sm bg-neutral-200 text-foreground w-full font-semibold"
                   >
-                    <Briefcase className="w-3 h-3 min-w-3 min-h-3 mr-1" />
-                    {position.name} ({position.siglas})
+                    <Briefcase className="w-4 h-4 min-w-4 min-h-4" />
+                    <span>{position.name}</span>
+                    <Badge
+                      key={position.id}
+                      variant="outline"
+                      className="text-sm rounded-full"
+                      style={{
+                        backgroundColor: `${colorLightenDarken(position.color, 0.8)}`,
+                        color: position.color,
+                        borderColor: position.color,
+                      }}
+                    >
+                      {position.siglas}
+                    </Badge>
                   </Badge>
                 ))}
               </div>
