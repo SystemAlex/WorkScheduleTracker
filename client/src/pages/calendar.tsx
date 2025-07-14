@@ -14,7 +14,7 @@ import type {
   Cliente,
   InsertShift,
 } from '@shared/schema';
-import { base } from '@/lib/paths';
+import { base } from '@shared/paths';
 import { subMonths } from 'date-fns';
 
 type ViewMode = 'month' | 'week' | 'day';

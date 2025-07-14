@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from '@tanstack/react-query';
-import { base } from './paths';
+import { base } from '../../../shared/paths';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

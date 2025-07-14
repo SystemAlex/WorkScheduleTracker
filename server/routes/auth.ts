@@ -18,7 +18,6 @@ import {
   isSameDay, // Importar isSameDay
   startOfDay,
   parse, // Importar parse
-  differenceInCalendarDays, // Importar la función que faltaba
 } from 'date-fns'; // Importar utilidades de fecha
 import { storage } from '../storage'; // Importar storage
 
@@ -77,7 +76,7 @@ const setPasswordSchema = z
  */
 authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
-    const { username, password, rememberMe } = req.body;
+    const { username, password, rememberMe } = req.body; // Destructure rememberMe
 
     const [user] = await db
       .select()
@@ -85,11 +84,10 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
       .where(eq(users.username, username));
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      return next(new UnauthorizedError('Error de Usuario y Contraseña'));
+      return next(new UnauthorizedError('Error de Usuario y Contraseña')); // Changed message here
     }
 
-    let companyStatus = null;
-
+    // --- REVISED PAYMENT CHECK LOGIC ---
     if (user.role !== 'super_admin' && user.mainCompanyId) {
       const [company] = await db
         .select()
@@ -100,6 +98,7 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
         return next(new ForbiddenError('Associated company not found.'));
       }
 
+      // Block if manually set to inactive
       if (!company.isActive) {
         return next(
           new ForbiddenError(
@@ -108,12 +107,12 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
         );
       }
 
+      // Now, check payment status based on dates
       let isCompanyActiveBasedOnPayment: boolean;
-      let nextPaymentDueDate: Date | null = null;
-      let isPaymentDueSoon = false;
       const now = startOfDay(new Date());
 
       if (!company.lastPaymentDate) {
+        // No payment ever registered = inactive
         isCompanyActiveBasedOnPayment = false;
       } else {
         const lastPayment = parse(
@@ -129,14 +128,12 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
             const monthlyDueDate = startOfDay(addMonths(lastPayment, 1));
             isCompanyActiveBasedOnPayment =
               isBefore(now, monthlyDueDate) || isSameDay(now, monthlyDueDate);
-            nextPaymentDueDate = monthlyDueDate;
             break;
           }
           case 'annual': {
             const annualDueDate = startOfDay(addYears(lastPayment, 1));
             isCompanyActiveBasedOnPayment =
               isBefore(now, annualDueDate) || isSameDay(now, annualDueDate);
-            nextPaymentDueDate = annualDueDate;
             break;
           }
           default:
@@ -152,56 +149,34 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
           ),
         );
       }
-
-      if (nextPaymentDueDate) {
-        const daysUntilDue = differenceInCalendarDays(nextPaymentDueDate, now);
-        if (daysUntilDue >= 0 && daysUntilDue <= 5) {
-          isPaymentDueSoon = true;
-        }
-      }
-
-      companyStatus = {
-        isActive: company.isActive && isCompanyActiveBasedOnPayment,
-        paymentControl: company.paymentControl,
-        lastPaymentDate: company.lastPaymentDate,
-        nextPaymentDueDate: nextPaymentDueDate,
-        isPaymentDueSoon: isPaymentDueSoon,
-        needsSetup: company.needsSetup,
-      };
     }
+    // --- END REVISED PAYMENT CHECK LOGIC ---
 
+    // Record the successful login
     await storage.recordLogin(user.id, user.mainCompanyId, req.ip || '');
 
-    req.session.regenerate((err) => {
-      if (err) {
-        return next(err);
-      }
+    // Set session maxAge dynamically based on rememberMe
+    if (rememberMe) {
+      req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
+    } else {
+      req.session.cookie.maxAge = 30 * 60 * 1000; // 30 minutes
+    }
 
-      req.session.userId = user.id;
-      req.session.role = user.role;
-      req.session.mainCompanyId = user.mainCompanyId;
-      req.session.isPendingPasswordChange = user.mustChangePassword;
+    // Create a full session regardless of password status
+    req.session.userId = user.id;
+    req.session.role = user.role;
+    req.session.mainCompanyId = user.mainCompanyId;
+    req.session.isPendingPasswordChange = user.mustChangePassword;
 
-      if (rememberMe) {
-        req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
-      }
-
-      req.session.save((saveErr) => {
-        if (saveErr) {
-          return next(saveErr);
-        }
-        res.json({
-          message: 'Logged in successfully',
-          user: {
-            id: user.id,
-            username: user.username,
-            role: user.role,
-            mainCompanyId: user.mainCompanyId,
-            mustChangePassword: user.mustChangePassword,
-            companyStatus: companyStatus,
-          },
-        });
-      });
+    res.json({
+      message: 'Logged in successfully',
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        mainCompanyId: user.mainCompanyId,
+        mustChangePassword: user.mustChangePassword, // Return the flag
+      },
     });
   } catch (error) {
     next(error);
@@ -309,12 +284,6 @@ authRouter.get(
         });
         return;
       }
-
-      // <-- CAMBIO: Añadir cabeceras para deshabilitar la caché
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('Surrogate-Control', 'no-store');
 
       res.json({ ...user, companyStatus: req.mainCompanyPaymentStatus });
     } catch (error) {

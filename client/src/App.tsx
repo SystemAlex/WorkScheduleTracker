@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Layout, LayoutMain } from '@/components/ui/layout';
-import { base } from '@/lib/paths';
+import { base } from '@shared/paths';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { PaymentStatusBanner } from '@/components/layout/payment-status-banner';
 import {

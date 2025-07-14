@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { base } from '@/lib/paths';
+import { base } from '@shared/paths';
 import type { User as BaseUser, MainCompany } from '@shared/schema';
 
 // Define a more specific type for the user object returned by the /me endpoint
@@ -41,9 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     queryKey: ['/api/auth/me'],
     queryFn: async () => {
       try {
-        // Add a cache-busting parameter to the URL to bypass intermediate proxies
-        const url = `${base('/api/auth/me')}?_t=${new Date().getTime()}`;
-        const response = await fetch(url, {
+        const response = await fetch(base('/api/auth/me'), {
           credentials: 'include',
         });
         if (response.status === 401) {

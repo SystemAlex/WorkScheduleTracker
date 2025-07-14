@@ -18,7 +18,7 @@ import type { Cliente, InsertCliente, Position } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SearchInput } from '@/components/common/search-input';
-import { base } from '@/lib/paths';
+import { base } from '@shared/paths';
 import { ClientForm } from '@/components/clients/client-form';
 import { ClientCard } from '@/components/clients/client-card';
 import { z } from 'zod';

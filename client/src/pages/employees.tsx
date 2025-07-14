@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { z } from 'zod';
 import { addMonths, format, startOfDay, parse } from 'date-fns';
-import { base } from '@/lib/paths';
+import { base } from '@shared/paths';
 import { SearchInput } from '@/components/common/search-input';
 import { EmployeeForm } from '@/components/employees/employee-form';
 import { EmployeeCard } from '@/components/employees/employee-card';

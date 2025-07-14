@@ -10,7 +10,7 @@ import {
   getProcessedReportPositions,
 } from '@shared/utils';
 import { exportToCsv } from '@/lib/utils';
-import { base } from '@/lib/paths';
+import { base } from '@shared/paths';
 import { ReportFilters } from '@/components/reports/report-filters';
 import { ReportSummaryCards } from '@/components/reports/report-summary-cards';
 import { ReportTable } from '@/components/reports/report-table';
