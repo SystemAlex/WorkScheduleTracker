@@ -152,32 +152,37 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
     // Record the successful login
     await storage.recordLogin(user.id, user.mainCompanyId, req.ip || '');
 
-    // Populate the session. `saveUninitialized: true` ensures req.session exists.
-    req.session.userId = user.id;
-    req.session.role = user.role;
-    req.session.mainCompanyId = user.mainCompanyId;
-    req.session.isPendingPasswordChange = user.mustChangePassword;
-
-    if (rememberMe) {
-      req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
-    } else {
-      req.session.cookie.maxAge = 30 * 60 * 1000; // 30 minutes
-    }
-
-    // <-- CAMBIO: Forzar el guardado de la sesión
-    req.session.save((err) => {
+    // Use regenerate for a new, clean session
+    req.session.regenerate((err) => {
       if (err) {
         return next(err);
       }
-      res.json({
-        message: 'Logged in successfully',
-        user: {
-          id: user.id,
-          username: user.username,
-          role: user.role,
-          mainCompanyId: user.mainCompanyId,
-          mustChangePassword: user.mustChangePassword,
-        },
+
+      // Populate the new session
+      req.session.userId = user.id;
+      req.session.role = user.role;
+      req.session.mainCompanyId = user.mainCompanyId;
+      req.session.isPendingPasswordChange = user.mustChangePassword;
+
+      if (rememberMe) {
+        req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
+      }
+
+      // Save the session explicitly to be sure it's written before responding
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          return next(saveErr);
+        }
+        res.json({
+          message: 'Logged in successfully',
+          user: {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            mainCompanyId: user.mainCompanyId,
+            mustChangePassword: user.mustChangePassword,
+          },
+        });
       });
     });
   } catch (error) {

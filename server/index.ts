@@ -24,7 +24,7 @@ const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl/' : '/';
 const PgSession = pgSession(session);
 app.use(
   session({
-    name: 'wst.session',
+    name: 'wst.session', // Dar un nombre único a la cookie
     store: new PgSession({
       pool: pool,
       tableName: 'session',
@@ -32,14 +32,14 @@ app.use(
     }),
     secret: process.env.SESSION_SECRET || 'supersecretkey',
     resave: false,
-    saveUninitialized: true, // Garantiza que req.session exista antes del login
+    saveUninitialized: true, // CRUCIAL: Asegura que req.session siempre exista
     rolling: true,
     cookie: {
       maxAge: 30 * 60 * 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: basePath, // <-- CAMBIO: Usar la ruta base dinámica
+      path: basePath, // CRUCIAL: Establece el alcance correcto de la cookie
     },
   }),
 );
