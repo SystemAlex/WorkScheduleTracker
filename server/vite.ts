@@ -61,7 +61,8 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, 'public');
+  const distPath = path.resolve(import.meta.dirname, '..', 'dist', 'public');
+  const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl' : '/';
 
   if (!fs.existsSync(distPath)) {
     logger.error(
@@ -72,7 +73,7 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  app.use(basePath, express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
   app.use('*', (_req, res) => {

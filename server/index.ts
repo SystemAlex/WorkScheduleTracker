@@ -1,7 +1,12 @@
 import 'dotenv/config';
 import './types/express.d.ts'; // Importación explícita del archivo de definición de tipos
-import express, { NextFunction, type Request, Response } from 'express';
-import { registerRoutes } from './routes';
+import express, {
+  NextFunction,
+  type Request,
+  Response,
+  Router,
+} from 'express';
+import { createServer } from 'http';
 import { setupVite, serveStatic } from './vite';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
@@ -12,6 +17,13 @@ import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 import { pool } from './db'; // Import the pg pool
 import authRouter from './routes/auth'; // Import the new auth router
+import employeesRouter from './routes/employees';
+import positionsRouter from './routes/positions';
+import shiftsRouter from './routes/shifts';
+import clientsRouter from './routes/clients';
+import reportsRouter from './routes/reports';
+import adminRouter from './routes/sentinelzone';
+import usersRouter from './routes/users';
 
 const app = express();
 app.set('trust proxy', 1); // Habilitar para obtener la IP correcta detrás de un proxy
@@ -40,6 +52,8 @@ app.use(
   }),
 );
 
+const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl' : '';
+
 // Middleware to protect Swagger docs
 const protectSwaggerDocs = (
   req: Request,
@@ -50,7 +64,7 @@ const protectSwaggerDocs = (
     return next(); // User is super_admin, allow access
   }
   // For anyone else (not logged in, or not a super_admin), redirect to login
-  res.redirect('/login');
+  res.redirect(`${basePath}/login`);
 };
 
 // Configuración de Swagger
@@ -63,7 +77,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'http://localhost:5000',
+      url: basePath || '/',
     },
   ],
 };
@@ -83,12 +97,26 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
-app.use(
-  '/sentinelzone/api/docs',
+
+// Create a single router for all API endpoints
+const apiRouter = Router();
+apiRouter.use('/auth', authRouter);
+apiRouter.use('/employees', employeesRouter);
+apiRouter.use('/positions', positionsRouter);
+apiRouter.use('/shifts', shiftsRouter);
+apiRouter.use('/clientes', clientsRouter);
+apiRouter.use('/reports', reportsRouter);
+apiRouter.use('/users', usersRouter);
+apiRouter.use('/sentinelzone', adminRouter);
+apiRouter.use(
+  '/sentinelzone/docs',
   protectSwaggerDocs,
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec),
 );
+
+// Mount the API router with the base path
+app.use(`${basePath}/api`, apiRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -103,7 +131,7 @@ app.use((req, res, next) => {
 
   res.on('finish', () => {
     const duration = Date.now() - start;
-    if (path.startsWith('/api')) {
+    if (path.startsWith(`${basePath}/api`)) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
@@ -121,10 +149,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Register auth routes before other API routes
-  app.use('/api/auth', authRouter);
-
-  const server = await registerRoutes(app);
+  const server = createServer(app);
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
