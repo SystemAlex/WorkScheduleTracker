@@ -4,7 +4,7 @@ export function base(path?: string): string {
     // In Vite, import.meta.env.BASE_URL reflects the `base` config option.
     // It will be '/vipsrl/' in production and '/' in development.
     baseUrl = import.meta.env.BASE_URL;
-  } catch (e) {
+  } catch {
     // Fallback for Node.js environment (e.g., server-side code using shared/paths)
     // In Node.js, process.env.NODE_ENV is used.
     baseUrl = process.env.NODE_ENV === 'production' ? '/vipsrl/' : '/';
