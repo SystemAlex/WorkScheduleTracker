@@ -149,43 +149,31 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
     }
     // --- END REVISED PAYMENT CHECK LOGIC ---
 
-    // Regenerate session to prevent session fixation and ensure a clean session
-    req.session.regenerate(async (err) => {
-      if (err) {
-        return next(err);
-      }
+    // Record the successful login
+    await storage.recordLogin(user.id, user.mainCompanyId, req.ip || '');
 
-      // Record the successful login
-      await storage.recordLogin(user.id, user.mainCompanyId, req.ip || '');
+    // Populate the session. `saveUninitialized: true` ensures req.session exists.
+    req.session.userId = user.id;
+    req.session.role = user.role;
+    req.session.mainCompanyId = user.mainCompanyId;
+    req.session.isPendingPasswordChange = user.mustChangePassword;
 
-      // Populate the new session
-      req.session.userId = user.id;
-      req.session.role = user.role;
-      req.session.mainCompanyId = user.mainCompanyId;
-      req.session.isPendingPasswordChange = user.mustChangePassword;
+    if (rememberMe) {
+      req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
+    } else {
+      req.session.cookie.maxAge = 30 * 60 * 1000; // 30 minutes
+    }
 
-      if (rememberMe) {
-        req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
-      } else {
-        req.session.cookie.maxAge = 30 * 60 * 1000; // 30 minutes
-      }
-
-      // Save the session before sending the response
-      req.session.save((err) => {
-        if (err) {
-          return next(err);
-        }
-        res.json({
-          message: 'Logged in successfully',
-          user: {
-            id: user.id,
-            username: user.username,
-            role: user.role,
-            mainCompanyId: user.mainCompanyId,
-            mustChangePassword: user.mustChangePassword,
-          },
-        });
-      });
+    // The session will be saved automatically at the end of the response.
+    res.json({
+      message: 'Logged in successfully',
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        mainCompanyId: user.mainCompanyId,
+        mustChangePassword: user.mustChangePassword,
+      },
     });
   } catch (error) {
     next(error);

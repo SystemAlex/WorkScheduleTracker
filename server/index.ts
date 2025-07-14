@@ -13,7 +13,7 @@ import pgSession from 'connect-pg-simple';
 import { pool } from './db'; // Import the pg pool
 
 const app = express();
-app.set('trust proxy', true); // <-- CAMBIO: Confiar en la cabecera X-Forwarded-Proto
+app.set('trust proxy', 1); // Confiar en el primer proxy (ALB)
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -24,22 +24,22 @@ const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl/' : '/';
 const PgSession = pgSession(session);
 app.use(
   session({
-    name: 'wst.session', // <-- CAMBIO: Nombre de cookie único
+    name: 'wst.session',
     store: new PgSession({
-      pool: pool, // Use the same pg pool as Drizzle
-      tableName: 'session', // Name of the table to store sessions
-      createTableIfMissing: true, // Automatically create the session table if it doesn't exist
+      pool: pool,
+      tableName: 'session',
+      createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || 'supersecretkey', // Use a strong secret from env
+    secret: process.env.SESSION_SECRET || 'supersecretkey',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true, // Garantiza que req.session exista antes del login
     rolling: true,
     cookie: {
-      maxAge: 30 * 60 * 1000, // Default to 30 minutes (1,800,000 ms)
+      maxAge: 30 * 60 * 1000,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-      sameSite: 'lax', // CSRF protection
-      path: basePath,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: basePath, // <-- CAMBIO: Usar la ruta base dinámica
     },
   }),
 );
