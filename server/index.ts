@@ -13,7 +13,7 @@ import pgSession from 'connect-pg-simple';
 import { pool } from './db'; // Import the pg pool
 
 const app = express();
-app.set('trust proxy', 1); // Habilitar para obtener la IP correcta detrás de un proxy
+app.set('trust proxy', true); // <-- CAMBIO: Confiar en la cabecera X-Forwarded-Proto
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -24,6 +24,7 @@ const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl/' : '/';
 const PgSession = pgSession(session);
 app.use(
   session({
+    name: 'wst.session', // <-- CAMBIO: Nombre de cookie único
     store: new PgSession({
       pool: pool, // Use the same pg pool as Drizzle
       tableName: 'session', // Name of the table to store sessions
@@ -31,14 +32,14 @@ app.use(
     }),
     secret: process.env.SESSION_SECRET || 'supersecretkey', // Use a strong secret from env
     resave: false,
-    saveUninitialized: false, // <-- REVERTIDO: No guardar sesiones no inicializadas.
-    rolling: true, // <-- Reinicia el maxAge de la cookie en cada respuesta
+    saveUninitialized: false,
+    rolling: true,
     cookie: {
       maxAge: 30 * 60 * 1000, // Default to 30 minutes (1,800,000 ms)
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       sameSite: 'lax', // CSRF protection
-      path: basePath, // <-- Usar la ruta base para la cookie
+      path: basePath,
     },
   }),
 );
