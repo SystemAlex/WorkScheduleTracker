@@ -60,34 +60,22 @@ export async function setupVite(app: Express, server: Server) {
   });
 }
 
-export function serveStatic(app: Express, basePath: string) {
-  const distPath = path.resolve(import.meta.dirname, '..', 'dist', 'public');
+export function serveStatic(app: Express) {
+  const distPath = path.resolve(import.meta.dirname, 'public');
 
   if (!fs.existsSync(distPath)) {
     logger.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    ); // Use new logger
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
     );
   }
 
-  // Serve static assets from the /assets directory
-  app.use(
-    `${basePath}/assets`,
-    express.static(path.join(distPath, 'assets')),
-  );
+  app.use(express.static(distPath));
 
-  // For any other GET request under the base path, serve the index.html
-  // This acts as the SPA fallback.
-  app.get(`${basePath}/*`, (_req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
+  // fall through to index.html if the file doesn't exist
+  app.use('*', (_req, res) => {
+    res.sendFile(path.resolve(distPath, 'index.html'));
   });
-
-  // If the base path is empty, we need a root handler
-  if (!basePath) {
-    app.get('/', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
 }
