@@ -164,16 +164,21 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
       req.session.cookie.maxAge = 30 * 60 * 1000; // 30 minutes
     }
 
-    // The session will be saved automatically at the end of the response.
-    res.json({
-      message: 'Logged in successfully',
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        mainCompanyId: user.mainCompanyId,
-        mustChangePassword: user.mustChangePassword,
-      },
+    // <-- CAMBIO: Forzar el guardado de la sesión
+    req.session.save((err) => {
+      if (err) {
+        return next(err);
+      }
+      res.json({
+        message: 'Logged in successfully',
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          mainCompanyId: user.mainCompanyId,
+          mustChangePassword: user.mustChangePassword,
+        },
+      });
     });
   } catch (error) {
     next(error);
