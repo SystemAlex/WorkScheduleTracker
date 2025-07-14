@@ -28,7 +28,7 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl/' : '/';
+const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl' : ''; // Eliminar la barra final aquí
 const PgSession = pgSession(session);
 
 // El middleware de sesión se registra ANTES que las rutas
@@ -49,7 +49,7 @@ app.use(
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: basePath,
+      path: `${basePath}/`, // Asegurar que la cookie tenga la ruta base correcta
     },
   }),
 );
@@ -83,7 +83,7 @@ const swaggerOptions = {
   ],
 };
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
-app.use('/sentinelzone/api/docs', protectSwaggerDocs, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(`${basePath}/sentinelzone/api/docs`, protectSwaggerDocs, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Middleware de logging
 app.use((req, res, next) => {
@@ -98,8 +98,10 @@ app.use((req, res, next) => {
 
   res.on('finish', () => {
     const duration = Date.now() - start;
-    if (req.path.startsWith('/api')) {
-      let logLine = `${req.method} ${req.path} ${res.statusCode} in ${duration}ms`;
+    // Ajustar el log para que muestre la ruta completa incluyendo la basePath
+    const fullPath = req.originalUrl; // req.originalUrl ya incluye la basePath si está presente
+    if (fullPath.startsWith(`${basePath}/api`)) {
+      let logLine = `${req.method} ${fullPath} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
@@ -114,15 +116,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Registrar todas las rutas de la API aquí
-app.use('/api/auth', authRouter);
-app.use('/api/employees', employeesRouter);
-app.use('/api/positions', positionsRouter);
-app.use('/api/shifts', shiftsRouter);
-app.use('/api/clientes', clientsRouter);
-app.use('/api/reports', reportsRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/sentinelzone', adminRouter);
+// Registrar todas las rutas de la API aquí, prefijadas con basePath
+app.use(`${basePath}/api/auth`, authRouter);
+app.use(`${basePath}/api/employees`, employeesRouter);
+app.use(`${basePath}/api/positions`, positionsRouter);
+app.use(`${basePath}/api/shifts`, shiftsRouter);
+app.use(`${basePath}/api/clientes`, clientsRouter);
+app.use(`${basePath}/api/reports`, reportsRouter);
+app.use(`${basePath}/api/users`, usersRouter);
+app.use(`${basePath}/api/sentinelzone`, adminRouter);
 
 // --- INICIO: Código para listar rutas ---
 function listRoutes() {
@@ -135,12 +137,13 @@ function listRoutes() {
       // Extract the base path for this router from its regex source
       // This regex attempts to capture the clean path part from the Express internal regex
       const source = layer.regexp.source;
+      // Ajustar la regex para capturar la ruta base completa, incluyendo el prefijo de la aplicación
       const match = source.match(/^\^(.+?)(?:\\?\/\?\(\?\=\\\/\|\$\)\/i)?$/);
       let routerBasePath = '';
       if (match && match[1]) {
           routerBasePath = match[1].replace(/\\/g, ''); // Unescape backslashes
       }
-      // Ensure it starts with a slash if it's not empty and doesn't already
+      // Asegurarse de que empiece con una barra si no está vacío y no la tiene
       if (routerBasePath && !routerBasePath.startsWith('/')) {
           routerBasePath = '/' + routerBasePath;
       }
