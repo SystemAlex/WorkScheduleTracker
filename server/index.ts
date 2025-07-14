@@ -123,47 +123,9 @@ app.use((req, res, next) => {
 
 (async () => {
   // Register auth routes before other API routes
-  app.use(base('/api/auth'), authRouter);
+  app.use('/api/auth', authRouter);
 
   const server = await registerRoutes(app);
-  // --- INICIO: Código para listar rutas ---
-  function listRoutes() {
-    logger.info('--- Rutas Registradas ---');
-    app._router.stack.forEach((layer: any) => {
-      if (layer.route) {
-        // Routes directly attached to app (e.g., app.get('/'))
-        const methods = Object.keys(layer.route.methods)
-          .join(', ')
-          .toUpperCase();
-        logger.info(`[${methods}] ${layer.route.path}`);
-      } else if (layer.name === 'router' && layer.handle.stack) {
-        // Mounted routers
-        // Extract the base path for this router from its regex source
-        // This regex attempts to capture the clean path part from the Express internal regex
-        const source = layer.regexp.source;
-        // Ajustar la regex para capturar la ruta base completa, incluyendo el prefijo de la aplicación
-        const match = source.match(/^\^(.+?)(?:\\?\/\?\(\?\=\\\/\|\$\)\/i)?$/);
-        let routerBasePath = '';
-        if (match && match[1]) {
-          routerBasePath = match[1].replace(/\\/g, ''); // Unescape backslashes
-        }
-        // Asegurarse de que empiece con una barra si no está vacío y no la tiene
-        if (routerBasePath && !routerBasePath.startsWith('/')) {
-          routerBasePath = '/' + routerBasePath;
-        }
-
-        layer.handle.stack.forEach((handler: any) => {
-          const route = handler.route;
-          if (route && route.methods) {
-            const methods = Object.keys(route.methods).join(', ').toUpperCase();
-            logger.info(`[${methods}] ${routerBasePath}${route.path}`);
-          }
-        });
-      }
-    });
-    logger.info('-------------------------');
-  }
-  // --- FIN: Código para listar rutas ---
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
@@ -229,7 +191,6 @@ app.use((req, res, next) => {
     },
     () => {
       logger.info(`serving on port ${port}`);
-      listRoutes(); // Llamar a la función para listar las rutas al iniciar el servidor
     },
   );
 })();
