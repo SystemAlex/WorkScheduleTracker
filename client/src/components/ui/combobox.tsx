@@ -2,7 +2,9 @@
 
 import * as React from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -16,96 +18,76 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-interface ComboBoxProps {
-  options: { label: string; value: string }[];
-  placeholder?: string;
+interface ComboBoxOption {
   value: string;
-  onChange: (value: string) => void;
+  label: string;
+}
+
+interface ComboBoxProps {
+  options: ComboBoxOption[];
+  value: string; // This is the controlled value from parent
+  onValueChange: (value: string) => void; // This is the setter for the controlled value
+  placeholder?: string;
   disabled?: boolean;
 }
 
 export function ComboBox({
   options,
-  placeholder = 'Seleccionar...',
   value,
-  onChange,
+  onValueChange,
+  placeholder = 'Select...',
   disabled,
 }: ComboBoxProps) {
   const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState('');
-  const inputRef = React.useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
-    if (open) {
-      setInputValue('');
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open]);
-
-  const filteredOptions = React.useMemo(() => {
-    if (!inputValue) return options;
-    return options.filter((opt) =>
-      opt.label.toLowerCase().includes(inputValue.toLowerCase()),
+  // The displayed value in the button should directly come from the 'value' prop
+  const displayLabel = React.useMemo(() => {
+    return (
+      options.find((option) => option.value === value)?.label || placeholder
     );
-  }, [inputValue, options]);
+  }, [value, options, placeholder]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          type="button"
+        <Button
+          variant="outline"
           role="combobox"
           aria-expanded={open}
-          aria-label={placeholder}
+          className="w-full justify-between"
           disabled={disabled}
-          className={cn(
-            'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50',
-            !value && 'text-muted-foreground',
-          )}
         >
-          {options.find((opt) => opt.value === value)?.label || placeholder}
+          {displayLabel}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </button>
+        </Button>
       </PopoverTrigger>
-
-      {open && (
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-          <Command loop>
-            <CommandInput
-              ref={inputRef}
-              placeholder="Buscar..."
-              className="h-9"
-              value={inputValue}
-              onValueChange={setInputValue}
-              autoFocus
-            />
-            {filteredOptions.length === 0 ? (
-              <CommandEmpty>No se encontraron resultados.</CommandEmpty>
-            ) : (
-              <CommandGroup>
-                {filteredOptions.map((opt) => (
-                  <CommandItem
-                    key={opt.value}
-                    value={opt.value}
-                    onSelect={(currentValue) => {
-                      onChange(currentValue);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        'mr-2 h-4 w-4',
-                        value === opt.value ? 'opacity-100' : 'opacity-0',
-                      )}
-                    />
-                    {opt.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-          </Command>
-        </PopoverContent>
-      )}
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+        <Command>
+          <CommandInput placeholder={placeholder} />
+          <CommandEmpty>No option found.</CommandEmpty>
+          <CommandGroup>
+            {options.map((option) => (
+              <CommandItem
+                key={option.value}
+                value={option.label} // Use label for search, value for selection
+                onSelect={() => {
+                  // Always set the selected value, do not toggle
+                  onValueChange(option.value);
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    'mr-2 h-4 w-4',
+                    value === option.value ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
+                {option.label}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
     </Popover>
   );
 }

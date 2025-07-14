@@ -3,10 +3,16 @@ import { employees, type Employee, type InsertEmployee } from '@shared/schema';
 import { eq, asc, ilike, and } from 'drizzle-orm';
 
 export class EmployeeStorage {
-  async getEmployees(nameFilter?: string): Promise<Employee[]> {
-    const conditions = [eq(employees.status, 'active')];
+  async getEmployees(
+    nameFilter?: string,
+    mainCompanyId?: number,
+  ): Promise<Employee[]> {
+    const conditions = [];
     if (nameFilter) {
       conditions.push(ilike(employees.name, `%${nameFilter}%`));
+    }
+    if (mainCompanyId) {
+      conditions.push(eq(employees.mainCompanyId, mainCompanyId));
     }
     return await db
       .select()
@@ -15,18 +21,28 @@ export class EmployeeStorage {
       .orderBy(asc(employees.name));
   }
 
-  async getEmployee(id: number): Promise<Employee | undefined> {
+  async getEmployee(
+    id: number,
+    mainCompanyId?: number,
+  ): Promise<Employee | undefined> {
+    const conditions = [eq(employees.id, id)];
+    if (mainCompanyId) {
+      conditions.push(eq(employees.mainCompanyId, mainCompanyId));
+    }
     const [employee] = await db
       .select()
       .from(employees)
-      .where(eq(employees.id, id));
+      .where(and(...conditions));
     return employee || undefined;
   }
 
-  async createEmployee(insertEmployee: InsertEmployee): Promise<Employee> {
+  async createEmployee(
+    insertEmployee: InsertEmployee,
+    mainCompanyId: number,
+  ): Promise<Employee> {
     const [employee] = await db
       .insert(employees)
-      .values(insertEmployee)
+      .values({ ...insertEmployee, mainCompanyId })
       .returning();
     return employee;
   }
@@ -34,22 +50,29 @@ export class EmployeeStorage {
   async updateEmployee(
     id: number,
     data: InsertEmployee,
+    mainCompanyId?: number,
   ): Promise<Employee | null> {
+    const conditions = [eq(employees.id, id)];
+    if (mainCompanyId) {
+      conditions.push(eq(employees.mainCompanyId, mainCompanyId));
+    }
     const [employee] = await db
       .update(employees)
       .set(data)
-      .where(eq(employees.id, id))
+      .where(and(...conditions))
       .returning();
-    return employee || null; // Return null if no employee was updated
+    return employee || null;
   }
 
-  async deleteEmployee(id: number): Promise<boolean> {
-    // Change return type to boolean
-    // Implement soft delete for employees by setting status to 'inactive'
+  async deleteEmployee(id: number, mainCompanyId?: number): Promise<boolean> {
+    const conditions = [eq(employees.id, id)];
+    if (mainCompanyId) {
+      conditions.push(eq(employees.mainCompanyId, mainCompanyId));
+    }
     const result = await db
       .update(employees)
       .set({ status: 'inactive' })
-      .where(eq(employees.id, id));
-    return (result.rowCount ?? 0) > 0; // Return true if a row was affected, false otherwise
+      .where(and(...conditions));
+    return (result.rowCount ?? 0) > 0;
   }
 }

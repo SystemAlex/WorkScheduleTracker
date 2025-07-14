@@ -3,8 +3,20 @@ import { base } from './paths';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = res.statusText;
+    try {
+      const errorBody = await res.json();
+      if (errorBody && typeof errorBody.message === 'string') {
+        errorMessage = errorBody.message;
+      } else if (typeof errorBody === 'string') {
+        errorMessage = errorBody;
+      }
+    } catch (e) {
+      console.log(e);
+      // If parsing as JSON fails, fall back to statusText or a generic message
+      errorMessage = res.statusText || `Error: ${res.status}`;
+    }
+    throw new Error(errorMessage);
   }
 }
 

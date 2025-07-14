@@ -22,7 +22,7 @@ import type {
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { z } from 'zod';
-import { addMonths, format } from 'date-fns';
+import { addMonths, format, startOfDay, parse } from 'date-fns';
 import { base } from '@/lib/paths';
 import { SearchInput } from '@/components/common/search-input';
 import { EmployeeForm } from '@/components/employees/employee-form';
@@ -39,7 +39,7 @@ export default function Employees() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const today = new Date();
+  const today = startOfDay(new Date());
   const threeMonthsLater = addMonths(today, 3);
 
   const { data: allEmployees = [], isLoading } = useQuery<Employee[]>({
@@ -291,11 +291,12 @@ export default function Employees() {
                 .filter(
                   (shift) =>
                     shift.employeeId === employee.id &&
-                    new Date(shift.date) >= today,
+                    parse(shift.date, 'yyyy-MM-dd', new Date()) >= today,
                 )
                 .sort(
                   (a, b) =>
-                    new Date(a.date).getTime() - new Date(b.date).getTime(),
+                    parse(a.date, 'yyyy-MM-dd', new Date()).getTime() -
+                    parse(b.date, 'yyyy-MM-dd', new Date()).getTime(),
                 )
                 .slice(0, 5);
 

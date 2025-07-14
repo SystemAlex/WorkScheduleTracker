@@ -333,7 +333,7 @@ export default function Estructura() {
                         </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="p-4 pt-0">
+                    <AccordionContent className="p-3 pt-0">
                       <div className="ml-4">
                         <Accordion
                           type="multiple"
@@ -366,7 +366,7 @@ export default function Estructura() {
                                 </div>
                               </AccordionTrigger>
                               <AccordionContent className="p-3 pt-0">
-                                <div className="w-full ml-4">
+                                <div className="w-auto ml-4">
                                   <Accordion
                                     type="multiple"
                                     value={openPositions[client.id.toString()]}

@@ -1,10 +1,19 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import { storage } from '../storage';
 import { insertClienteSchema } from '@shared/schema';
 import { validate } from '../middleware/validate';
-import { NotFoundError } from '../errors'; // Import NotFoundError
+import { NotFoundError } from '../errors';
+import {
+  isAuthenticated,
+  authorizeCompany,
+  authorizeRole,
+  checkCompanyPaymentStatus,
+} from '../middleware/auth'; // Importar middlewares
 
 const clientsRouter = Router();
+
+// Aplicar isAuthenticated y authorizeCompany a todas las rutas de clientes
+clientsRouter.use(isAuthenticated, authorizeCompany, checkCompanyPaymentStatus);
 
 /**
  * @openapi
@@ -12,6 +21,8 @@ const clientsRouter = Router();
  *   get:
  *     summary: Obtiene todos los clientes
  *     tags: [Clientes]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: query
  *         name: search
@@ -21,14 +32,23 @@ const clientsRouter = Router();
  *     responses:
  *       200:
  *         description: Lista de clientes
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Acceso denegado
  */
-clientsRouter.get('/', async (req, res, next) => {
+clientsRouter.get('/', async (req: Request, res, next) => {
+  // Use Request here
   try {
     const { search } = req.query;
-    const clientes = await storage.getClientes(search as string);
+    // Pasar mainCompanyId a la función de almacenamiento
+    const clientes = await storage.getClientes(
+      search as string,
+      req.mainCompanyId ?? undefined,
+    );
     res.json(clientes);
   } catch (error) {
-    next(error); // Pass error to global error handler
+    next(error);
   }
 });
 
@@ -38,6 +58,8 @@ clientsRouter.get('/', async (req, res, next) => {
  *   post:
  *     summary: Crea un nuevo cliente
  *     tags: [Clientes]
+ *     security:
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -49,16 +71,23 @@ clientsRouter.get('/', async (req, res, next) => {
  *         description: Cliente creado
  *       400:
  *         description: Datos inválidos
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Acceso denegado
  */
 clientsRouter.post(
   '/',
+  authorizeRole(['admin']), // Solo administradores pueden crear clientes
   validate(insertClienteSchema),
-  async (req, res, next) => {
+  async (req: Request, res, next) => {
+    // Use Request here
     try {
-      const cliente = await storage.createCliente(req.body);
+      // Pasar mainCompanyId a la función de almacenamiento
+      const cliente = await storage.createCliente(req.body, req.mainCompanyId!);
       res.status(201).json(cliente);
     } catch (error) {
-      next(error); // Pass error to global error handler
+      next(error);
     }
   },
 );
@@ -69,6 +98,8 @@ clientsRouter.post(
  *   put:
  *     summary: Actualiza un cliente existente
  *     tags: [Clientes]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -86,6 +117,10 @@ clientsRouter.post(
  *         description: Cliente actualizado
  *       400:
  *         description: Datos inválidos
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Acceso denegado
  *       404:
  *         description: Cliente no encontrado
  *       500:
@@ -93,17 +128,24 @@ clientsRouter.post(
  */
 clientsRouter.put(
   '/:id',
+  authorizeRole(['admin']), // Solo administradores pueden actualizar clientes
   validate(insertClienteSchema),
-  async (req, res, next) => {
+  async (req: Request, res, next) => {
+    // Use Request here
     try {
       const id = parseInt(req.params.id);
-      const cliente = await storage.updateCliente(id, req.body);
+      // Pasar mainCompanyId a la función de almacenamiento
+      const cliente = await storage.updateCliente(
+        id,
+        req.body,
+        req.mainCompanyId ?? undefined,
+      );
       if (!cliente) {
         throw new NotFoundError('Cliente not found');
       }
       res.json(cliente);
     } catch (error) {
-      next(error); // Pass error to global error handler
+      next(error);
     }
   },
 );
@@ -114,6 +156,8 @@ clientsRouter.put(
  *   delete:
  *     summary: Elimina un cliente
  *     tags: [Clientes]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -123,22 +167,35 @@ clientsRouter.put(
  *     responses:
  *       204:
  *         description: Cliente eliminado
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Acceso denegado
  *       404:
  *         description: Cliente no encontrado
  *       500:
  *         description: Error interno
  */
-clientsRouter.delete('/:id', async (req, res, next) => {
-  try {
-    const id = parseInt(req.params.id);
-    const deleted = await storage.deleteCliente(id);
-    if (!deleted) {
-      throw new NotFoundError('Cliente not found');
+clientsRouter.delete(
+  '/:id',
+  authorizeRole(['admin']),
+  async (req: Request, res, next) => {
+    // Use Request here
+    try {
+      const id = parseInt(req.params.id);
+      // Pasar mainCompanyId a la función de almacenamiento
+      const deleted = await storage.deleteCliente(
+        id,
+        req.mainCompanyId ?? undefined,
+      );
+      if (!deleted) {
+        throw new NotFoundError('Cliente not found');
+      }
+      res.status(204).send();
+    } catch (error) {
+      next(error);
     }
-    res.status(204).send();
-  } catch (error) {
-    next(error); // Pass error to global error handler
-  }
-});
+  },
+);
 
 export default clientsRouter;

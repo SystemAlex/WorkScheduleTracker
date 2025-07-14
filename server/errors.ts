@@ -34,3 +34,17 @@ export class ConflictError extends CustomError {
     Object.setPrototypeOf(this, ConflictError.prototype);
   }
 }
+
+export class UnauthorizedError extends CustomError {
+  constructor(message: string = 'Authentication required', details?: unknown) {
+    super(message, 401, 'UNAUTHORIZED', details);
+    Object.setPrototypeOf(this, UnauthorizedError.prototype);
+  }
+}
+
+export class ForbiddenError extends CustomError {
+  constructor(message: string = 'Access denied', details?: unknown) {
+    super(message, 403, 'FORBIDDEN', details);
+    Object.setPrototypeOf(this, ForbiddenError.prototype);
+  }
+}

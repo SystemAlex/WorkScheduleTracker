@@ -13,10 +13,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm';
 import type { Employee, ShiftWithDetails } from '@shared/schema';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { IconWrapper } from '../ui/iconwrapper';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { IconWrapper } from '@/components/ui/iconwrapper';
 import {
   colorLightenDarken,
   getCssVarValue,
@@ -99,66 +103,72 @@ export function EmployeeCard({
                   </tr>
                 </thead>
                 <tbody>
-                  {upcomingShifts.map((shift) => (
-                    <tr
-                      key={shift.id}
-                      className="inline-flex items-center rounded-md border px-2.5 py-0.5 mb-1 w-full bg-neutral-200"
-                      style={
-                        getRelativeDayLabel(new Date(shift.date)) === 'HOY'
-                          ? {
-                              backgroundColor: `${colorLightenDarken(getCssVarValue('--success'), 0.8)}`,
-                              color: 'var(--success)',
-                              borderColor: 'var(--success)',
-                            }
-                          : {}
-                      }
-                    >
-                      <td>
-                        <h4 className="flex items-center text-sm font-semibold after:content-['-'] after:px-1">
-                          {getRelativeDayLabel(new Date(shift.date)) ===
-                          'HOY' ? (
-                            <Star className="inline w-4 min-w-4 max-w-4 h-4 min-h-4 max-h-4 mr-1" />
-                          ) : (
-                            <></>
-                          )}
-                          {getRelativeDayLabel(new Date(shift.date))}
-                        </h4>
-                      </td>
-                      <td className="text-sm space-x-1 after:content-['-'] after:px-1">
-                        <span className="">
-                          {format(new Date(shift.date), 'eee', {
-                            locale: es,
-                          }).toLocaleUpperCase()}
-                        </span>
-                        <span className="font-bold">
-                          {format(new Date(shift.date), 'dd/MMM', {
-                            locale: es,
-                          }).toLocaleUpperCase()}
-                        </span>
-                      </td>
-                      <td className="p-0">
-                        <Tooltip key={shift.id}>
-                          <TooltipTrigger asChild>
-                            <Badge
-                              key={shift.id}
-                              variant="outline"
-                              className="text-sm rounded-full"
-                              style={{
-                                backgroundColor: `${colorLightenDarken(shift.position.color, 0.8)}`,
-                                color: shift.position.color,
-                                borderColor: shift.position.color,
-                              }}
-                            >
-                              <span>{shift.position.siglas}</span>
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom">
-                            <p>{shift.position.name}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </td>
-                    </tr>
-                  ))}
+                  {upcomingShifts.map((shift) => {
+                    const shiftDate = parse(
+                      shift.date,
+                      'yyyy-MM-dd',
+                      new Date(),
+                    );
+                    return (
+                      <tr
+                        key={shift.id}
+                        className="inline-flex items-center rounded-md border px-2.5 py-0.5 mb-1 w-full bg-neutral-200"
+                        style={
+                          getRelativeDayLabel(shiftDate) === 'HOY'
+                            ? {
+                                backgroundColor: `${colorLightenDarken(getCssVarValue('--success'), 0.8)}`,
+                                color: 'var(--success)',
+                                borderColor: 'var(--success)',
+                              }
+                            : {}
+                        }
+                      >
+                        <td>
+                          <h4 className="flex items-center text-sm font-semibold after:content-['-'] after:px-1">
+                            {getRelativeDayLabel(shiftDate) === 'HOY' ? (
+                              <Star className="inline w-4 min-w-4 max-w-4 h-4 min-h-4 max-h-4 mr-1" />
+                            ) : (
+                              <></>
+                            )}
+                            {getRelativeDayLabel(shiftDate)}
+                          </h4>
+                        </td>
+                        <td className="text-sm space-x-1 after:content-['-'] after:px-1">
+                          <span className="">
+                            {format(shiftDate, 'eee', {
+                              locale: es,
+                            }).toLocaleUpperCase()}
+                          </span>
+                          <span className="font-bold">
+                            {format(shiftDate, 'dd/MMM', {
+                              locale: es,
+                            }).toLocaleUpperCase()}
+                          </span>
+                        </td>
+                        <td className="p-0">
+                          <Tooltip key={shift.id}>
+                            <TooltipTrigger asChild>
+                              <Badge
+                                key={shift.id}
+                                variant="outline"
+                                className="text-sm rounded-full"
+                                style={{
+                                  backgroundColor: `${colorLightenDarken(shift.position.color, 0.8)}`,
+                                  color: shift.position.color,
+                                  borderColor: shift.position.color,
+                                }}
+                              >
+                                <span>{shift.position.siglas}</span>
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                              <p>{shift.position.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (

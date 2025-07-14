@@ -1,15 +1,84 @@
-import { db } from './db';
-import { employees, positions, shifts, clientes } from '@shared/schema';
+import 'dotenv/config'; // Asegura que las variables de entorno se carguen al inicio
+import { db } from '../db';
+import {
+  employees,
+  positions,
+  shifts,
+  clientes,
+  mainCompanies,
+  users,
+} from '@shared/schema';
+import bcrypt from 'bcrypt'; // Import bcrypt
+import { Country, State } from 'country-state-city'; // Import Country and State
+import { format } from 'date-fns'; // Importar format
 
 async function seed() {
-  // Limpiar tablas
+  // Limpiar tablas en el orden correcto para evitar errores de FK
   await db.delete(shifts);
   await db.delete(employees);
   await db.delete(positions);
+  await db.delete(users);
   await db.delete(clientes);
+  await db.delete(mainCompanies);
 
-  // 1. Insertar clientes
-  const clientesAInsertar = [
+  console.log('Tablas limpiadas.');
+
+  // Obtener nombres de país y provincia para insertar
+  const argentina = Country.getAllCountries().find((c) => c.isoCode === 'AR');
+  const buenosAires = State.getStatesOfCountry('AR').find(
+    (s) => s.isoCode === 'BA',
+  );
+
+  // 1. Insertar la empresa principal "Empresa Demo"
+  const [mainCompany] = await db
+    .insert(mainCompanies)
+    .values({
+      name: 'Empresa Demo',
+      paymentControl: 'permanent', // Set to permanent
+      lastPaymentDate: format(new Date(), 'yyyy-MM-dd'), // Usar fecha formateada
+      isActive: true, // Ensure it's active
+      needsSetup: false, // This company is pre-configured
+      country: argentina?.name || 'Argentina', // Insert name
+      province: buenosAires?.name || 'Buenos Aires', // Insert name
+      city: 'CABA',
+      address: 'Av. Corrientes 1234',
+      taxId: '20-12345678-9',
+      contactName: 'Juan Demo',
+      phone: '+5491112345678',
+      email: 'contacto@empresademo.com',
+    })
+    .returning();
+
+  console.log(
+    `Main Company '${mainCompany.name}' creada con ID: ${mainCompany.id}`,
+  );
+
+  // 2. Insertar el usuario "demo_admin" (admin) y asociarlo
+  const hashedPassword = await bcrypt.hash('password123', 10); // Hash a password for the admin user
+  await db.insert(users).values({
+    username: 'demo_admin',
+    passwordHash: hashedPassword,
+    role: 'admin',
+    mainCompanyId: mainCompany.id,
+    mustChangePassword: false, // No forzar cambio de contraseña
+  });
+
+  console.log('Usuario "demo_admin" creado y asociado.');
+
+  // 2.1. Insertar un usuario SuperAdmin (sin mainCompanyId)
+  const superAdminHashedPassword = await bcrypt.hash('superadmin123', 10); // Hash a password for the super admin
+  await db.insert(users).values({
+    username: 'superadmin',
+    passwordHash: superAdminHashedPassword,
+    role: 'super_admin',
+    mainCompanyId: null, // SuperAdmin is not tied to a specific mainCompany
+    mustChangePassword: false, // No forzar cambio de contraseña
+  });
+
+  console.log('Usuario "superadmin" (SuperAdmin) creado.');
+
+  // 3. Preparar y asociar clientes con la Main Company
+  const clientesData = [
     {
       empresa: 'Empresa Uno',
       direccion: 'Calle 1',
@@ -51,12 +120,20 @@ async function seed() {
       email: 'cinco@empresa.com',
     },
   ];
+
+  const clientesAInsertar = clientesData.map((cliente) => ({
+    ...cliente,
+    mainCompanyId: mainCompany.id, // Asociar con Main Company
+  }));
+
   const clientesInsertados = await db
     .insert(clientes)
     .values(clientesAInsertar)
     .returning();
 
-  // 2. Insertar 10 puestos, varios por cliente
+  console.log(`${clientesInsertados.length} clientes insertados y asociados.`);
+
+  // 4. Insertar puestos (sin cambios, ya depende de clientesInsertados)
   const puestosAInsertar = [
     // Cliente 1
     {
@@ -155,10 +232,14 @@ async function seed() {
     },
   ];
 
-  await db.insert(positions).values(puestosAInsertar).returning();
+  const puestosDb = await db
+    .insert(positions)
+    .values(puestosAInsertar)
+    .returning();
+  console.log(`${puestosDb.length} puestos insertados.`);
 
-  // 3. Insertar empleados
-  await db.insert(employees).values([
+  // 5. Preparar y asociar empleados con la Main Company
+  const employeesData = [
     {
       name: 'Juan Pérez',
       email: 'juan@example.com',
@@ -219,52 +300,60 @@ async function seed() {
       phone: '101010101',
       status: 'active',
     },
-  ]);
+  ];
 
-  // Obtener IDs y datos necesarios
+  const empleadosAInsertar = employeesData.map((employee) => ({
+    ...employee,
+    mainCompanyId: mainCompany.id, // Asociar con Main Company
+  }));
+
+  await db.insert(employees).values(empleadosAInsertar);
+  console.log(`${empleadosAInsertar.length} empleados insertados y asociados.`);
+
+  // Obtener IDs y datos para generar turnos
   const empleados = await db.select().from(employees);
-  const puestosDb = await db.select().from(positions);
 
   // Generar turnos para el mes actual
   const now = new Date();
   const year = now.getFullYear();
-  const month = now.getMonth(); // 0-indexed
+  const month = now.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const turnosAInsertar = [];
 
   for (const empleado of empleados) {
-    // Assign a random position to each employee for the seed data
     const randomPosition =
       puestosDb[Math.floor(Math.random() * puestosDb.length)];
-    if (!randomPosition) continue; // Should not happen with valid data
+    if (!randomPosition) continue;
 
-    // 5 turnos por semana: Lunes a Viernes
     let diasAsignados = 0;
     for (let day = 1; day <= daysInMonth; day++) {
       const fecha = new Date(year, month, day);
-      const diaSemana = fecha.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+      const diaSemana = fecha.getDay();
 
       if (diaSemana >= 1 && diaSemana <= 5) {
         turnosAInsertar.push({
           employeeId: empleado.id,
-          positionId: randomPosition.id, // Assign a positionId
+          positionId: randomPosition.id,
           date: fecha.toISOString().slice(0, 10),
           notes: '',
         });
         diasAsignados++;
-        if (diasAsignados >= 20) break; // Máximo 20 turnos por mes por empleado
+        if (diasAsignados >= 20) break;
       }
     }
   }
 
-  await db.insert(shifts).values(turnosAInsertar);
+  if (turnosAInsertar.length > 0) {
+    await db.insert(shifts).values(turnosAInsertar);
+    console.log(`${turnosAInsertar.length} turnos insertados.`);
+  }
 
   console.log('Seed completado!');
   process.exit(0);
 }
 
 seed().catch((err) => {
-  console.error(err);
+  console.error('Error durante el proceso de seed:', err);
   process.exit(1);
 });

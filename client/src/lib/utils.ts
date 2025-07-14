@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Position, Cliente } from '@shared/schema'; // Import types for Position and Cliente
 import { EmployeeHoursReport, getMonthName } from '@shared/utils'; // Import getMonthName from shared
-import { differenceInCalendarDays } from 'date-fns';
+import { differenceInCalendarDays, startOfDay } from 'date-fns';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -226,7 +226,7 @@ export function exportToCsv(
 
 export function getRelativeDayLabel(date: Date): string {
   if (!date) return '';
-  const today = new Date();
+  const today = startOfDay(new Date());
   const diff = differenceInCalendarDays(date, today);
 
   switch (diff) {

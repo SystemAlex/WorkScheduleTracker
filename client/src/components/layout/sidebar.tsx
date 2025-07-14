@@ -11,6 +11,10 @@ import {
   Building,
   ChevronLeft,
   ChevronRight,
+  LogOut,
+  LayoutDashboard, // New icon for admin section
+  List, // New icon for company list
+  UsersRound, // New icon for user management
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,9 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-// No necesitamos 'base' de '@/lib/paths' aquí para los href de Link,
-// ya que wouter lo maneja automáticamente con la base configurada en el Router.
-// import { base } from '@/lib/paths'; // Eliminado
+import { useAuth } from '@/context/auth-context';
 
 interface SidebarLinkProps {
   href: string;
@@ -42,7 +44,7 @@ function SidebarLink({
 }: SidebarLinkProps) {
   const linkContent = (
     <Link
-      href={href} // El href ya es relativo a la base del Router
+      href={href}
       onClick={onClick}
       className={cn(
         'flex justify-start items-center space-x-0 space-y-0 p-2 rounded-lg transition-colors text-sm font-medium',
@@ -56,7 +58,7 @@ function SidebarLink({
       </span>
       <span
         className={cn(
-          'overflow-hidden transition-all duration-300',
+          'overflow-hidden transition-all duration-300 truncate',
           !isCollapsed && 'px-3 w-full',
           isCollapsed && 'px-0 w-[0%]',
         )}
@@ -83,45 +85,72 @@ function SidebarLink({
 export function Sidebar() {
   const [location] = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(true);
-  // const isMobile = useIsMobile(); // No se usa en el código proporcionado, se puede eliminar si no se usa en otro lugar
+  const { user, logout } = useAuth();
 
-  const navigation = [
-    {
-      href: '/', // Ruta relativa a la base del Router
-      icon: <Calendar className="w-[23px] h-[23px]" />,
-      label: 'Organigrama',
-    },
-    {
-      href: '/employees', // Ruta relativa a la base del Router
-      icon: <Users className="w-[23px] h-[23px]" />,
-      label: 'Empleados',
-    },
-    {
-      href: '/positions', // Ruta relativa a la base del Router
-      icon: <Briefcase className="w-[23px] h-[23px]" />,
-      label: 'Puestos',
-    },
-    {
-      href: '/clientes', // Ruta relativa a la base del Router
-      icon: <Building className="w-[23px] h-[23px]" />,
-      label: 'Clientes',
-    },
-    {
-      href: '/reports', // Ruta relativa a la base del Router
-      icon: <BarChart3 className="w-[23px] h-[23px]" />,
-      label: 'Reportes',
-    },
-    {
-      href: '/estructura', // Ruta relativa a la base del Router
-      icon: <Map className="w-[23px] h-[23px]" />,
-      label: 'Estructura',
-    },
-  ];
+  // Define navigation items based on user role
+  const getNavigation = () => {
+    if (!user) return [];
 
-  // La comparación debe ser directa, ya que `location` ya es la ruta relativa a la base.
-  // Si `location` es `/`, el primer elemento de navegación es activo.
-  // Si `location` es `/employees`, el segundo elemento de navegación es activo.
-  // const activeItem = navigation.find((item) => item.href === location);
+    if (user.role === 'super_admin') {
+      return [
+        {
+          href: '/sentinelzone/dashboard',
+          icon: <LayoutDashboard className="w-6 h-6" />,
+          label: 'Dashboard',
+        },
+        {
+          href: '/sentinelzone/companies',
+          icon: <List className="w-6 h-6" />,
+          label: 'Gestionar Empresas',
+        },
+      ];
+    }
+
+    const commonNavigation = [
+      {
+        href: '/',
+        icon: <Calendar className="w-6 h-6" />,
+        label: 'Organigrama',
+      },
+      {
+        href: '/employees',
+        icon: <Users className="w-6 h-6" />,
+        label: 'Empleados',
+      },
+      {
+        href: '/positions',
+        icon: <Briefcase className="w-6 h-6" />,
+        label: 'Puestos',
+      },
+      {
+        href: '/clientes',
+        icon: <Building className="w-6 h-6" />,
+        label: 'Clientes',
+      },
+      {
+        href: '/reports',
+        icon: <BarChart3 className="w-6 h-6" />,
+        label: 'Reportes',
+      },
+      {
+        href: '/estructura',
+        icon: <Map className="w-6 h-6" />,
+        label: 'Estructura',
+      },
+    ];
+
+    if (user.role === 'admin') {
+      commonNavigation.push({
+        href: '/users',
+        icon: <UsersRound className="w-6 h-6" />,
+        label: 'Usuarios',
+      });
+    }
+
+    return commonNavigation;
+  };
+
+  const navigation = getNavigation();
 
   const handleNavigate = () => {
     setIsCollapsed(true);
@@ -167,18 +196,11 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            'p-1 h-[32px] w-[32px]',
-            // isMobile && isCollapsed && 'bg-primary text-primary-foreground', // Comentado si useIsMobile no se usa
-          )}
+          className={cn('p-1 h-[32px] w-[32px]')}
         >
           {isCollapsed ? (
-            // isMobile && activeItem?.icon ? ( // Comentado si useIsMobile no se usa
-            //   activeItem.icon
-            // ) : (
             <ChevronRight className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
           ) : (
-            // )
             <ChevronLeft className="w-[20px] h-[20px] flex-grow-0 flex-shrink-0" />
           )}
         </Button>
@@ -196,7 +218,7 @@ export function Sidebar() {
             key={item.href}
             href={item.href}
             icon={item.icon}
-            isActive={location === item.href} // Comparación directa
+            isActive={location === item.href}
             isCollapsed={isCollapsed}
             onClick={handleNavigate}
           >
@@ -206,18 +228,60 @@ export function Sidebar() {
       </nav>
 
       {/* User */}
-      {!isCollapsed && (
-        <div className="p-4 border-t border-neutral-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-neutral-300 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-neutral-600" />
-            </div>
-            <div className="flex-1 min-w-0">
+      {user && (
+        <div
+          className={cn(
+            'p-3 border-t border-neutral-200',
+            isCollapsed ? 'hidden md:block' : '',
+          )}
+        >
+          <div
+            className={cn(
+              'flex items-center',
+              !isCollapsed && 'flex-row space-x-3',
+              isCollapsed && 'flex-col space-y-1',
+            )}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex justify-center items-center flex-grow-0 flex-shrink-0 self-center w-8 h-8 bg-neutral-300 rounded-full">
+                  <User className="w-6 h-6 text-neutral-600" />
+                </div>
+              </TooltipTrigger>
+              {isCollapsed && (
+                <TooltipContent side="right">
+                  <p className="text-sm font-medium text-neutral-900 truncate">
+                    {user.username}
+                  </p>
+                  <p className="text-xs text-neutral-500 truncate capitalize">
+                    {user.role.replace('_', ' ')}
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+            <div className={cn('flex-1 min-w-0', isCollapsed && 'hidden')}>
               <p className="text-sm font-medium text-neutral-900 truncate">
-                Admin
+                {user.username}
               </p>
-              <p className="text-xs text-neutral-500 truncate">Administrador</p>
+              <p className="text-xs text-neutral-500 truncate capitalize">
+                {user.role.replace('_', ' ')}
+              </p>
             </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  className="w-8 h-8"
+                >
+                  <LogOut className="w-4 h-4 min-w-4 min-h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Cerrar sesión</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       )}

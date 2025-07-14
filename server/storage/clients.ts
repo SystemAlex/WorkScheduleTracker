@@ -8,10 +8,16 @@ import {
 import { eq, ilike, asc, isNull, count, and } from 'drizzle-orm';
 
 export class ClientStorage {
-  async getClientes(searchFilter?: string): Promise<Cliente[]> {
+  async getClientes(
+    searchFilter?: string,
+    mainCompanyId?: number,
+  ): Promise<Cliente[]> {
     const conditions = [isNull(clientes.deletedAt)];
     if (searchFilter) {
       conditions.push(ilike(clientes.empresa, `%${searchFilter}%`));
+    }
+    if (mainCompanyId) {
+      conditions.push(eq(clientes.mainCompanyId, mainCompanyId));
     }
     return await db
       .select()
@@ -20,26 +26,40 @@ export class ClientStorage {
       .orderBy(asc(clientes.empresa));
   }
 
-  async createCliente(data: InsertCliente): Promise<Cliente> {
-    const [cliente] = await db.insert(clientes).values(data).returning();
+  async createCliente(
+    data: InsertCliente,
+    mainCompanyId: number,
+  ): Promise<Cliente> {
+    const [cliente] = await db
+      .insert(clientes)
+      .values({ ...data, mainCompanyId })
+      .returning();
     return cliente;
   }
 
   async updateCliente(
     id: number,
     data: InsertCliente,
+    mainCompanyId?: number,
   ): Promise<Cliente | null> {
+    const conditions = [eq(clientes.id, id)];
+    if (mainCompanyId) {
+      conditions.push(eq(clientes.mainCompanyId, mainCompanyId));
+    }
     const [cliente] = await db
       .update(clientes)
       .set(data)
-      .where(eq(clientes.id, id))
+      .where(and(...conditions))
       .returning();
-    return cliente || null; // Return null if no client was updated
+    return cliente || null;
   }
 
-  async deleteCliente(id: number): Promise<boolean> {
-    // Change return type to boolean
-    // Check if there are any positions associated with this client
+  async deleteCliente(id: number, mainCompanyId?: number): Promise<boolean> {
+    const conditions = [eq(clientes.id, id)];
+    if (mainCompanyId) {
+      conditions.push(eq(clientes.mainCompanyId, mainCompanyId));
+    }
+
     const positionsCount = await db
       .select({ count: count() })
       .from(positions)
@@ -47,15 +67,13 @@ export class ClientStorage {
 
     let result;
     if (positionsCount[0].count > 0) {
-      // If there are associated positions, perform a soft delete
       result = await db
         .update(clientes)
         .set({ deletedAt: new Date() })
-        .where(eq(clientes.id, id));
+        .where(and(...conditions));
     } else {
-      // If no associated positions, perform a hard delete
-      result = await db.delete(clientes).where(eq(clientes.id, id));
+      result = await db.delete(clientes).where(and(...conditions));
     }
-    return (result.rowCount ?? 0) > 0; // Return true if a row was affected, false otherwise
+    return (result.rowCount ?? 0) > 0;
   }
 }

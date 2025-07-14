@@ -1,12 +1,20 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import { storage } from '../storage';
 import {
   EmployeeHoursReport,
   getMonthName,
   getProcessedReportPositions,
 } from '@shared/utils';
+import {
+  isAuthenticated,
+  authorizeCompany,
+  checkCompanyPaymentStatus,
+} from '../middleware/auth'; // Importar middlewares
 
 const reportsRouter = Router();
+
+// Aplicar isAuthenticated y authorizeCompany a todas las rutas de reportes
+reportsRouter.use(isAuthenticated, authorizeCompany, checkCompanyPaymentStatus);
 
 /**
  * @openapi
@@ -14,6 +22,8 @@ const reportsRouter = Router();
  *   get:
  *     summary: Obtiene el reporte de horas trabajadas por empleado
  *     tags: [Reports]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: query
  *         name: month
@@ -34,22 +44,25 @@ const reportsRouter = Router();
  *     responses:
  *       200:
  *         description: Reporte generado
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Acceso denegado
  */
-reportsRouter.get('/employee-hours', async (req, res) => {
+reportsRouter.get('/employee-hours', async (req: Request, res, next) => {
+  // Use Request here
   try {
-    const { month, year, employeeId, clientId } = req.query; // Obtener clientId
+    const { month, year, employeeId, clientId } = req.query;
     const report = await storage.getEmployeeHoursReport(
       employeeId ? parseInt(employeeId as string) : undefined,
       month ? parseInt(month as string) : undefined,
       year ? parseInt(year as string) : undefined,
-      clientId ? parseInt(clientId as string) : undefined, // Pasar clientId
+      clientId ? parseInt(clientId as string) : undefined,
+      req.mainCompanyId ?? undefined, // Pasar mainCompanyId
     );
     res.json(report);
   } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: 'Failed to generate employee hours report' });
+    next(error);
   }
 });
 
@@ -59,6 +72,8 @@ reportsRouter.get('/employee-hours', async (req, res) => {
  *   get:
  *     summary: Exporta el reporte de horas trabajadas por empleado a XLSX
  *     tags: [Reports]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: query
  *         name: month
@@ -86,35 +101,43 @@ reportsRouter.get('/employee-hours', async (req, res) => {
  *             schema:
  *               type: string
  *               format: binary
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Acceso denegado
  *       500:
  *         description: Error al generar el reporte
  */
-reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
+reportsRouter.get('/employee-hours/xlsx', async (req: Request, res, next) => {
+  // Use Request here
   try {
-    const { month, year, employeeId, clientId } = req.query; // Obtener clientId
+    const { month, year, employeeId, clientId } = req.query;
 
     const parsedMonth = parseInt(month as string);
     const parsedYear = parseInt(year as string);
     const parsedEmployeeId = employeeId
       ? parseInt(employeeId as string)
       : undefined;
-    const parsedClientId = clientId // Parsear clientId
-      ? parseInt(clientId as string)
-      : undefined;
+    const parsedClientId = clientId ? parseInt(clientId as string) : undefined;
 
-    // Fetch report data
     const reportData = await storage.getEmployeeHoursReport(
       parsedEmployeeId,
       parsedMonth,
       parsedYear,
-      parsedClientId, // Pasar clientId
+      parsedClientId,
+      req.mainCompanyId ?? undefined, // Pasar mainCompanyId
     );
 
-    // Get all positions and clients for header generation
-    const allPositions = await storage.getPositions();
-    const allClientes = await storage.getClientes();
+    // Obtener todas las posiciones y clientes para la generación de encabezados
+    const allPositions = await storage.getPositions(
+      undefined,
+      req.mainCompanyId ?? undefined,
+    ); // Pasar mainCompanyId
+    const allClientes = await storage.getClientes(
+      undefined,
+      req.mainCompanyId ?? undefined,
+    ); // Pasar mainCompanyId
 
-    // Use the new shared function
     const { groupedPositionsByClient } = getProcessedReportPositions(
       reportData,
       allPositions,
@@ -151,8 +174,7 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
     );
     res.send(buffer);
   } catch (error) {
-    console.error('Error generating XLSX report:', error);
-    res.status(500).json({ message: 'Failed to generate XLSX report' });
+    next(error);
   }
 });
 
@@ -162,6 +184,8 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
  *   get:
  *     summary: Exporta el reporte de horas trabajadas por empleado a PDF
  *     tags: [Reports]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: query
  *         name: month
@@ -189,35 +213,43 @@ reportsRouter.get('/employee-hours/xlsx', async (req, res) => {
  *             schema:
  *               type: string
  *               format: binary
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Acceso denegado
  *       500:
  *         description: Error al generar el reporte
  */
-reportsRouter.get('/employee-hours/pdf', async (req, res) => {
+reportsRouter.get('/employee-hours/pdf', async (req: Request, res, next) => {
+  // Use Request here
   try {
-    const { month, year, employeeId, clientId } = req.query; // Obtener clientId
+    const { month, year, employeeId, clientId } = req.query;
 
     const parsedMonth = parseInt(month as string);
     const parsedYear = parseInt(year as string);
     const parsedEmployeeId = employeeId
       ? parseInt(employeeId as string)
       : undefined;
-    const parsedClientId = clientId // Parsear clientId
-      ? parseInt(clientId as string)
-      : undefined;
+    const parsedClientId = clientId ? parseInt(clientId as string) : undefined;
 
-    // Fetch report data
     const reportData = await storage.getEmployeeHoursReport(
       parsedEmployeeId,
       parsedMonth,
       parsedYear,
-      parsedClientId, // Pasar clientId
+      parsedClientId,
+      req.mainCompanyId ?? undefined, // Pasar mainCompanyId
     );
 
-    // Get all positions and clients for header generation
-    const allPositions = await storage.getPositions();
-    const allClientes = await storage.getClientes();
+    // Obtener todas las posiciones y clientes para la generación de encabezados
+    const allPositions = await storage.getPositions(
+      undefined,
+      req.mainCompanyId ?? undefined,
+    ); // Pasar mainCompanyId
+    const allClientes = await storage.getClientes(
+      undefined,
+      req.mainCompanyId ?? undefined,
+    ); // Pasar mainCompanyId
 
-    // Use the new shared function
     const { groupedPositionsByClient } = getProcessedReportPositions(
       reportData,
       allPositions,
@@ -251,8 +283,7 @@ reportsRouter.get('/employee-hours/pdf', async (req, res) => {
     );
     res.send(buffer);
   } catch (error) {
-    console.error('Error generating PDF report:', error);
-    res.status(500).json({ message: 'Failed to generate PDF report' });
+    next(error);
   }
 });
 
