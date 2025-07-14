@@ -127,30 +127,31 @@ app.use('/api/sentinelzone', adminRouter);
 // --- INICIO: Código para listar rutas ---
 function listRoutes() {
   logger.info('--- Rutas Registradas ---');
-  app._router.stack.forEach((middleware: any) => {
-    // Check if it's a router (has a stack of its own)
-    if (middleware.handle && middleware.handle.stack) {
-      // Extract the base path for this router
-      // This regex attempts to get the clean path from the middleware's regexp source
-      const routerBasePathMatch = middleware.regexp.source.match(/^\/\^\\?(\/.+?)(?:\\\/\?\(\?\=\\\/\|\$\)\/\i)?$/);
-      const routerBasePath = routerBasePathMatch ? routerBasePathMatch[1].replace(/\\/g, '') : '';
+  app._router.stack.forEach((layer: any) => {
+    if (layer.route) { // Routes directly attached to app (e.g., app.get('/'))
+      const methods = Object.keys(layer.route.methods).join(', ').toUpperCase();
+      logger.info(`[${methods}] ${layer.route.path}`);
+    } else if (layer.name === 'router' && layer.handle.stack) { // Mounted routers
+      // Extract the base path for this router from its regex source
+      // This regex attempts to capture the clean path part from the Express internal regex
+      const source = layer.regexp.source;
+      const match = source.match(/^\^(.+?)(?:\\?\/\?\(\?\=\\\/\|\$\)\/i)?$/);
+      let routerBasePath = '';
+      if (match && match[1]) {
+          routerBasePath = match[1].replace(/\\/g, ''); // Unescape backslashes
+      }
+      // Ensure it starts with a slash if it's not empty and doesn't already
+      if (routerBasePath && !routerBasePath.startsWith('/')) {
+          routerBasePath = '/' + routerBasePath;
+      }
 
-      middleware.handle.stack.forEach((handler: any) => {
+      layer.handle.stack.forEach((handler: any) => {
         const route = handler.route;
-        // Ensure route and route.methods exist
         if (route && route.methods) {
           const methods = Object.keys(route.methods).join(', ').toUpperCase();
           logger.info(`[${methods}] ${routerBasePath}${route.path}`);
         }
       });
-    } else if (middleware.route) {
-      // This is a direct route on the app (e.g., app.get('/'))
-      const route = middleware.route;
-      // Ensure route.methods exists
-      if (route.methods) {
-        const methods = Object.keys(route.methods).join(', ').toUpperCase();
-        logger.info(`[${methods}] ${route.path}`);
-      }
     }
   });
   logger.info('-------------------------');
