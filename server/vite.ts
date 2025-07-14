@@ -62,30 +62,20 @@ export async function setupVite(app: Express, server: Server) {
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, 'public');
-  const isProduction = process.env.NODE_ENV === 'production';
-  const baseUrl = isProduction ? '/vipsrl' : ''; // Coincide con la URL base de vite.config.ts
 
   if (!fs.existsSync(distPath)) {
     logger.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    ); // Use new logger
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
     );
   }
 
-  // Servir archivos estáticos bajo la URL base correcta
-  app.use(baseUrl, express.static(distPath));
+  app.use(express.static(distPath));
 
-  // Fallback a index.html para el enrutamiento del lado del cliente,
-  // pero solo para rutas que comienzan con la URL base.
-  // Esto asegura que las solicitudes a la API no sean interceptadas.
-  app.use(`${baseUrl}/*`, (req, res, next) => {
-    // Si la solicitud es para una ruta de API, no la manejes aquí.
-    // Las rutas de API ya están registradas con el prefijo /vipsrl/api
-    if (req.path.startsWith(`${baseUrl}/api/`)) {
-      return next();
-    }
+  // fall through to index.html if the file doesn't exist
+  app.use('*', (_req, res) => {
     res.sendFile(path.resolve(distPath, 'index.html'));
   });
 }
