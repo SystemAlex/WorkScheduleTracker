@@ -11,7 +11,6 @@ import { CustomError, UnauthorizedError, ForbiddenError } from './errors'; // Im
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 import { pool } from './db'; // Import the pg pool
-import authRouter from './routes/auth'; // Import the new auth router
 
 const app = express();
 app.set('trust proxy', 1); // Habilitar para obtener la IP correcta detrás de un proxy
@@ -125,9 +124,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Register auth routes before other API routes
-  app.use('/api/auth', authRouter);
-
+  // registerRoutes ahora se encarga de TODAS las rutas de la API.
   const server = await registerRoutes(app);
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
