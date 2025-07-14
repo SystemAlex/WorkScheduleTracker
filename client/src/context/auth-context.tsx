@@ -41,7 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     queryKey: ['/api/auth/me'],
     queryFn: async () => {
       try {
-        const response = await fetch(base('/api/auth/me'), {
+        // Add a cache-busting parameter to the URL to bypass intermediate proxies
+        const url = `${base('/api/auth/me')}?_t=${new Date().getTime()}`;
+        const response = await fetch(url, {
           credentials: 'include',
         });
         if (response.status === 401) {
