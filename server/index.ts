@@ -1,30 +1,40 @@
 import 'dotenv/config';
-import './types/express.d.ts'; // Importación explícita del archivo de definición de tipos
+import './types/express.d.ts';
 import express, { NextFunction, type Request, Response } from 'express';
-import { registerRoutes } from './routes';
-import { setupVite, serveStatic } from './vite';
-import swaggerUi from 'swagger-ui-express';
-import swaggerJSDoc from 'swagger-jsdoc';
-import logger from './utils/logger';
-import './config/env';
-import { CustomError, UnauthorizedError, ForbiddenError } from './errors'; // Import new error types
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
-import { pool } from './db'; // Import the pg pool
+import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
+import { createServer } from 'http';
+
+import { pool } from './db';
+import logger from './utils/logger';
+import './config/env';
+import { CustomError, UnauthorizedError, ForbiddenError } from './errors';
+import { setupVite, serveStatic } from './vite';
+
+// Importar los routers directamente aquí
+import authRouter from './routes/auth';
+import employeesRouter from './routes/employees';
+import positionsRouter from './routes/positions';
+import shiftsRouter from './routes/shifts';
+import clientsRouter from './routes/clients';
+import reportsRouter from './routes/reports';
+import usersRouter from './routes/users';
+import adminRouter from './routes/sentinelzone';
 
 const app = express();
-app.set('trust proxy', 1); // Confiar en el primer proxy (ALB)
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Determinar la ruta base para la cookie de sesión
 const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl/' : '/';
-
-// Configure session middleware
 const PgSession = pgSession(session);
+
+// El middleware de sesión se registra ANTES que las rutas
 app.use(
   session({
-    name: 'wst.session', // Dar un nombre único a la cookie
+    name: 'wst.session',
     store: new PgSession({
       pool: pool,
       tableName: 'session',
@@ -32,32 +42,25 @@ app.use(
     }),
     secret: process.env.SESSION_SECRET || 'supersecretkey',
     resave: false,
-    saveUninitialized: true, // CRUCIAL: Asegura que req.session siempre exista
+    saveUninitialized: true,
     rolling: true,
     cookie: {
-      maxAge: 30 * 60 * 1000,
+      maxAge: 30 * 60 * 60 * 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: basePath, // CRUCIAL: Establece el alcance correcto de la cookie
+      path: basePath,
     },
   }),
 );
 
-// Middleware to protect Swagger docs
-const protectSwaggerDocs = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+// Configuración de Swagger
+const protectSwaggerDocs = (req: Request, res: Response, next: NextFunction) => {
   if (req.session?.role === 'super_admin') {
-    return next(); // User is super_admin, allow access
+    return next();
   }
-  // For anyone else (not logged in, or not a super_admin), redirect to login
   res.redirect('/login');
 };
-
-// Configuración de Swagger
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
@@ -65,13 +68,8 @@ const swaggerDefinition = {
     version: '1.0.0',
     description: 'Documentación de la API de WorkScheduleTracker',
   },
-  servers: [
-    {
-      url: 'http://localhost:5000',
-    },
-  ],
+  servers: [{ url: 'http://localhost:5000' }],
 };
-
 const swaggerOptions = {
   swaggerDefinition,
   apis: [
@@ -79,24 +77,17 @@ const swaggerOptions = {
     './server/routes/positions.ts',
     './server/routes/shifts.ts',
     './server/routes/clients.ts',
-    './server/routes/reports.ts',
     './server/routes/auth.ts',
     './server/routes/sentinelzone.ts',
-    './server/routes/users.ts', // Añadido para documentar los endpoints de usuarios
+    './server/routes/users.ts',
   ],
 };
-
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
-app.use(
-  '/sentinelzone/api/docs',
-  protectSwaggerDocs,
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec),
-);
+app.use('/sentinelzone/api/docs', protectSwaggerDocs, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Middleware de logging
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
   let capturedJsonResponse: unknown = undefined;
 
   const originalResJson = res.json;
@@ -107,8 +98,8 @@ app.use((req, res, next) => {
 
   res.on('finish', () => {
     const duration = Date.now() - start;
-    if (path.startsWith('/api')) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+    if (req.path.startsWith('/api')) {
+      let logLine = `${req.method} ${req.path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
@@ -120,25 +111,60 @@ app.use((req, res, next) => {
       logger.info(logLine);
     }
   });
-
   next();
 });
 
-(async () => {
-  // registerRoutes ahora se encarga de TODAS las rutas de la API.
-  const server = await registerRoutes(app);
+// Registrar todas las rutas de la API aquí
+app.use('/api/auth', authRouter);
+app.use('/api/employees', employeesRouter);
+app.use('/api/positions', positionsRouter);
+app.use('/api/shifts', shiftsRouter);
+app.use('/api/clientes', clientsRouter);
+app.use('/api/reports', reportsRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/sentinelzone', adminRouter);
 
+// --- INICIO: Código para listar rutas ---
+function listRoutes() {
+  logger.info('--- Rutas Registradas ---');
+  app._router.stack.forEach((middleware: any) => {
+    // Check if it's a router (has a stack of its own)
+    if (middleware.handle && middleware.handle.stack) {
+      // Extract the base path for this router
+      // This regex attempts to get the clean path from the middleware's regexp source
+      const routerBasePathMatch = middleware.regexp.source.match(/^\/\^\\?(\/.+?)(?:\\\/\?\(\?\=\\\/\|\$\)\/\i)?$/);
+      const routerBasePath = routerBasePathMatch ? routerBasePathMatch[1].replace(/\\/g, '') : '';
+
+      middleware.handle.stack.forEach((handler: any) => {
+        const route = handler.route;
+        // Ensure route and route.methods exist
+        if (route && route.methods) {
+          const methods = Object.keys(route.methods).join(', ').toUpperCase();
+          logger.info(`[${methods}] ${routerBasePath}${route.path}`);
+        }
+      });
+    } else if (middleware.route) {
+      // This is a direct route on the app (e.g., app.get('/'))
+      const route = middleware.route;
+      // Ensure route.methods exists
+      if (route.methods) {
+        const methods = Object.keys(route.methods).join(', ').toUpperCase();
+        logger.info(`[${methods}] ${route.path}`);
+      }
+    }
+  });
+  logger.info('-------------------------');
+}
+// --- FIN: Código para listar rutas ---
+
+// Crear el servidor HTTP a partir de la app ya configurada
+const server = createServer(app);
+
+(async () => {
+  // Manejador de errores
   /* eslint-disable @typescript-eslint/no-unused-vars */
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    const e = err as
-      | CustomError
-      | {
-          status?: number;
-          statusCode?: number;
-          message?: string;
-          stack?: string;
-        };
-
+    const e = err as CustomError | { status?: number; statusCode?: number; message?: string; stack?: string; };
     let status = 500;
     let message = 'Internal Server Error';
     let code: string | undefined;
@@ -159,20 +185,11 @@ app.use((req, res, next) => {
       code = e.code;
     } else if (typeof e === 'object' && e !== null) {
       if ('status' in e && typeof e.status === 'number') status = e.status;
-      if ('statusCode' in e && typeof e.statusCode === 'number')
-        status = e.statusCode;
+      if ('statusCode' in e && typeof e.statusCode === 'number') status = e.statusCode;
       if ('message' in e && typeof e.message === 'string') message = e.message;
     }
 
-    logger.error(`Error: ${message}`, {
-      stack: e.stack,
-      status,
-      path: _req.path,
-      method: _req.method,
-      code,
-      details,
-    });
-
+    logger.error(`Error: ${message}`, { stack: e.stack, status, path: _req.path, method: _req.method, code, details });
     res.status(status).json({ message, code, details });
   });
   /* eslint-enable */
@@ -184,14 +201,8 @@ app.use((req, res, next) => {
   }
 
   const port = 5000;
-  server.listen(
-    {
-      port,
-      host: '0.0.0.0',
-      reusePort: true,
-    },
-    () => {
-      logger.info(`serving on port ${port}`);
-    },
-  );
+  server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
+    logger.info(`serving on port ${port}`);
+    listRoutes(); // Llamar a la función para listar las rutas al iniciar el servidor
+  });
 })();
