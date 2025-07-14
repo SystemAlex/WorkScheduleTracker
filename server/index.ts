@@ -31,7 +31,7 @@ app.use(
     }),
     secret: process.env.SESSION_SECRET || 'supersecretkey', // Use a strong secret from env
     resave: false,
-    saveUninitialized: true, // <-- CAMBIO CLAVE: Garantiza que req.session siempre exista.
+    saveUninitialized: false, // <-- REVERTIDO: No guardar sesiones no inicializadas.
     rolling: true, // <-- Reinicia el maxAge de la cookie en cada respuesta
     cookie: {
       maxAge: 30 * 60 * 1000, // Default to 30 minutes (1,800,000 ms)

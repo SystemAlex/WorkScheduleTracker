@@ -76,7 +76,7 @@ const setPasswordSchema = z
  */
 authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
-    const { username, password, rememberMe } = req.body; // Destructure rememberMe
+    const { username, password, rememberMe } = req.body;
 
     const [user] = await db
       .select()
@@ -84,7 +84,7 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
       .where(eq(users.username, username));
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      return next(new UnauthorizedError('Error de Usuario y Contraseña')); // Changed message here
+      return next(new UnauthorizedError('Error de Usuario y Contraseña'));
     }
 
     // --- REVISED PAYMENT CHECK LOGIC ---
@@ -98,7 +98,6 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
         return next(new ForbiddenError('Associated company not found.'));
       }
 
-      // Block if manually set to inactive
       if (!company.isActive) {
         return next(
           new ForbiddenError(
@@ -107,12 +106,10 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
         );
       }
 
-      // Now, check payment status based on dates
       let isCompanyActiveBasedOnPayment: boolean;
       const now = startOfDay(new Date());
 
       if (!company.lastPaymentDate) {
-        // No payment ever registered = inactive
         isCompanyActiveBasedOnPayment = false;
       } else {
         const lastPayment = parse(
@@ -152,31 +149,43 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
     }
     // --- END REVISED PAYMENT CHECK LOGIC ---
 
-    // Record the successful login
-    await storage.recordLogin(user.id, user.mainCompanyId, req.ip || '');
+    // Regenerate session to prevent session fixation and ensure a clean session
+    req.session.regenerate(async (err) => {
+      if (err) {
+        return next(err);
+      }
 
-    // IMPORTANTE: Asignar datos a la sesión PRIMERO para inicializarla.
-    req.session.userId = user.id;
-    req.session.role = user.role;
-    req.session.mainCompanyId = user.mainCompanyId;
-    req.session.isPendingPasswordChange = user.mustChangePassword;
+      // Record the successful login
+      await storage.recordLogin(user.id, user.mainCompanyId, req.ip || '');
 
-    // AHORA, es seguro modificar las propiedades de la cookie.
-    if (rememberMe) {
-      req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
-    } else {
-      req.session.cookie.maxAge = 30 * 60 * 1000; // 30 minutes
-    }
+      // Populate the new session
+      req.session.userId = user.id;
+      req.session.role = user.role;
+      req.session.mainCompanyId = user.mainCompanyId;
+      req.session.isPendingPasswordChange = user.mustChangePassword;
 
-    res.json({
-      message: 'Logged in successfully',
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        mainCompanyId: user.mainCompanyId,
-        mustChangePassword: user.mustChangePassword, // Return the flag
-      },
+      if (rememberMe) {
+        req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
+      } else {
+        req.session.cookie.maxAge = 30 * 60 * 1000; // 30 minutes
+      }
+
+      // Save the session before sending the response
+      req.session.save((err) => {
+        if (err) {
+          return next(err);
+        }
+        res.json({
+          message: 'Logged in successfully',
+          user: {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            mainCompanyId: user.mainCompanyId,
+            mustChangePassword: user.mustChangePassword,
+          },
+        });
+      });
     });
   } catch (error) {
     next(error);
