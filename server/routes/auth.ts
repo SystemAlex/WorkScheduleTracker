@@ -18,6 +18,7 @@ import {
   isSameDay, // Importar isSameDay
   startOfDay,
   parse, // Importar parse
+  differenceInCalendarDays, // Importar la función que faltaba
 } from 'date-fns'; // Importar utilidades de fecha
 import { storage } from '../storage'; // Importar storage
 
@@ -87,7 +88,8 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
       return next(new UnauthorizedError('Error de Usuario y Contraseña'));
     }
 
-    // --- REVISED PAYMENT CHECK LOGIC ---
+    let companyStatus = null;
+
     if (user.role !== 'super_admin' && user.mainCompanyId) {
       const [company] = await db
         .select()
@@ -107,6 +109,8 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
       }
 
       let isCompanyActiveBasedOnPayment: boolean;
+      let nextPaymentDueDate: Date | null = null;
+      let isPaymentDueSoon = false;
       const now = startOfDay(new Date());
 
       if (!company.lastPaymentDate) {
@@ -125,12 +129,14 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
             const monthlyDueDate = startOfDay(addMonths(lastPayment, 1));
             isCompanyActiveBasedOnPayment =
               isBefore(now, monthlyDueDate) || isSameDay(now, monthlyDueDate);
+            nextPaymentDueDate = monthlyDueDate;
             break;
           }
           case 'annual': {
             const annualDueDate = startOfDay(addYears(lastPayment, 1));
             isCompanyActiveBasedOnPayment =
               isBefore(now, annualDueDate) || isSameDay(now, annualDueDate);
+            nextPaymentDueDate = annualDueDate;
             break;
           }
           default:
@@ -146,19 +152,31 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
           ),
         );
       }
-    }
-    // --- END REVISED PAYMENT CHECK LOGIC ---
 
-    // Record the successful login
+      if (nextPaymentDueDate) {
+        const daysUntilDue = differenceInCalendarDays(nextPaymentDueDate, now);
+        if (daysUntilDue >= 0 && daysUntilDue <= 5) {
+          isPaymentDueSoon = true;
+        }
+      }
+
+      companyStatus = {
+        isActive: company.isActive && isCompanyActiveBasedOnPayment,
+        paymentControl: company.paymentControl,
+        lastPaymentDate: company.lastPaymentDate,
+        nextPaymentDueDate: nextPaymentDueDate,
+        isPaymentDueSoon: isPaymentDueSoon,
+        needsSetup: company.needsSetup,
+      };
+    }
+
     await storage.recordLogin(user.id, user.mainCompanyId, req.ip || '');
 
-    // Use regenerate for a new, clean session
     req.session.regenerate((err) => {
       if (err) {
         return next(err);
       }
 
-      // Populate the new session
       req.session.userId = user.id;
       req.session.role = user.role;
       req.session.mainCompanyId = user.mainCompanyId;
@@ -168,7 +186,6 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
         req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
       }
 
-      // Save the session explicitly to be sure it's written before responding
       req.session.save((saveErr) => {
         if (saveErr) {
           return next(saveErr);
@@ -181,6 +198,7 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
             role: user.role,
             mainCompanyId: user.mainCompanyId,
             mustChangePassword: user.mustChangePassword,
+            companyStatus: companyStatus,
           },
         });
       });
