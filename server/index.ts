@@ -18,6 +18,9 @@ app.set('trust proxy', 1); // Habilitar para obtener la IP correcta detrás de u
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Determinar la ruta base para la cookie de sesión
+const basePath = process.env.NODE_ENV === 'production' ? '/vipsrl/' : '/';
+
 // Configure session middleware
 const PgSession = pgSession(session);
 app.use(
@@ -36,6 +39,7 @@ app.use(
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       sameSite: 'lax', // CSRF protection
+      path: basePath, // <-- Usar la ruta base para la cookie
     },
   }),
 );

@@ -155,18 +155,18 @@ authRouter.post('/login', validate(loginSchema), async (req, res, next) => {
     // Record the successful login
     await storage.recordLogin(user.id, user.mainCompanyId, req.ip || '');
 
-    // Set session maxAge dynamically based on rememberMe
+    // IMPORTANTE: Asignar datos a la sesión PRIMERO para inicializarla.
+    req.session.userId = user.id;
+    req.session.role = user.role;
+    req.session.mainCompanyId = user.mainCompanyId;
+    req.session.isPendingPasswordChange = user.mustChangePassword;
+
+    // AHORA, es seguro modificar las propiedades de la cookie.
     if (rememberMe) {
       req.session.cookie.maxAge = 36 * 60 * 60 * 1000; // 36 hours
     } else {
       req.session.cookie.maxAge = 30 * 60 * 1000; // 30 minutes
     }
-
-    // Create a full session regardless of password status
-    req.session.userId = user.id;
-    req.session.role = user.role;
-    req.session.mainCompanyId = user.mainCompanyId;
-    req.session.isPendingPasswordChange = user.mustChangePassword;
 
     res.json({
       message: 'Logged in successfully',
