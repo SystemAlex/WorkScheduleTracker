@@ -8,12 +8,11 @@ import { ConflictError, NotFoundError } from '../errors'; // Import NotFoundErro
 import {
   startOfDay,
   endOfDay,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  startOfYear,
-  endOfYear,
+  addWeeks,
+  addMonths,
+  addYears,
+  eachDayOfInterval,
+  formatISO,
 } from 'date-fns';
 
 const adminRouter = Router();
@@ -492,50 +491,47 @@ adminRouter.get(
 
       let startDate: Date;
       let endDate: Date;
-      let granularity: 'hour' | 'day' | 'month';
+      let granularity: 'day';
 
-      const now = new Date();
+      const now = new Date(query.startDate || '');
+
+      startDate = startOfDay(now);
+      endDate = endOfDay(now);
+      granularity = 'day';
 
       if (query.period === 'custom' && query.startDate && query.endDate) {
         startDate = startOfDay(new Date(query.startDate));
         endDate = endOfDay(new Date(query.endDate));
-        const diffDays =
-          (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
-        if (diffDays <= 2) {
-          granularity = 'hour';
-        } else if (diffDays <= 90) {
-          granularity = 'day';
-        } else {
-          granularity = 'month';
-        }
       } else {
         switch (query.period) {
-          case 'day':
-            startDate = startOfDay(now);
-            endDate = endOfDay(now);
-            granularity = 'day'; // Changed from 'hour' to 'day'
-            break;
           case 'week':
-            startDate = startOfWeek(now, { weekStartsOn: 1 }); // Monday
-            endDate = endOfWeek(now, { weekStartsOn: 1 });
-            granularity = 'day';
+            startDate = addWeeks(startDate, -1);
             break;
           case 'month':
-            startDate = startOfMonth(now);
-            endDate = endOfMonth(now);
-            granularity = 'day';
+            startDate = addMonths(startDate, -1);
             break;
           case 'year':
-            startDate = startOfYear(now);
-            endDate = endOfYear(now);
-            granularity = 'month';
-            break;
-          default: // Default to week
-            startDate = startOfWeek(now, { weekStartsOn: 1 });
-            endDate = endOfWeek(now, { weekStartsOn: 1 });
-            granularity = 'day';
+            startDate = addYears(startDate, -1);
             break;
         }
+      }
+      function normalizeLoginHistory(
+        history: { date: string; logins: number }[],
+        start: Date,
+        end: Date,
+      ) {
+        const fullDates = eachDayOfInterval({ start, end }).map((d) =>
+          formatISO(d, { representation: 'date' }),
+        );
+
+        const dataMap = new Map(
+          history.map((h) => [h.date.slice(0, 10), h.logins]),
+        );
+
+        return fullDates.map((date) => ({
+          date,
+          logins: dataMap.get(date) ?? 0,
+        }));
       }
 
       const history = await storage.getLoginHistory(
@@ -543,7 +539,8 @@ adminRouter.get(
         endDate,
         granularity,
       );
-      res.json(history);
+      const normalized = normalizeLoginHistory(history, startDate, endDate);
+      res.json(normalized);
     } catch (error) {
       next(error);
     }

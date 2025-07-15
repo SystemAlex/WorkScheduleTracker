@@ -9,6 +9,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  BarChart,
+  Bar,
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -34,14 +36,12 @@ import { getRelativeDayLabel } from '@/lib/utils'; // Importar la función
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom';
 
-interface LoginHistoryData {
-  date: string; // ISO string from backend
-  logins: number;
-}
+let now = new Date().toISOString();
 
 export function LoginHistoryChart() {
   const [period, setPeriod] = React.useState<Period>('day'); // Cambiado a 'day' como valor inicial
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
+  let totalLogins = 0;
 
   const queryParams = new URLSearchParams();
   if (period === 'custom' && dateRange?.from && dateRange?.to) {
@@ -50,14 +50,22 @@ export function LoginHistoryChart() {
     queryParams.append('endDate', dateRange.to.toISOString());
   } else if (period !== 'custom') {
     queryParams.append('period', period);
+    queryParams.append('startDate', now);
   }
 
-  const { data: historyData = [], isLoading } = useQuery<LoginHistoryData[]>({
+  const { data: historyData = [], isLoading } = useQuery({
     queryKey: ['/api/sentinelzone/login-history', queryParams.toString()],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/sentinelzone/login-history?${queryParams.toString()}`,
+      );
+      return res.json();
+    },
     enabled: period !== 'custom' || !!(dateRange?.from && dateRange?.to),
   });
 
   const handlePeriodChange = (newPeriod: Period) => {
+    now = new Date().toISOString();
     setPeriod(newPeriod);
     if (newPeriod !== 'custom') {
       setDateRange(undefined);
@@ -81,6 +89,13 @@ export function LoginHistoryChart() {
     }
     return format(date, 'dd MMM', { locale: es });
   };
+
+  if (historyData.length > 0) {
+    totalLogins = historyData.reduce(
+      (acc: any, item: any) => acc + item.logins,
+      0,
+    );
+  }
 
   return (
     <Card>
@@ -156,58 +171,76 @@ export function LoginHistoryChart() {
             </PopoverContent>
           </Popover>
         </div>
-        <div className="h-[350px]">
+        <div className="flex items-center justify-center h-[350px]">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               Cargando datos...
             </div>
-          ) : historyData.length === 0 ? (
+          ) : historyData.length === 0 || totalLogins === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               No hay inicios de sesión en este período.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historyData}>
-                {' '}
-                {/* Eliminado .slice().reverse() */}
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tickFormatter={formatXAxis} />
-                <YAxis allowDecimals={false} />
-                <Tooltip
-                  labelFormatter={(label) => {
-                    const date = parseISO(label);
-                    if (period === 'day') {
-                      // Daily data for 'Hoy'
-                      return format(date, 'PPP', { locale: es }); // Mostrar solo la fecha
-                    } else if (
-                      period === 'week' ||
-                      period === 'month' ||
-                      period === 'custom'
-                    ) {
-                      // Daily data for these periods
-                      return format(date, 'PPP', { locale: es });
-                    } else if (period === 'year') {
-                      // Monthly data
-                      return format(date, 'MMMM yyyy', { locale: es });
-                    }
-                    return label; // Fallback
-                  }}
-                  formatter={(value) => [
-                    `${value} logins`,
-                    'Inicios de Sesión',
-                  ]}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="logins"
-                  name="Inicios de Sesión"
-                  stroke="#8884d8"
-                  strokeWidth={2}
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div
+              className={cn(
+                'h-full w-full',
+                historyData.length === 1 && 'w-full lg:w-1/2',
+                'ml-[-15vw] md:ml-[-6vw] xl:ml-[-4vw] 2xl:ml-[-2vw]',
+              )}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                {historyData.length === 1 ? (
+                  <BarChart data={historyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tickFormatter={formatXAxis} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip
+                      labelFormatter={(label) => {
+                        const date = parseISO(label);
+                        return format(date, 'PPP', { locale: es }); // Mostrar solo la fecha
+                      }}
+                      formatter={(value) => [
+                        `${value} logins`,
+                        'Inicios de Sesión',
+                      ]}
+                    />
+                    <Legend />
+                    <Bar
+                      type="monotone"
+                      dataKey="logins"
+                      name="Inicios de Sesión"
+                      fill="#8884d8"
+                    />
+                  </BarChart>
+                ) : (
+                  <LineChart data={historyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tickFormatter={formatXAxis} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip
+                      labelFormatter={(label) => {
+                        const date = parseISO(label);
+                        return format(date, 'PPP', { locale: es }); // Mostrar solo la fecha
+                      }}
+                      formatter={(value) => [
+                        `${value} logins`,
+                        'Inicios de Sesión',
+                      ]}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="logins"
+                      name="Inicios de Sesión"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                      activeDot={{ r: 8 }}
+                      dot={false}
+                    />
+                  </LineChart>
+                )}
+              </ResponsiveContainer>
+            </div>
           )}
         </div>
       </CardContent>

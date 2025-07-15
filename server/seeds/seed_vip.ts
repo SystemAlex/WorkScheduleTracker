@@ -12,17 +12,10 @@ import { generarPuestos } from './vip/puestos-seeder';
 import { shiftsData } from './vip/data/shifts-data';
 import bcrypt from 'bcrypt'; // Import bcrypt
 import { eq } from 'drizzle-orm';
-import { Country, State } from 'country-state-city'; // Import Country and State
 import { format } from 'date-fns'; // Importar format
 
 async function seed() {
   // No borrar tablas aquí, este seed es para añadir datos a una DB existente o recién migrada.
-
-  // Obtener nombres de país y provincia para insertar
-  const argentina = Country.getAllCountries().find((c) => c.isoCode === 'AR');
-  const misiones = State.getStatesOfCountry('AR').find(
-    (s) => s.isoCode === 'M',
-  );
 
   // 1. Insertar la empresa principal (Main Company) si no existe
   let mainCompany = (
@@ -40,9 +33,9 @@ async function seed() {
         lastPaymentDate: format(new Date(), 'yyyy-MM-dd'), // Usar fecha formateada
         isActive: true, // Ensure it's active
         needsSetup: false, // This company is pre-configured
-        country: argentina?.name || 'Argentina', // Insert name
-        province: misiones?.name || 'Misiones', // Insert name
-        city: 'Eldorado', // Default value
+        country: 'Argentina', // Insert name
+        province: 'Misiones', // Insert name
+        city: 'Puerto Esperanza', // Default value
         address: 'Av. San Martín 123', // Default value
         taxId: '30-71234567-8', // Default value
         contactName: 'Gerente VIP', // Default value
@@ -59,12 +52,12 @@ async function seed() {
 
   // 2. Insertar el usuario "gerente" (admin) y asociarlo con la Main Company si no existe
   const gerenteUser = (
-    await db.select().from(users).where(eq(users.username, 'gerente'))
+    await db.select().from(users).where(eq(users.username, 'gerente_vip'))
   )[0];
   if (!gerenteUser) {
-    const hashedPassword = await bcrypt.hash('supersecretpasswordhash', 10); // Hash a password
+    const hashedPassword = await bcrypt.hash('VipSRL2025', 10); // Hash a password
     await db.insert(users).values({
-      username: 'gerente',
+      username: 'gerente_vip',
       passwordHash: hashedPassword,
       role: 'admin', // 'admin' es el rol más cercano a "Gerente"
       mainCompanyId: mainCompany.id,

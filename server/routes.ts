@@ -6,8 +6,7 @@ import shiftsRouter from './routes/shifts';
 import clientsRouter from './routes/clients';
 import reportsRouter from './routes/reports';
 import adminRouter from './routes/sentinelzone';
-import usersRouter from './routes/users'; // New import
-import { base } from '@shared/paths';
+import usersRouter from './routes/users';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Apply checkCompanyPaymentStatus to all API routes that require an active company

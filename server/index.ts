@@ -12,7 +12,6 @@ import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 import { pool } from './db'; // Import the pg pool
 import authRouter from './routes/auth'; // Import the new auth router
-import { base } from '@shared/paths.ts';
 
 const app = express();
 app.set('trust proxy', 1); // Habilitar para obtener la IP correcta detrás de un proxy

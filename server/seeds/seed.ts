@@ -9,7 +9,6 @@ import {
   users,
 } from '@shared/schema';
 import bcrypt from 'bcrypt'; // Import bcrypt
-import { Country, State } from 'country-state-city'; // Import Country and State
 import { format } from 'date-fns'; // Importar format
 
 async function seed() {
@@ -23,12 +22,6 @@ async function seed() {
 
   console.log('Tablas limpiadas.');
 
-  // Obtener nombres de país y provincia para insertar
-  const argentina = Country.getAllCountries().find((c) => c.isoCode === 'AR');
-  const buenosAires = State.getStatesOfCountry('AR').find(
-    (s) => s.isoCode === 'BA',
-  );
-
   // 1. Insertar la empresa principal "Empresa Demo"
   const [mainCompany] = await db
     .insert(mainCompanies)
@@ -38,9 +31,9 @@ async function seed() {
       lastPaymentDate: format(new Date(), 'yyyy-MM-dd'), // Usar fecha formateada
       isActive: true, // Ensure it's active
       needsSetup: false, // This company is pre-configured
-      country: argentina?.name || 'Argentina', // Insert name
-      province: buenosAires?.name || 'Buenos Aires', // Insert name
-      city: 'CABA',
+      country: 'Argentina', // Insert name
+      province: 'Ciudad Autónoma de Buenos Aires', // Insert name
+      city: '',
       address: 'Av. Corrientes 1234',
       taxId: '20-12345678-9',
       contactName: 'Juan Demo',

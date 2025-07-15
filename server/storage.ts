@@ -415,11 +415,7 @@ class CombinedStorage implements IStorage {
       ipAddress,
     });
   }
-  getLoginHistory(
-    startDate: Date,
-    endDate: Date,
-    granularity: 'hour' | 'day' | 'month',
-  ) {
+  getLoginHistory(startDate: Date, endDate: Date, granularity: 'day') {
     return this.adminStorage.getLoginHistory(startDate, endDate, granularity);
   }
 

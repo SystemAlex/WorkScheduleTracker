@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     mutationFn: () => apiRequest('POST', '/api/auth/logout'),
     onSuccess: () => {
       queryClient.setQueryData(['/api/auth/me'], null);
-      queryClient.clear(); // Clear all caches on logout
+      queryClient.clear();
     },
   });
 
@@ -82,8 +82,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     rememberMe?: boolean;
   }) => {
     await loginMutation.mutateAsync(data);
-    // After login is successful, invalidate the user query to refetch it.
-    // Awaiting this ensures the user state is updated before proceeding.
     await queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
   };
 

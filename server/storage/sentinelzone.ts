@@ -12,7 +12,7 @@ import {
   type MainCompany,
   type User,
 } from '@shared/schema';
-import { eq, and, gte, lte, isNull, sql, desc } from 'drizzle-orm'; // Importar sql y desc
+import { eq, and, gte, lte, isNull, sql, asc } from 'drizzle-orm'; // Importar sql y desc
 import { ConflictError, NotFoundError } from '../errors';
 import bcrypt from 'bcrypt';
 import { subDays, parseISO, format } from 'date-fns'; // Importar format
@@ -305,7 +305,7 @@ export class AdminStorage {
       )
       // Usar sql.raw para la cláusula GROUP BY
       .groupBy(sql.raw(dateTruncSqlString))
-      .orderBy(desc(sql.raw(dateTruncSqlString)));
+      .orderBy(asc(sql.raw(dateTruncSqlString)));
 
     return result.map((row) => {
       const parsedDate = parseISO(row.date);
