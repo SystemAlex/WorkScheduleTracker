@@ -33,6 +33,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { getRelativeDayLabel } from '@/lib/utils'; // Importar la función
+import { base } from '@shared/paths';
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom';
 
@@ -57,7 +58,7 @@ export function LoginHistoryChart() {
     queryKey: ['/api/sentinelzone/login-history', queryParams.toString()],
     queryFn: async () => {
       const res = await fetch(
-        `/api/sentinelzone/login-history?${queryParams.toString()}`,
+        `${base('/api/sentinelzone/login-history')}?${queryParams.toString()}`,
       );
       return res.json();
     },
